@@ -12,20 +12,18 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import html2canvas from 'html2canvas';
 import { useRef, useState } from 'react';
-import {AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { useForm } from "react-hook-form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { z } from "zod";
 
 interface Answer {
   questionId: number;
   value: number;
-}
-
-function getFacetWeights(value: number): { A: number; B: number } {
-  if (value === 1) return { A: 100, B: 0 };
-  if (value === 2) return { A: 75, B: 25 };
-  if (value === 3) return { A: 50, B: 50 };
-  if (value === 4) return { A: 25, B: 75 };
-  if (value === 5) return { A: 0, B: 100 };
-  return { A: 50, B: 50 };
 }
 
 type DimensionKey = "외향성/내향성" | "감각/직관" | "사고/감정" | "판단/인식";
@@ -45,16 +43,21 @@ const facetColors: Record<DimensionKey, [string, string]> = {
   "판단/인식": ["hsl(45, 75%, 55%)", "hsl(45, 65%, 80%)"]
 } as const;
 
-type FacetGroup = {
-  category: DimensionKey;
-  title: DimensionKey;
-  facets: {
-    id: number;
-    facet: string;
-    selected: "A" | "B" | "neutral";
-    weights: { A: number; B: number };
-  }[];
-};
+const loginSchema = z.object({
+  userId: z.string().min(1, { message: "아이디를 입력해주세요." }),
+  password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
+});
+
+type LoginInput = z.infer<typeof loginSchema>;
+
+function getFacetWeights(value: number): { A: number; B: number } {
+  if (value === 1) return { A: 100, B: 0 };
+  if (value === 2) return { A: 75, B: 25 };
+  if (value === 3) return { A: 50, B: 50 };
+  if (value === 4) return { A: 25, B: 75 };
+  if (value === 5) return { A: 0, B: 100 };
+  return { A: 50, B: 50 };
+}
 
 const mbtiIcons: Record<MbtiLetter, JSX.Element> = {
   E: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
@@ -67,18 +70,126 @@ const mbtiIcons: Record<MbtiLetter, JSX.Element> = {
   P: <MdStarBorder className="w-12 h-12 drop-shadow-lg" />
 };
 
+interface FacetGroup {
+  category: DimensionKey;
+  title: DimensionKey;
+  facets: {
+    id: number;
+    facet: string;
+    selected: "A" | "B" | "neutral";
+    weights: { A: number; B: number };
+  }[];
+}
+
+const dimensionToLetters: Record<DimensionKey, [MbtiLetter, MbtiLetter]> = {
+  "외향성/내향성": ["E", "I"],
+  "감각/직관": ["S", "N"],
+  "사고/감정": ["T", "F"],
+  "판단/인식": ["J", "P"]
+};
+
+
 export default function Result() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
+  const [showLoginDialog, setShowLoginDialog] = useState(true);
+  const [loginCredentials, setLoginCredentials] = useState<LoginInput | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const snsRef = useRef<HTMLDivElement>(null);
   const [previewImage, setPreviewImage] = useState<string>('');
   const [snsImage, setSnsImage] = useState<string>('');
 
+  const loginForm = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      userId: "",
+      password: "",
+    },
+  });
+
+  const { toast } = useToast();
+
+  const loginMutation = useMutation({
+    mutationFn: async (data: LoginInput) => {
+      const response = await apiRequest("POST", "/api/mbti-results/login", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.id.toString() === id) {
+        setShowLoginDialog(false);
+        setLoginCredentials(loginForm.getValues());
+      } else {
+        toast({
+          title: "로그인 실패",
+          description: "잘못된 접근입니다.",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "로그인 실패",
+        description: "아이디 또는 비밀번호를 확인해주세요.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
-    enabled: !!id
+    enabled: !!id && !showLoginDialog
   });
+
+  if (showLoginDialog) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
+        <div className="max-w-md mx-auto pt-8">
+          <Card>
+            <CardContent className="pt-6">
+              <h2 className="text-xl font-semibold mb-6">결과 조회</h2>
+              <Form {...loginForm}>
+                <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
+                  <FormField
+                    control={loginForm.control}
+                    name="userId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>아이디</FormLabel>
+                        <FormControl>
+                          <Input type="text" placeholder="아이디를 입력하세요" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>비밀번호</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loginMutation.isPending}
+                  >
+                    결과 조회하기
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -107,13 +218,6 @@ export default function Result() {
   }
 
   const dimensionScores = calculateDimensionScores(result.answers as Answer[]);
-
-  const dimensionToLetters: Record<DimensionKey, [MbtiLetter, MbtiLetter]> = {
-    "외향성/내향성": ["E", "I"],
-    "감각/직관": ["S", "N"],
-    "사고/감정": ["T", "F"],
-    "판단/인식": ["J", "P"]
-  };
 
   const facetGroups: FacetGroup[] = (Object.keys(dimensionColors) as DimensionKey[]).map(dimension => {
     const categoryQuestions = questions.filter(q =>

@@ -1,4 +1,4 @@
-import { mbtiResults, type MbtiResult, type InsertMbtiResult } from "@shared/schema";
+import { mbtiResults, adminUsers, type MbtiResult, type InsertMbtiResult, type CreateAdminInput } from "@shared/schema";
 import { db } from "./db";
 import { and, eq, isNotNull } from "drizzle-orm";
 
@@ -16,6 +16,8 @@ export interface IStorage {
     coordinateZ: number | null;
   }>>;
   getAllMbtiResults(): Promise<MbtiResult[]>;
+  createAdminUser(admin: CreateAdminInput): Promise<void>;
+  getAdminUser(username: string): Promise<{ id: number; username: string; password: string } | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -80,6 +82,33 @@ export class DatabaseStorage implements IStorage {
       .from(mbtiResults)
       .orderBy(mbtiResults.createdAt);
   }
+
+  async createAdminUser(admin: CreateAdminInput): Promise<void> {
+    await db.insert(adminUsers).values(admin);
+  }
+
+  async getAdminUser(username: string): Promise<{ id: number; username: string; password: string } | undefined> {
+    const [user] = await db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.username, username));
+    return user;
+  }
 }
 
 export const storage = new DatabaseStorage();
+
+// Create initial admin user if it doesn't exist
+async function initializeAdminUser() {
+  const storage = new DatabaseStorage();
+  const existingAdmin = await storage.getAdminUser("host");
+  if (!existingAdmin) {
+    await storage.createAdminUser({
+      username: "host",
+      password: "algobee"
+    });
+    console.log("Initial admin user created");
+  }
+}
+
+initializeAdminUser().catch(console.error);

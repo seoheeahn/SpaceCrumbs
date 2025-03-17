@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMbtiResultSchema, loginSchema, adminLoginSchema } from "@shared/schema";
+import { insertMbtiResultSchema, loginSchema, adminLoginSchema, adminCreationSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { analyzeMbtiResult } from "./openai";
 import { calculateDimensionScores, calculateMbti } from "../client/src/lib/mbti";
@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { analysis, requestId } = await analyzeMbtiResult(result);
 
       // Update the result in database
-      await storage.updateMbtiResult(id, { 
+      await storage.updateMbtiResult(id, {
         analysis,
         openaiRequestId: requestId
       });
@@ -204,14 +204,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/login", async (req, res) => {
     try {
       const data = adminLoginSchema.parse(req.body);
+      const admin = await storage.getAdminUser(data.username);
 
-      if (data.username === ADMIN_USERNAME && data.password === ADMIN_PASSWORD) {
+      if (admin && admin.password === data.password) {
         res.json({ success: true });
       } else {
         res.status(401).json({ error: "잘못된 관리자 계정입니다" });
       }
     } catch (error) {
       console.error("Error in admin login:", error);
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: "유효하지 않은 데이터입니다", details: error.errors });
+      } else {
+        res.status(500).json({ error: "서버 오류가 발생했습니다" });
+      }
+    }
+  });
+
+  app.post("/api/admin/create", async (req, res) => {
+    try {
+      const data = adminCreationSchema.parse(req.body);
+
+      // Check if admin already exists
+      const existingAdmin = await storage.getAdminUser(data.username);
+      if (existingAdmin) {
+        res.status(400).json({ error: "이미 존재하는 관리자 계정입니다" });
+        return;
+      }
+
+      await storage.createAdminUser(data);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error creating admin user:", error);
       if (error instanceof ZodError) {
         res.status(400).json({ error: "유효하지 않은 데이터입니다", details: error.errors });
       } else {

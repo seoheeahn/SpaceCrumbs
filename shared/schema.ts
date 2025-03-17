@@ -21,10 +21,16 @@ export const mbtiResults = pgTable("mbti_results", {
   language: text("language").notNull(),
   openaiRequestId: text("openai_request_id"),
   analysis: text("analysis"),
-  // Add 3D coordinates
   coordinateX: numeric("coordinate_x"),
   coordinateY: numeric("coordinate_y"),
   coordinateZ: numeric("coordinate_z"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const adminUsers = pgTable("admin_users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -70,4 +76,13 @@ export const adminLoginSchema = z.object({
   password: z.string().min(1, "비밀번호를 입력해주세요"),
 });
 
+export const adminCreationSchema = z.object({
+  username: z.string()
+    .min(4, "아이디는 최소 4자 이상이어야 합니다")
+    .max(20, "아이디는 최대 20자까지 가능합니다")
+    .regex(/^[a-zA-Z0-9]+$/, "아이디는 영문자와 숫자만 사용할 수 있습니다"),
+  password: z.string().min(6, "비밀번호는 최소 6자 이상이어야 합니다"),
+});
+
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+export type CreateAdminInput = z.infer<typeof adminCreationSchema>;

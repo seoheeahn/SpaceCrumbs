@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { adminLoginSchema, type AdminLoginInput } from "@shared/schema";
+import { adminLoginSchema, type AdminLoginInput, adminCreationSchema, type AdminCreationInput } from "@shared/schema"; // Added import for admin creation schema
 import {
   Table,
   TableBody,
@@ -98,6 +98,35 @@ export default function Admin() {
       });
     },
   });
+
+  const createAdminForm = useForm<AdminCreationInput>({
+    resolver: zodResolver(adminCreationSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const createAdminMutation = useMutation({ // Added mutation for admin creation
+    mutationFn: async (data: AdminCreationInput) => {
+      const response = await apiRequest("POST", "/api/admin/create", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "관리자 계정 생성 성공",
+        description: "새로운 관리자 계정이 생성되었습니다.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "관리자 계정 생성 실패",
+        description: "계정 생성 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
 
   if (!isAuthenticated) {
     return (
@@ -238,6 +267,52 @@ export default function Admin() {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+
+              {/* Added Admin Creation Form */}
+              <div className="mt-8">
+                <Card>
+                  <CardContent className="pt-6">
+                    <h2 className="text-xl font-semibold mb-4">관리자 계정 생성</h2>
+                    <Form {...createAdminForm}>
+                      <form onSubmit={createAdminForm.handleSubmit((data) => createAdminMutation.mutate(data))} className="space-y-4">
+                        <FormField
+                          control={createAdminForm.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>아이디</FormLabel>
+                              <FormControl>
+                                <Input placeholder="새 관리자 아이디" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={createAdminForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>비밀번호</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="새 관리자 비밀번호" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={createAdminMutation.isPending}
+                        >
+                          관리자 계정 생성
+                        </Button>
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </Card>
