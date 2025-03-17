@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
@@ -21,38 +20,11 @@ function Planet({ position }: { position: [number, number, number] }) {
   );
 }
 
-function Scene() {
+export default function Universe() {
   const { data: coordinates = [] } = useQuery<Coordinate[]>({
     queryKey: ["/api/universe-coordinates"],
   });
 
-  return (
-    <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1} />
-      <Stars 
-        radius={100} 
-        depth={50} 
-        count={5000} 
-        factor={4} 
-        saturation={0}
-      />
-      {coordinates?.map((coord, index) => (
-        <Planet
-          key={index}
-          position={[
-            coord.coordinateX / 5, 
-            coord.coordinateY / 5,
-            coord.coordinateZ / 5
-          ]}
-        />
-      ))}
-      <OrbitControls />
-    </>
-  );
-}
-
-export default function Universe() {
   return (
     <div className="w-full h-screen bg-black">
       <Canvas
@@ -60,7 +32,25 @@ export default function Universe() {
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
-          <Scene />
+          <directionalLight position={[10, 10, 5]} intensity={1} />
+          <Stars 
+            radius={100} 
+            depth={50} 
+            count={5000} 
+            factor={4} 
+            saturation={0}
+          />
+          {coordinates?.map((coord, index) => (
+            <Planet
+              key={index}
+              position={[
+                coord.coordinateX / 5, 
+                coord.coordinateY / 5,
+                coord.coordinateZ / 5
+              ]}
+            />
+          ))}
+          <OrbitControls />
         </Suspense>
       </Canvas>
     </div>
