@@ -1,11 +1,12 @@
 import { mbtiResults, type MbtiResult, type InsertMbtiResult } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export interface IStorage {
   createMbtiResult(result: InsertMbtiResult): Promise<MbtiResult>;
   getMbtiResult(id: number): Promise<MbtiResult | undefined>;
-  getMbtiResultByCredentials(nickname: string, password: string): Promise<MbtiResult | undefined>;
+  getMbtiResultByCredentials(userId: string, password: string): Promise<MbtiResult | undefined>;
+  checkDuplicateUserId(userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -19,13 +20,23 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async getMbtiResultByCredentials(nickname: string, password: string): Promise<MbtiResult | undefined> {
+  async getMbtiResultByCredentials(userId: string, password: string): Promise<MbtiResult | undefined> {
     const [result] = await db
       .select()
       .from(mbtiResults)
-      .where(eq(mbtiResults.nickname, nickname))
-      .where(eq(mbtiResults.password, password));
+      .where(and(
+        eq(mbtiResults.userId, userId),
+        eq(mbtiResults.password, password)
+      ));
     return result;
+  }
+
+  async checkDuplicateUserId(userId: string): Promise<boolean> {
+    const [result] = await db
+      .select({ id: mbtiResults.id })
+      .from(mbtiResults)
+      .where(eq(mbtiResults.userId, userId));
+    return !!result;
   }
 }
 

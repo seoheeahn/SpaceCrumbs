@@ -13,6 +13,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput, type Answer } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Test() {
   const [, setLocation] = useLocation();
@@ -20,6 +22,8 @@ export default function Test() {
   const [currentQuestion, setCurrentQuestion] = useState(-1); // -1 means login form
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [userCredentials, setUserCredentials] = useState<LoginInput | null>(null);
+  const [isCheckingId, setIsCheckingId] = useState(false);
+  const [isDuplicateId, setIsDuplicateId] = useState(false);
   const progress = Math.max(0, (currentQuestion / questions.length) * 100);
 
   const form = useForm<LoginInput>({
@@ -30,9 +34,61 @@ export default function Test() {
     },
   });
 
-  const handleLoginSubmit = (data: LoginInput) => {
-    setUserCredentials(data);
-    setCurrentQuestion(0);
+  const checkDuplicateId = async (userId: string) => {
+    try {
+      setIsCheckingId(true);
+      const response = await fetch(`/api/check-user-id/${userId}`);
+      const data = await response.json();
+      setIsDuplicateId(data.isDuplicate);
+
+      if (data.isDuplicate) {
+        form.setError("userId", {
+          type: "manual",
+          message: "이미 사용 중인 아이디입니다"
+        });
+      } else {
+        form.clearErrors("userId");
+        toast({
+          title: "사용 가능한 아이디",
+          description: "입력하신 아이디를 사용할 수 있습니다.",
+        });
+      }
+    } catch (error) {
+      console.error("Error checking user ID:", error);
+      toast({
+        title: "오류 발생",
+        description: "아이디 중복 확인 중 오류가 발생했습니다",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingId(false);
+    }
+  };
+
+  const handleLoginSubmit = async (data: LoginInput) => {
+    try {
+      // Check for duplicate ID before proceeding
+      const response = await fetch(`/api/check-user-id/${data.userId}`);
+      const checkResult = await response.json();
+
+      if (checkResult.isDuplicate) {
+        form.setError("userId", {
+          type: "manual",
+          message: "이미 사용 중인 아이디입니다"
+        });
+        return;
+      }
+
+      setUserCredentials(data);
+      setCurrentQuestion(0);
+    } catch (error) {
+      console.error("Error during login submission:", error);
+      toast({
+        title: "오류 발생",
+        description: "로그인 처리 중 오류가 발생했습니다",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAnswer = async (value: number) => {
@@ -103,12 +159,26 @@ export default function Test() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>아이디</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="영문, 숫자 조합 4-20자" 
-                              {...field} 
-                            />
-                          </FormControl>
+                          <div className="flex gap-2">
+                            <FormControl>
+                              <Input 
+                                placeholder="영문, 숫자 조합 4-20자" 
+                                {...field} 
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  setIsDuplicateId(false);
+                                }}
+                              />
+                            </FormControl>
+                            <Button 
+                              type="button"
+                              variant="outline"
+                              onClick={() => checkDuplicateId(field.value)}
+                              disabled={isCheckingId || !field.value || field.value.length < 4}
+                            >
+                              중복확인
+                            </Button>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -130,7 +200,11 @@ export default function Test() {
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" className="w-full">
+                    <Button 
+                      type="submit" 
+                      className="w-full"
+                      disabled={isDuplicateId || isCheckingId}
+                    >
                       테스트 시작하기
                     </Button>
                   </form>
