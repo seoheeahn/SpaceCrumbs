@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
-import { BsPerson, BsGear, BsLightning, BsHeart, BsHeartFill, BsCloud } from "react-icons/bs";
+import { MdPerson, MdSettings, MdFlashOn, MdFavorite, MdFavoriteBorder, MdCloud } from "react-icons/md";
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
@@ -110,14 +110,14 @@ export default function Result() {
   };
 
   const mbtiIcons = {
-    E: <BsPerson className="w-10 h-10" />,
-    I: <BsPerson className="w-10 h-10" />,
-    S: <BsGear className="w-10 h-10" />,
-    N: <BsLightning className="w-10 h-10" />,
-    T: <BsHeart className="w-10 h-10" />,
-    F: <BsHeartFill className="w-10 h-10" />,
-    J: <BsCloud className="w-10 h-10" />,
-    P: <BsCloud className="w-10 h-10 rotate-180" />
+    E: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
+    I: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
+    S: <MdSettings className="w-12 h-12 drop-shadow-lg" />,
+    N: <MdFlashOn className="w-12 h-12 drop-shadow-lg" />,
+    T: <MdFavoriteBorder className="w-12 h-12 drop-shadow-lg" />,
+    F: <MdFavorite className="w-12 h-12 drop-shadow-lg" />,
+    J: <MdCloud className="w-12 h-12 drop-shadow-lg" />,
+    P: <MdCloud className="w-12 h-12 rotate-180 drop-shadow-lg" />
   };
 
   return (
@@ -169,11 +169,11 @@ export default function Result() {
               <div className="space-y-4">
                 {facetGroups.map((group, index) => (
                   <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                    <h2 className="text-lg font-semibold mb-3 text-center"
+                    <h2 className="text-lg font-semibold mb-3 text-center" 
                       style={{ color: dimensionColors[group.title] }}>
                       {group.title}
                     </h2>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {group.facets.map((facet) => {
                         const [typeA, typeB] = facet.facet.split("-");
                         const [colorA, colorB] = facetColors[group.title];
@@ -183,9 +183,14 @@ export default function Result() {
                         return (
                           <div key={facet.id} className="bg-gray-50 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <div className="flex items-center gap-3">
-                              <div className={`text-sm font-medium text-right w-24 shrink-0 ${
-                                isADominant ? "text-primary font-bold" : "text-gray-600"
-                              }`}>
+                              <div className={`text-sm font-medium text-right w-24 shrink-0 transition-all ${
+                                isADominant 
+                                  ? `font-bold drop-shadow-md`
+                                  : "text-gray-600"
+                              }`}
+                              style={{ 
+                                color: isADominant ? dimensionColors[group.title] : undefined
+                              }}>
                                 {typeA}
                               </div>
                               <div className="grow h-5 relative bg-gray-200 rounded-full overflow-hidden">
@@ -193,20 +198,25 @@ export default function Result() {
                                   className="absolute inset-y-0 left-0 transition-all duration-500"
                                   style={{
                                     width: `${facet.weights.A}%`,
-                                    backgroundColor: colorA
+                                    backgroundColor: dimensionColors[group.title]
                                   }}
                                 />
                                 <div
                                   className="absolute inset-y-0 right-0 transition-all duration-500"
                                   style={{
                                     width: `${facet.weights.B}%`,
-                                    backgroundColor: colorB
+                                    backgroundColor: `${dimensionColors[group.title]}40`
                                   }}
                                 />
                               </div>
-                              <div className={`text-sm font-medium w-24 shrink-0 ${
-                                isBDominant ? "text-primary font-bold" : "text-gray-600"
-                              }`}>
+                              <div className={`text-sm font-medium w-24 shrink-0 transition-all ${
+                                isBDominant 
+                                  ? `font-bold drop-shadow-md`
+                                  : "text-gray-600"
+                              }`}
+                              style={{ 
+                                color: isBDominant ? dimensionColors[group.title] : undefined
+                              }}>
                                 {typeB}
                               </div>
                             </div>
