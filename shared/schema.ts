@@ -2,11 +2,22 @@ import { pgTable, text, serial, integer, jsonb, timestamp } from "drizzle-orm/pg
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Define Answer type and schema
+export interface Answer {
+  questionId: number;
+  value: number;
+}
+
+export const answerSchema = z.object({
+  questionId: z.number(),
+  value: z.number().min(1).max(5),
+});
+
 export const mbtiResults = pgTable("mbti_results", {
   id: serial("id").primaryKey(),
   nickname: text("nickname").notNull(),
   password: text("password").notNull(),
-  answers: jsonb("answers").notNull(),
+  answers: jsonb("answers").$type<Answer[]>().notNull(),
   result: text("result").notNull(),
   language: text("language").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

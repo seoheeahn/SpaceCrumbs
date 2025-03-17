@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { questions, type Answer } from "@/lib/questions";
+import { questions } from "@/lib/questions";
 import { calculateMbti } from "@/lib/mbti";
 import { apiRequest } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, type LoginInput } from "@shared/schema";
+import { loginSchema, type LoginInput, type Answer } from "@shared/schema";
 
 export default function Test() {
   const [, setLocation] = useLocation();
@@ -34,24 +34,36 @@ export default function Test() {
   };
 
   const handleAnswer = async (value: number) => {
-    const newAnswers = [
-      ...answers,
-      { questionId: questions[currentQuestion].id, value }
-    ];
-    setAnswers(newAnswers);
+    try {
+      const newAnswers = [
+        ...answers,
+        { questionId: questions[currentQuestion].id, value }
+      ];
+      setAnswers(newAnswers);
 
-    if (currentQuestion === questions.length - 1) {
-      const mbtiType = calculateMbti(newAnswers);
-      const response = await apiRequest("POST", "/api/mbti-results", {
-        ...userCredentials,
-        answers: newAnswers,
-        result: mbtiType,
-        language: "ko",
-      });
-      const result = await response.json();
-      setLocation(`/result/${result.id}`);
-    } else {
-      setCurrentQuestion(prev => prev + 1);
+      if (currentQuestion === questions.length - 1) {
+        const mbtiType = calculateMbti(newAnswers);
+        if (!userCredentials) {
+          throw new Error("User credentials not found");
+        }
+        const response = await apiRequest("POST", "/api/mbti-results", {
+          ...userCredentials,
+          answers: newAnswers,
+          result: mbtiType,
+          language: "ko",
+        });
+        const result = await response.json();
+        if (!result.id) {
+          throw new Error("Invalid response from server");
+        }
+        setLocation(`/result/${result.id}`);
+      } else {
+        setCurrentQuestion(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error submitting answer:", error);
+      setCurrentQuestion(0); // Reset to first question on error
+      setAnswers([]); // Clear answers
     }
   };
 
