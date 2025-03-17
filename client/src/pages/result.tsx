@@ -396,14 +396,6 @@ export default function Result() {
                 </DialogContent>
               </Dialog>
               <Button
-                onClick={() => setLocation('/universe')} // Added new button
-                className="w-full bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary/80 transition-all duration-300"
-                variant="outline"
-              >
-                <Stars className="w-4 h-4 mr-2" />
-                우주에서 나의 위치 보기
-              </Button>
-              <Button
                 onClick={() => setLocation('/')}
                 className="w-full bg-white hover:bg-gray-50 text-primary hover:text-primary/80 transition-colors duration-300"
               >
