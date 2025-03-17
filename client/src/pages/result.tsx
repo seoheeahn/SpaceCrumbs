@@ -8,10 +8,15 @@ import { MdPerson, MdSettings, MdFlashOn, MdFavorite, MdFavoriteBorder, MdStarBo
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import html2canvas from 'html2canvas';
 import { useRef, useState } from 'react';
+
+interface Answer {
+  questionId: number;
+  value: number;
+}
 
 function getFacetWeights(value: number): { A: number; B: number } {
   if (value === 1) return { A: 100, B: 0 };
@@ -61,20 +66,20 @@ export default function Result() {
     );
   }
 
-  const dimensionScores = calculateDimensionScores(result.answers);
+  const dimensionScores = calculateDimensionScores(result.answers as Answer[]);
   const dimensionColors = {
     "외향성/내향성": "hsl(220, 70%, 65%)",  // 블루계열
     "감각/직관": "hsl(12, 75%, 65%)",      // 진한 연어색
     "사고/감정": "hsl(160, 75%, 65%)",     // 진한 민트색
     "판단/인식": "hsl(45, 75%, 60%)"       // 진한 황금색
-  };
+  } as const;
 
   const facetColors = {
     "외향성/내향성": ["hsl(220, 70%, 60%)", "hsl(220, 60%, 85%)"],
     "감각/직관": ["hsl(12, 75%, 60%)", "hsl(12, 65%, 85%)"],
     "사고/감정": ["hsl(160, 75%, 60%)", "hsl(160, 65%, 85%)"],
     "판단/인식": ["hsl(45, 75%, 55%)", "hsl(45, 65%, 80%)"]
-  };
+  } as const;
 
   // 질문들을 MBTI 차원별로 그룹화
   const facetGroups: FacetGroup[] = Object.keys(dimensionColors).map(dimension => {
