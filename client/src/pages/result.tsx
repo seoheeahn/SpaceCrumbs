@@ -153,20 +153,15 @@ export default function Result() {
     <Card className="shadow-xl hover:shadow-2xl transition-shadow duration-300">
       <CardContent className="pt-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-center mb-6">
-            당신의 우주좌표는
-          </h1>
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-3">{result.result}</h2>
-            <p className="text-lg text-primary font-semibold">우주좌표값:</p>
-            <p className="text-gray-600 text-xl mt-2">
+            <p className="text-gray-600 text-3xl font-bold mt-2 text-primary">
               X: {result.coordinateX !== null ? Number(result.coordinateX).toFixed(2) : '0.00'} |
               Y: {result.coordinateY !== null ? Number(result.coordinateY).toFixed(2) : '0.00'} |
               Z: {result.coordinateZ !== null ? Number(result.coordinateZ).toFixed(2) : '0.00'}
             </p>
           </div>
 
-          <div className="flex justify-center gap-8 mb-8">
+          <div className="flex justify-center gap-6 mb-8">
             {result.result.split("").map((letter, index) => {
               const dimension = Object.keys(dimensionColors)[index] as DimensionKey;
               const [letterA, letterB] = dimensionToLetters[dimension];
@@ -175,15 +170,15 @@ export default function Result() {
               return (
                 <div
                   key={index}
-                  className="w-28 h-28 rounded-2xl flex items-center justify-center flex-col"
+                  className="w-20 h-20 rounded-xl flex items-center justify-center flex-col"
                   style={{
                     backgroundColor: `${dimensionColors[dimension]}40`,
                     color: dimensionColors[dimension]
                   }}
                 >
                   {mbtiIcons[letter as MbtiLetter]}
-                  <span className="text-3xl font-bold mt-2">{letter}</span>
-                  <span className="text-sm mt-1">{Math.round(score)}%</span>
+                  <span className="text-xl font-bold mt-1">{letter}</span>
+                  <span className="text-xs mt-0.5">{Math.round(score)}%</span>
                 </div>
               );
             })}
@@ -194,48 +189,48 @@ export default function Result() {
               const analysisData = JSON.parse(result.analysis);
               return (
                 <Card className="mb-8 bg-primary/5 hover:bg-primary/10 transition-colors">
-                  <CardContent className="pt-6">
-                    <h2 className="text-xl font-semibold mb-4 text-primary">✨ AI 분석 결과</h2>
-                    <div className="space-y-4">
-                      <div className="mb-4">
-                        <h3 className="text-lg font-medium mb-2">🎭 {analysisData.Description}</h3>
+                  <CardContent className="pt-4">
+                    <h2 className="text-lg font-semibold mb-3 text-primary">✨ AI 분석 결과</h2>
+                    <div className="space-y-3 text-sm">
+                      <div className="mb-3">
+                        <h3 className="font-medium mb-1">🎭 {analysisData.Description}</h3>
                         <p className="text-gray-700">{analysisData.Analysis}</p>
                       </div>
 
-                      <div className="mb-4">
-                        <h3 className="text-lg font-medium mb-2">💪 강점</h3>
-                        <ul className="list-none space-y-1">
+                      <div className="mb-3">
+                        <h3 className="font-medium mb-1">💪 강점</h3>
+                        <ul className="list-none space-y-0.5">
                           {analysisData.Strengths.map((strength: string, index: number) => (
                             <li key={index} className="flex items-center">
-                              <span className="mr-2">•</span>{strength}
+                              <span className="mr-1">•</span>{strength}
                             </li>
                           ))}
                         </ul>
                       </div>
 
-                      <div className="mb-4">
-                        <h3 className="text-lg font-medium mb-2">🌱 성장 포인트</h3>
-                        <ul className="list-none space-y-1">
+                      <div className="mb-3">
+                        <h3 className="font-medium mb-1">🌱 성장 포인트</h3>
+                        <ul className="list-none space-y-0.5">
                           {analysisData.Growth.map((point: string, index: number) => (
                             <li key={index} className="flex items-center">
-                              <span className="mr-2">•</span>{point}
+                              <span className="mr-1">•</span>{point}
                             </li>
                           ))}
                         </ul>
                       </div>
 
-                      <div className="mb-4">
-                        <h3 className="text-lg font-medium mb-2">👥 대인관계 특징</h3>
+                      <div className="mb-3">
+                        <h3 className="font-medium mb-1">👥 대인관계 특징</h3>
                         <p className="text-gray-700">{analysisData.Social}</p>
                       </div>
 
                       <div>
-                        <h3 className="text-lg font-medium mb-2">💼 추천 직업</h3>
-                        <div className="flex flex-wrap gap-2">
+                        <h3 className="font-medium mb-1">💼 추천 직업</h3>
+                        <div className="flex flex-wrap gap-1">
                           {analysisData.Careers.map((career: string, index: number) => (
                             <span
                               key={index}
-                              className="px-3 py-1 bg-primary/10 rounded-full text-primary text-sm"
+                              className="px-2 py-0.5 bg-primary/10 rounded-full text-primary text-xs"
                             >
                               {career}
                             </span>
@@ -255,7 +250,6 @@ export default function Result() {
               );
             }
           })()}
-
           <div className="space-y-4">
             {facetGroups.map((group, index) => (
               <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
