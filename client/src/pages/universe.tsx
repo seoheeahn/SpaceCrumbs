@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Text, Line, Html } from "@react-three/drei";
-import { Suspense, useState, useEffect } from "react";
-import * as THREE from "three";
+import { OrbitControls, Html } from "@react-three/drei";
+import { useState } from "react";
 import { useParams } from "wouter";
-import type { MbtiResult } from "@shared/schema";
+import type { MbtiResult } from "@/lib/types";
+import { dimensionColors, dimensionScores, dimensionToLetters } from "@/lib/mbti";
 
 // 축 레이블 컴포넌트
 function AxisLabel({ position, text }: { position: [number, number, number]; text: string }) {
@@ -80,11 +80,20 @@ function Planet({
 }
 
 export default function Universe() {
-  const { id } = useParams(); // Get result ID from URL params
+  const { id } = useParams();
 
-  const { data: result, isLoading } = useQuery<MbtiResult>({
+  const { data: result, isLoading, error } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
+    enabled: !!id
   });
+
+  if (!id) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <p className="text-white">잘못된 접근입니다.</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -94,83 +103,47 @@ export default function Universe() {
     );
   }
 
-  if (!result) {
+  if (error || !result) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
-        <p className="text-white">데이터를 불러올 수 없습니다.</p>
+        <p className="text-white">결과를 불러올 수 없습니다.</p>
       </div>
     );
   }
 
-  const scale = 0.2;
-  const dimensions = ["E-I", "S-N", "T-F", "J-P"];
-  const dimensionColors = {
-    "E-I": "#ff9500",
-    "S-N": "#34c759",
-    "T-F": "#007aff",
-    "J-P": "#af52de"
-  };
-
-  // Calculate scores from result data
-  const dimensionScores = {
-    "E-I": { E: result.scores["E-I"].E, I: result.scores["E-I"].I },
-    "S-N": { S: result.scores["S-N"].S, N: result.scores["S-N"].N },
-    "T-F": { T: result.scores["T-F"].T, F: result.scores["T-F"].F },
-    "J-P": { J: result.scores["J-P"].J, P: result.scores["J-P"].P }
-  };
+  const scale = 5;
 
   return (
-    <div className="w-full h-screen bg-black">
-      <Canvas
-        camera={{ position: [20, 20, 20], fov: 60 }}
-        gl={{ antialias: true }}
-      >
-        <Suspense fallback={null}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} intensity={1} />
+    <div className="w-full h-screen">
+      <Canvas camera={{ position: [10, 10, 10] }}>
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        {Object.entries(dimensionColors).map(([dim, color], i) => {
+          const scores = dimensionScores[result.result[i] as keyof typeof dimensionScores];
+          return Object.entries(scores).map(([trait, score], j) => {
+            const position: [number, number, number] = [
+              i === 0 ? score * scale : 0,
+              i === 1 ? score * scale : 0,
+              i === 2 ? score * scale : 0
+            ];
 
-          {/* 축 레이블 */}
-          <AxisLabel position={[15, 0, 0]} text="E-I" />
-          <AxisLabel position={[0, 15, 0]} text="S-N" />
-          <AxisLabel position={[0, 0, 15]} text="T-F" />
-
-          {/* 그리드 */}
-          <GridLines />
-
-          {/* MBTI 점수 행성들 */}
-          {dimensions.map((dim, i) => {
-            const scores = dimensionScores[dim as keyof typeof dimensionScores];
-            const color = dimensionColors[dim as keyof typeof dimensionColors];
-
-            return Object.entries(scores).map(([trait, score], j) => {
-              const position: [number, number, number] = [
-                i === 0 ? score * scale : 0,
-                i === 1 ? score * scale : 0,
-                i === 2 ? score * scale : 0
-              ];
-
-              return (
-                <Planet
-                  key={`${dim}-${trait}`}
-                  position={position}
-                  size={0.5}
-                  color={color}
-                  label={`${trait}`}
-                  score={score}
-                />
-              );
-            });
-          })}
-
-          {/* 카메라 컨트롤 */}
-          <OrbitControls
-            enableZoom={true}
-            enablePan={true}
-            enableRotate={true}
-            minDistance={5}
-            maxDistance={50}
-          />
-        </Suspense>
+            return (
+              <Planet
+                key={`${dim}-${trait}`}
+                position={position}
+                size={0.5}
+                color={color}
+                label={`${trait}`}
+                score={Math.round(score * 100)}
+              />
+            );
+          });
+        })}
+        <OrbitControls
+          enableZoom={true}
+          enablePan={true}
+          enableRotate={true}
+        />
       </Canvas>
     </div>
   );
