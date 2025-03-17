@@ -74,7 +74,7 @@ export default function Result() {
   const [previewImage, setPreviewImage] = useState<string>('');
   const [snsImage, setSnsImage] = useState<string>('');
 
-  const { data: result, isLoading } = useQuery<MbtiResult & { analysis?: string; coordinateX?: number; coordinateY?: number; coordinateZ?: number }>({
+  const { data: result, isLoading } = useQuery<MbtiResult & { analysis?: string; coordinateX?: number | null; coordinateY?: number | null; coordinateZ?: number | null }>({
     queryKey: [`/api/mbti-results/${id}`]
   });
 
@@ -182,9 +182,9 @@ export default function Result() {
           <div className="text-center mb-6">
             <p className="text-lg text-primary font-semibold">우주좌표값:</p>
             <p className="text-gray-600">
-              X: {typeof result.coordinateX === 'number' ? result.coordinateX.toFixed(2) : '0.00'} | 
-              Y: {typeof result.coordinateY === 'number' ? result.coordinateY.toFixed(2) : '0.00'} | 
-              Z: {typeof result.coordinateZ === 'number' ? result.coordinateZ.toFixed(2) : '0.00'}
+              X: {result.coordinateX !== null ? Number(result.coordinateX).toFixed(2) : '0.00'} | 
+              Y: {result.coordinateY !== null ? Number(result.coordinateY).toFixed(2) : '0.00'} | 
+              Z: {result.coordinateZ !== null ? Number(result.coordinateZ).toFixed(2) : '0.00'}
             </p>
           </div>
 
