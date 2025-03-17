@@ -158,9 +158,9 @@ export default function Test() {
                           <FormLabel>아이디</FormLabel>
                           <div className="flex gap-2">
                             <FormControl>
-                              <Input 
-                                placeholder="영문, 숫자 조합 4-20자" 
-                                {...field} 
+                              <Input
+                                placeholder="영문, 숫자 조합 4-20자"
+                                {...field}
                                 onChange={(e) => {
                                   field.onChange(e);
                                   setIsDuplicateId(false);
@@ -169,7 +169,7 @@ export default function Test() {
                                 className="flex-1"
                               />
                             </FormControl>
-                            <Button 
+                            <Button
                               type="button"
                               variant="outline"
                               onClick={() => checkDuplicateId(field.value)}
@@ -190,18 +190,18 @@ export default function Test() {
                         <FormItem>
                           <FormLabel>비밀번호</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="결과 조회시 사용할 비밀번호" 
-                              {...field} 
+                            <Input
+                              type="password"
+                              placeholder="결과 조회시 사용할 비밀번호"
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full"
                       disabled={!isIdChecked || isDuplicateId || isCheckingId}
                     >
@@ -268,26 +268,42 @@ export default function Test() {
               </h2>
 
               <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                <div className="text-sm grid grid-cols-[1fr,auto,1fr] gap-2 sm:gap-4 items-center">
-                  <div className="text-left text-xs sm:text-sm">{question.options.A}</div>
-                  <div className="grid grid-cols-5 gap-1 sm:gap-2">
+                {/* Options and Buttons - Stacks vertically on very small screens */}
+                <div className="flex flex-col md:grid md:grid-cols-[minmax(120px,1fr),auto,minmax(120px,1fr)] gap-4 items-center">
+                  {/* Option A */}
+                  <div className="text-center md:text-left w-full md:w-auto text-sm">
+                    <p className="min-h-[2.5rem] flex items-center justify-center md:justify-start">
+                      {question.options.A}
+                    </p>
+                  </div>
+
+                  {/* Answer Buttons */}
+                  <div className="grid grid-cols-5 gap-2 w-full md:w-auto">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <Button
                         key={value}
                         variant="secondary"
                         onClick={() => handleAnswer(value)}
-                        className="w-8 h-8 sm:w-10 sm:h-10 p-0 text-sm sm:text-base"
+                        className="w-12 h-12 sm:w-14 sm:h-14 md:w-10 md:h-10 p-0 text-sm sm:text-base"
                       >
                         {value}
                       </Button>
                     ))}
                   </div>
-                  <div className="text-right text-xs sm:text-sm">{question.options.B}</div>
+
+                  {/* Option B */}
+                  <div className="text-center md:text-right w-full md:w-auto text-sm">
+                    <p className="min-h-[2.5rem] flex items-center justify-center md:justify-end">
+                      {question.options.B}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500 grid grid-cols-[1fr,auto,1fr] gap-2 sm:gap-4">
-                  <div className="text-left">매우 그렇다</div>
+
+                {/* Labels */}
+                <div className="text-xs text-gray-500 flex md:grid md:grid-cols-[1fr,auto,1fr] gap-4 justify-between items-center">
+                  <div className="text-center md:text-left">매우 그렇다</div>
                   <div className="text-center">중립</div>
-                  <div className="text-right">매우 그렇다</div>
+                  <div className="text-center md:text-right">매우 그렇다</div>
                 </div>
               </div>
 
