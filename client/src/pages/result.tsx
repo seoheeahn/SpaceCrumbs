@@ -8,7 +8,6 @@ import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
 
-
 function getFacetWeights(value: number): { A: number; B: number } {
   if (value === 1) return { A: 100, B: 0 };
   if (value === 2) return { A: 75, B: 25 };
@@ -55,10 +54,17 @@ export default function Result() {
 
   const dimensionScores = calculateDimensionScores(result.answers);
   const dimensionColors = {
-    "외향성/내향성": "hsl(200, 70%, 65%)",
-    "감각/직관": "hsl(150, 70%, 65%)",
-    "사고/감정": "hsl(300, 70%, 65%)",
-    "판단/인식": "hsl(50, 70%, 65%)"
+    "외향성/내향성": "hsl(200, 80%, 75%)",
+    "감각/직관": "hsl(150, 70%, 75%)",
+    "사고/감정": "hsl(260, 70%, 80%)",
+    "판단/인식": "hsl(30, 70%, 75%)"
+  };
+
+  const facetColors = {
+    "외향성/내향성": ["hsl(200, 80%, 65%)", "hsl(200, 80%, 85%)"],
+    "감각/직관": ["hsl(150, 70%, 65%)", "hsl(150, 70%, 85%)"],
+    "사고/감정": ["hsl(260, 70%, 70%)", "hsl(260, 70%, 90%)"],
+    "판단/인식": ["hsl(30, 70%, 65%)", "hsl(30, 70%, 85%)"]
   };
 
   const dimensionChartData = [
@@ -170,6 +176,7 @@ export default function Result() {
                     <div className="space-y-1">
                       {group.facets.map((facet) => {
                         const [typeA, typeB] = facet.facet.split("-");
+                        const [colorA, colorB] = facetColors[group.title];
                         return (
                           <div key={facet.id} className="bg-gray-50 px-2 py-1 rounded">
                             <div className="flex items-center gap-2">
@@ -179,14 +186,14 @@ export default function Result() {
                                   className="absolute inset-y-0 left-0 transition-all duration-500" 
                                   style={{ 
                                     width: `${facet.weights.A}%`,
-                                    backgroundColor: dimensionColors[group.title]
+                                    backgroundColor: colorA
                                   }}
                                 />
                                 <div 
                                   className="absolute inset-y-0 right-0 transition-all duration-500" 
                                   style={{ 
                                     width: `${facet.weights.B}%`,
-                                    backgroundColor: `${dimensionColors[group.title]}80`
+                                    backgroundColor: colorB
                                   }}
                                 />
                               </div>
