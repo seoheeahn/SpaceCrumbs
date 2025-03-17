@@ -9,6 +9,15 @@ import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
+function getFacetWeights(value: number): { A: number; B: number } {
+  if (value === 1) return { A: 100, B: 0 };
+  if (value === 2) return { A: 75, B: 25 };
+  if (value === 3) return { A: 50, B: 50 };
+  if (value === 4) return { A: 25, B: 75 };
+  if (value === 5) return { A: 0, B: 100 };
+  return { A: 50, B: 50 };
+}
+
 type FacetGroup = {
   category: string;
   title: string;
@@ -16,7 +25,7 @@ type FacetGroup = {
     id: number;
     facet: string;
     selected: "A" | "B" | "neutral";
-    text: string;
+    weights: { A: number; B: number };
   }[];
 };
 
@@ -98,12 +107,12 @@ export default function Result() {
         const selected = answer
           ? (answer.value <= 2 ? "A" : answer.value >= 4 ? "B" : "neutral")
           : "neutral";
-        const [facetA, facetB] = q.facet.split("-");
+        const weights = answer ? getFacetWeights(answer.value) : { A: 50, B: 50 };
         return {
           id: q.id,
           facet: q.facet,
           selected,
-          text: q.text.ko
+          weights
         };
       })
     };
@@ -178,29 +187,32 @@ export default function Result() {
                 ))}
               </div>
 
-              <div className="mb-8 space-y-6">
+              <div className="space-y-3">
                 {facetGroups.map((group, index) => (
-                  <div key={index} className="bg-white p-6 rounded-xl shadow-lg">
-                    <h2 className="text-xl font-semibold mb-4 text-center text-primary">
-                      {group.title} ({group.category})
+                  <div key={index} className="bg-white p-4 rounded-xl shadow-lg">
+                    <h2 className="text-lg font-semibold mb-3 text-center text-primary">
+                      {group.title}
                     </h2>
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {group.facets.map((facet) => {
                         const [typeA, typeB] = facet.facet.split("-");
                         return (
-                          <div key={facet.id} className="bg-gray-50 p-3 rounded-lg">
-                            <div className="grid grid-cols-2 gap-4">
+                          <div key={facet.id} className="bg-gray-50 p-2 rounded-lg">
+                            <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center">
                               <div className={`p-2 rounded text-center ${
                                 facet.selected === "A" ? "bg-primary/10 font-bold text-primary" : 
                                 facet.selected === "neutral" ? "bg-primary/5 text-primary" : "text-gray-500"
                               }`}>
                                 {typeA}
+                                <div className="text-xs mt-1">{facet.weights.A}%</div>
                               </div>
+                              <div className="text-xs text-gray-400">vs</div>
                               <div className={`p-2 rounded text-center ${
                                 facet.selected === "B" ? "bg-primary/10 font-bold text-primary" : 
                                 facet.selected === "neutral" ? "bg-primary/5 text-primary" : "text-gray-500"
                               }`}>
                                 {typeB}
+                                <div className="text-xs mt-1">{facet.weights.B}%</div>
                               </div>
                             </div>
                           </div>
@@ -211,21 +223,23 @@ export default function Result() {
                 ))}
               </div>
 
-              <Button
-                onClick={handleShare}
-                className="w-full mb-4"
-                variant="outline"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                결과 공유하기
-              </Button>
+              <div className="mt-8">
+                <Button
+                  onClick={handleShare}
+                  className="w-full mb-4"
+                  variant="outline"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  결과 공유하기
+                </Button>
 
-              <Button
-                onClick={() => setLocation('/')}
-                className="w-full"
-              >
-                테스트 다시하기
-              </Button>
+                <Button
+                  onClick={() => setLocation('/')}
+                  className="w-full"
+                >
+                  테스트 다시하기
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
