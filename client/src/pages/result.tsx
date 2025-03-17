@@ -7,7 +7,7 @@ import { Share2 } from "lucide-react";
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+
 
 function getFacetWeights(value: number): { A: number; B: number } {
   if (value === 1) return { A: 100, B: 0 };
@@ -54,30 +54,37 @@ export default function Result() {
   }
 
   const dimensionScores = calculateDimensionScores(result.answers);
+  const dimensionColors = {
+    "외향성/내향성": "hsl(200, 70%, 65%)",
+    "감각/직관": "hsl(150, 70%, 65%)",
+    "사고/감정": "hsl(300, 70%, 65%)",
+    "판단/인식": "hsl(50, 70%, 65%)"
+  };
+
   const dimensionChartData = [
     { 
       dimension: "외향성/내향성",
-      scoreA: dimensionScores.E,
-      scoreB: dimensionScores.I,
-      selected: result.result.includes("I") ? "I" : "E"
+      dominant: result.result.includes("I") ? "내향성" : "외향성",
+      recessive: result.result.includes("I") ? "외향성" : "내향성",
+      color: dimensionColors["외향성/내향성"]
     },
     {
       dimension: "감각/직관",
-      scoreA: dimensionScores.S,
-      scoreB: dimensionScores.N,
-      selected: result.result.includes("N") ? "N" : "S"
+      dominant: result.result.includes("N") ? "직관" : "감각",
+      recessive: result.result.includes("N") ? "감각" : "직관",
+      color: dimensionColors["감각/직관"]
     },
     {
       dimension: "사고/감정",
-      scoreA: dimensionScores.T,
-      scoreB: dimensionScores.F,
-      selected: result.result.includes("F") ? "F" : "T"
+      dominant: result.result.includes("F") ? "감정" : "사고",
+      recessive: result.result.includes("F") ? "사고" : "감정",
+      color: dimensionColors["사고/감정"]
     },
     {
       dimension: "판단/인식",
-      scoreA: dimensionScores.J,
-      scoreB: dimensionScores.P,
-      selected: result.result.includes("P") ? "P" : "J"
+      dominant: result.result.includes("P") ? "인식" : "판단",
+      recessive: result.result.includes("P") ? "판단" : "인식",
+      color: dimensionColors["판단/인식"]
     }
   ];
 
@@ -139,60 +146,48 @@ export default function Result() {
                 {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
               </p>
 
-              <div className="bg-white p-4 rounded-xl shadow-lg mb-8">
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={dimensionChartData}
-                      layout="vertical"
-                      margin={{ top: 5, right: 5, bottom: 5, left: 120 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                      <XAxis type="number" domain={[0, 100]} />
-                      <YAxis dataKey="dimension" type="category" width={120} />
-                      <Bar
-                        dataKey="scoreA"
-                        fill="hsl(200, 70%, 65%)"
-                        stackId="stack"
-                        radius={[4, 0, 0, 4]}
-                      />
-                      <Bar
-                        dataKey="scoreB"
-                        fill="hsl(260, 70%, 65%)"
-                        stackId="stack"
-                        radius={[0, 4, 4, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+              <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <div className="grid gap-4">
+                  {dimensionChartData.map((dimension, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="text-xl" style={{ color: dimension.color }}>
+                        <span className="font-bold text-2xl">{dimension.dominant}</span>
+                        <span className="mx-2 text-gray-400">/</span>
+                        <span className="text-gray-500">{dimension.recessive}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div className="space-y-4">
                 {facetGroups.map((group, index) => (
                   <div key={index} className="bg-white p-4 rounded-xl shadow-lg">
-                    <h2 className="text-lg font-semibold mb-2 text-center text-primary">
+                    <h2 className="text-lg font-semibold mb-2 text-center" 
+                      style={{ color: dimensionColors[group.title] }}>
                       {group.title}
                     </h2>
                     <div className="space-y-1">
                       {group.facets.map((facet) => {
                         const [typeA, typeB] = facet.facet.split("-");
-                        const facetData = [
-                          { value: facet.weights.A, color: "hsl(200, 70%, 65%)" },
-                          { value: facet.weights.B, color: "hsl(260, 70%, 65%)" }
-                        ];
-
                         return (
                           <div key={facet.id} className="bg-gray-50 px-2 py-1 rounded">
                             <div className="flex items-center gap-2">
                               <div className="text-sm text-right w-20 shrink-0">{typeA}</div>
                               <div className="grow h-6 relative bg-gray-100 rounded overflow-hidden">
                                 <div 
-                                  className="absolute inset-y-0 left-0 bg-[hsl(200,70%,65%)]" 
-                                  style={{ width: `${facet.weights.A}%` }}
+                                  className="absolute inset-y-0 left-0 transition-all duration-500" 
+                                  style={{ 
+                                    width: `${facet.weights.A}%`,
+                                    backgroundColor: dimensionColors[group.title]
+                                  }}
                                 />
                                 <div 
-                                  className="absolute inset-y-0 right-0 bg-[hsl(260,70%,65%)]" 
-                                  style={{ width: `${facet.weights.B}%` }}
+                                  className="absolute inset-y-0 right-0 transition-all duration-500" 
+                                  style={{ 
+                                    width: `${facet.weights.B}%`,
+                                    backgroundColor: `${dimensionColors[group.title]}80`
+                                  }}
                                 />
                               </div>
                               <div className="text-sm w-20 shrink-0">{typeB}</div>
