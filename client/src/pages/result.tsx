@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Share2 } from "lucide-react";
+import { Share2, Users, Brain, Heart, Calendar } from "lucide-react";
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
@@ -135,6 +135,17 @@ export default function Result() {
     }
   };
 
+  const mbtiIcons = {
+    E: <Users className="w-6 h-6" />,
+    I: <Users className="w-6 h-6" />,
+    S: <Brain className="w-6 h-6" />,
+    N: <Brain className="w-6 h-6" />,
+    T: <Heart className="w-6 h-6" />,
+    F: <Heart className="w-6 h-6" />,
+    J: <Calendar className="w-6 h-6" />,
+    P: <Calendar className="w-6 h-6" />
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
       <div className="max-w-2xl mx-auto pt-8">
@@ -144,11 +155,22 @@ export default function Result() {
         >
           <Card className="shadow-xl hover:shadow-2xl transition-shadow duration-300">
             <CardContent className="pt-6">
-              <div className="relative mb-6">
-                <h1 className="text-3xl font-bold text-center">
-                  당신의 MBTI는 {result.result}입니다
+              <div className="relative mb-8">
+                <h1 className="text-3xl font-bold text-center mb-4">
+                  당신의 MBTI는
                 </h1>
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 bg-gradient-to-r from-primary/30 via-primary to-primary/30 rounded-full"></div>
+                <div className="flex justify-center gap-4">
+                  {result.result.split("").map((letter, index) => (
+                    <div
+                      key={index}
+                      className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center flex-col"
+                      style={{ color: dimensionColors[Object.keys(dimensionColors)[index]] }}
+                    >
+                      {mbtiIcons[letter as keyof typeof mbtiIcons]}
+                      <span className="text-lg font-bold mt-1">{letter}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <p className="text-lg text-gray-600 mb-8 text-center">
@@ -180,10 +202,17 @@ export default function Result() {
                       {group.facets.map((facet) => {
                         const [typeA, typeB] = facet.facet.split("-");
                         const [colorA, colorB] = facetColors[group.title];
+                        const isADominant = facet.weights.A > facet.weights.B;
+                        const isBDominant = facet.weights.B > facet.weights.A;
+
                         return (
                           <div key={facet.id} className="bg-gray-50 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <div className="flex items-center gap-3">
-                              <div className="text-sm font-medium text-right w-24 shrink-0">{typeA}</div>
+                              <div className={`text-sm font-medium text-right w-24 shrink-0 ${
+                                isADominant ? "text-primary font-bold" : "text-gray-600"
+                              }`}>
+                                {typeA}
+                              </div>
                               <div className="grow h-5 relative bg-gray-200 rounded-full overflow-hidden">
                                 <div 
                                   className="absolute inset-y-0 left-0 transition-all duration-500" 
@@ -200,7 +229,11 @@ export default function Result() {
                                   }}
                                 />
                               </div>
-                              <div className="text-sm font-medium w-24 shrink-0">{typeB}</div>
+                              <div className={`text-sm font-medium w-24 shrink-0 ${
+                                isBDominant ? "text-primary font-bold" : "text-gray-600"
+                              }`}>
+                                {typeB}
+                              </div>
                             </div>
                           </div>
                         );
