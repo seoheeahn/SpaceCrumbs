@@ -8,35 +8,33 @@ import { calculateDimensionScores } from "../client/src/lib/mbti";
 
 // Normalize each axis independently
 function normalizeByAxis(x: number, y: number, z: number): [number, number, number] {
-  const coordinates = [x, y, z];
-  const xValues = [x];
-  const yValues = [y];
-  const zValues = [z];
+  // Calculate raw coordinates (-100 to 100 range)
+  const rawX = x;
+  const rawY = y;
+  const rawZ = z;
 
-  // Function to normalize a single value within its axis range
-  const normalizeValue = (value: number, values: number[]) => {
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    return ((value - min) / (max - min)) * 100;
+  // Function to normalize a single value to 0-100 range
+  const normalizeValue = (value: number) => {
+    return ((value + 100) / 200) * 100;
   };
 
   return [
-    normalizeValue(x, xValues),
-    normalizeValue(y, yValues),
-    normalizeValue(z, zValues)
+    normalizeValue(rawX),
+    normalizeValue(rawY),
+    normalizeValue(rawZ)
   ];
 }
 
 function calculateCoordinates(answers: { questionId: number; value: number }[]) {
   const scores = calculateDimensionScores(answers);
 
-  // Calculate raw coordinates (-100 to 100 range)
-  const rawX = ((scores.E - scores.I) / 100) * 100; // E/I axis
-  const rawY = ((scores.N - scores.S) / 100) * 100; // N/S axis
-  const rawZ = ((scores.F - scores.T) / 100) * 100; // F/T axis
+  // Calculate coordinates (-100 to 100 range)
+  const x = ((scores.E - scores.I) / 100) * 100; // E/I axis
+  const y = ((scores.N - scores.S) / 100) * 100; // N/S axis
+  const z = ((scores.F - scores.T) / 100) * 100; // F/T axis
 
   // Normalize coordinates to 0-100 range
-  return normalizeByAxis(rawX, rawY, rawZ);
+  return normalizeByAxis(x, y, z);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -48,9 +46,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/mbti-results", async (req, res) => {
     try {
       const data = insertMbtiResultSchema.parse(req.body);
+      console.log("Processing MBTI results for answers:", data.answers);
 
       // Calculate normalized 3D coordinates
       const [x, y, z] = calculateCoordinates(data.answers);
+      console.log("Calculated coordinates:", { x, y, z });
+
       const resultWithCoordinates = {
         ...data,
         coordinateX: x,

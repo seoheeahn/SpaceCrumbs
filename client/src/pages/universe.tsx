@@ -17,7 +17,11 @@ function Scene({ coordinates }: { coordinates: [number, number, number] }) {
 
       <mesh position={coordinates}>
         <sphereGeometry args={[2, 32, 32]} />
-        <meshStandardMaterial color="#00ffcc" />
+        <meshStandardMaterial 
+          color="#00ffcc"
+          metalness={0.7}
+          roughness={0.3}
+        />
       </mesh>
     </>
   );
@@ -34,16 +38,12 @@ function ErrorFallback() {
 export default function Universe() {
   const { id } = useParams();
 
-  const { data: result, isLoading, error } = useQuery<MbtiResult & { 
-    coordinateX: number | null;
-    coordinateY: number | null;
-    coordinateZ: number | null;
-  }>({
+  const { data: result, isLoading, error } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
     enabled: !!id
   });
 
-  if (!id || isLoading || error || !result || !result.coordinateX || !result.coordinateY || !result.coordinateZ) {
+  if (!id || isLoading || error || !result) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
         <p className="text-gray-800">
@@ -53,10 +53,21 @@ export default function Universe() {
     );
   }
 
+  // Ensure all coordinates exist and convert to numbers
+  if (typeof result.coordinateX !== 'number' || 
+      typeof result.coordinateY !== 'number' || 
+      typeof result.coordinateZ !== 'number') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
+        <p className="text-gray-800">좌표 데이터를 찾을 수 없습니다.</p>
+      </div>
+    );
+  }
+
   const coordinates: [number, number, number] = [
-    Number(result.coordinateX),
-    Number(result.coordinateY),
-    Number(result.coordinateZ)
+    result.coordinateX,
+    result.coordinateY,
+    result.coordinateZ
   ];
 
   return (
