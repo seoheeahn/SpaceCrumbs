@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars } from "@react-three/drei";
 import { Suspense } from "react";
 
 interface Coordinate {
   id: number;
   userId: string;
-  coordinateX: number;
-  coordinateY: number;
-  coordinateZ: number;
+  coordinateX: number | null;
+  coordinateY: number | null;
+  coordinateZ: number | null;
 }
 
 function Planet({ position }: { position: [number, number, number] }) {
@@ -32,24 +31,16 @@ export default function Universe() {
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
-          <Stars 
-            radius={100} 
-            depth={50} 
-            count={5000} 
-            factor={4} 
-            saturation={0}
-          />
           {coordinates?.map((coord, index) => (
             <Planet
               key={index}
               position={[
-                coord.coordinateX / 5, 
-                coord.coordinateY / 5,
-                coord.coordinateZ / 5
+                Number(coord.coordinateX) / 5, 
+                Number(coord.coordinateY) / 5,
+                Number(coord.coordinateZ) / 5
               ]}
             />
           ))}
-          <OrbitControls />
         </Suspense>
       </Canvas>
     </div>
