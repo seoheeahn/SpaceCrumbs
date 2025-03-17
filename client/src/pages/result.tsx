@@ -3,12 +3,13 @@ import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Share2 } from "lucide-react";
+import { Share2, Download } from "lucide-react";
 import { MdPerson, MdSettings, MdFlashOn, MdFavorite, MdFavoriteBorder, MdStarBorder, MdChecklist } from "react-icons/md";
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import html2canvas from 'html2canvas';
 import { useRef, useState } from 'react';
 
@@ -36,7 +37,9 @@ export default function Result() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const resultRef = useRef<HTMLDivElement>(null);
+  const snsRef = useRef<HTMLDivElement>(null);
   const [previewImage, setPreviewImage] = useState<string>('');
+  const [snsImage, setSnsImage] = useState<string>('');
 
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`]
@@ -102,11 +105,20 @@ export default function Result() {
     };
   });
 
-  const handleShare = async () => {
-    if (resultRef.current) {
-      const canvas = await html2canvas(resultRef.current);
-      const image = canvas.toDataURL('image/png');
-      setPreviewImage(image);
+  const handleShare = async (type: 'sns' | 'full') => {
+    const targetRef = type === 'sns' ? snsRef : resultRef;
+    if (targetRef.current) {
+      const canvas = await html2canvas(targetRef.current, {
+        scale: 2,
+        width: type === 'sns' ? 1080 : 800,
+        height: type === 'sns' ? 1080 : targetRef.current.scrollHeight,
+      });
+      const image = canvas.toDataURL('image/png', 1.0);
+      if (type === 'sns') {
+        setSnsImage(image);
+      } else {
+        setPreviewImage(image);
+      }
     }
   };
 
@@ -123,6 +135,31 @@ export default function Result() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
+      {/* SNS 공유용 숨겨진 컴포넌트 */}
+      <div className="hidden">
+        <div ref={snsRef} className="w-[1080px] h-[1080px] bg-white p-12 flex flex-col items-center justify-center">
+          <h1 className="text-4xl font-bold mb-8">MBTI 성격 유형 결과</h1>
+          <div className="flex gap-8 mb-8">
+            {result.result.split("").map((letter, index) => (
+              <div
+                key={index}
+                className="w-40 h-40 rounded-3xl flex items-center justify-center flex-col"
+                style={{
+                  backgroundColor: `${dimensionColors[Object.keys(dimensionColors)[index]]}40`,
+                  color: dimensionColors[Object.keys(dimensionColors)[index]]
+                }}
+              >
+                {mbtiIcons[letter as keyof typeof mbtiIcons]}
+                <span className="text-5xl font-bold mt-4">{letter}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-2xl text-gray-700 max-w-2xl text-center">
+            {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
+          </p>
+        </div>
+      </div>
+
       <div className="max-w-2xl mx-auto pt-8" ref={resultRef}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -233,7 +270,10 @@ export default function Result() {
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
-                      onClick={handleShare}
+                      onClick={() => {
+                        handleShare('sns');
+                        handleShare('full');
+                      }}
                       className="w-full bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary/80 transition-all duration-300"
                       variant="outline"
                     >
@@ -241,40 +281,72 @@ export default function Result() {
                       결과 공유하기
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold mb-4">MBTI 결과 공유</h3>
-                      {previewImage && (
-                        <div className="rounded-lg overflow-hidden shadow-lg">
-                          <img src={previewImage} alt="MBTI Result" className="w-full" />
-                        </div>
-                      )}
-                      <div className="flex gap-4 mt-4">
-                        <Button
-                          onClick={() => {
-                            const link = document.createElement('a');
-                            link.download = 'mbti-result.png';
-                            link.href = previewImage;
-                            link.click();
-                          }}
-                          className="flex-1"
-                        >
-                          이미지 저장
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            navigator.share({
-                              title: "My MBTI Result",
-                              text: `My MBTI type is ${result?.result}`,
-                              url: window.location.href
-                            }).catch(console.error);
-                          }}
-                          className="flex-1"
-                        >
-                          링크 공유
-                        </Button>
-                      </div>
-                    </div>
+                  <DialogContent className="max-w-3xl">
+                    <DialogTitle>MBTI 결과 공유</DialogTitle>
+                    <DialogDescription>
+                      원하시는 형식을 선택하여 저장하거나 공유하세요
+                    </DialogDescription>
+                    <Tabs defaultValue="sns" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="sns">SNS 공유용</TabsTrigger>
+                        <TabsTrigger value="full">상세 리포트</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="sns">
+                        {snsImage && (
+                          <div className="rounded-lg overflow-hidden shadow-lg">
+                            <img src={snsImage} alt="MBTI Result for SNS" className="w-full" />
+                            <div className="flex gap-4 mt-4">
+                              <Button
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.download = 'mbti-result-sns.png';
+                                  link.href = snsImage;
+                                  link.click();
+                                }}
+                                className="flex-1"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                이미지 저장
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  navigator.share({
+                                    title: "My MBTI Result",
+                                    text: `My MBTI type is ${result?.result}`,
+                                    files: [new File([snsImage], 'mbti-result.png', { type: 'image/png' })]
+                                  }).catch(console.error);
+                                }}
+                                className="flex-1"
+                              >
+                                <Share2 className="w-4 h-4 mr-2" />
+                                공유하기
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </TabsContent>
+                      <TabsContent value="full">
+                        {previewImage && (
+                          <div className="rounded-lg overflow-hidden shadow-lg">
+                            <img src={previewImage} alt="MBTI Full Report" className="w-full" />
+                            <div className="flex gap-4 mt-4">
+                              <Button
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.download = 'mbti-result-full.png';
+                                  link.href = previewImage;
+                                  link.click();
+                                }}
+                                className="flex-1"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                이미지 저장
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </TabsContent>
+                    </Tabs>
                   </DialogContent>
                 </Dialog>
                 <Button
