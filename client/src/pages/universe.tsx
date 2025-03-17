@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
-import { dimensionColors, calculateDimensionScores } from "@/lib/mbti";
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -11,14 +10,16 @@ interface DataPoint {
   x: number;
   y: number;
   z: number;
-  color: string;
 }
 
 export default function Universe() {
   const { id } = useParams();
-  const scale = 0.2;
 
-  const { data: result, isLoading, error } = useQuery<MbtiResult>({
+  const { data: result, isLoading, error } = useQuery<MbtiResult & { 
+    coordinateX: number | null;
+    coordinateY: number | null;
+    coordinateZ: number | null;
+  }>({
     queryKey: [`/api/mbti-results/${id}`],
     enabled: !!id
   });
@@ -39,7 +40,7 @@ export default function Universe() {
     );
   }
 
-  if (error || !result) {
+  if (error || !result || !result.coordinateX || !result.coordinateY || !result.coordinateZ) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
         <p className="text-white">데이터를 불러올 수 없습니다.</p>
@@ -47,53 +48,21 @@ export default function Universe() {
     );
   }
 
-  const scores = calculateDimensionScores(result.answers);
+  // Create data point for the scatter plot using actual coordinates
+  const data: DataPoint[] = [{
+    name: result.result,
+    x: result.coordinateX,
+    y: result.coordinateY,
+    z: result.coordinateZ
+  }];
 
-  // Create data points for the scatter plot
-  const data: DataPoint[] = [
-    {
-      name: 'E',
-      x: scores.E * scale,
-      y: 0,
-      z: 0,
-      color: dimensionColors["E-I"]
-    },
-    {
-      name: 'I',
-      x: -scores.I * scale,
-      y: 0,
-      z: 0,
-      color: dimensionColors["E-I"]
-    },
-    {
-      name: 'S',
-      x: 0,
-      y: -scores.S * scale,
-      z: 0,
-      color: dimensionColors["S-N"]
-    },
-    {
-      name: 'N',
-      x: 0,
-      y: scores.N * scale,
-      z: 0,
-      color: dimensionColors["S-N"]
-    },
-    {
-      name: 'T',
-      x: 0,
-      y: 0,
-      z: -scores.T * scale,
-      color: dimensionColors["T-F"]
-    },
-    {
-      name: 'F',
-      x: 0,
-      y: 0,
-      z: scores.F * scale,
-      color: dimensionColors["T-F"]
-    }
-  ];
+  // Calculate domain based on coordinates
+  const maxValue = Math.max(
+    Math.abs(result.coordinateX),
+    Math.abs(result.coordinateY),
+    Math.abs(result.coordinateZ)
+  );
+  const domain = [-maxValue, maxValue];
 
   return (
     <motion.div 
@@ -105,6 +74,13 @@ export default function Universe() {
       <Card className="w-full max-w-4xl mx-auto mt-8">
         <CardContent className="p-6">
           <h1 className="text-2xl font-bold text-center mb-6">우주 좌표계에서 보기</h1>
+          <p className="text-center mb-8 text-gray-600">
+            당신의 MBTI 유형({result.result})의 우주 좌표:
+            <br />
+            X: {result.coordinateX.toFixed(2)}, 
+            Y: {result.coordinateY.toFixed(2)}, 
+            Z: {result.coordinateZ.toFixed(2)}
+          </p>
           <div className="w-full h-[600px]">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart
@@ -119,23 +95,24 @@ export default function Universe() {
                 <XAxis 
                   type="number" 
                   dataKey="x" 
-                  name="E-I" 
-                  domain={[-1, 1]}
-                  label={{ value: 'E-I', position: 'bottom' }}
+                  name="X" 
+                  domain={domain}
+                  label={{ value: 'X축 (E-I)', position: 'bottom' }}
                 />
                 <YAxis 
                   type="number" 
                   dataKey="y" 
-                  name="S-N"
-                  domain={[-1, 1]}
-                  label={{ value: 'S-N', angle: -90, position: 'left' }}
+                  name="Y"
+                  domain={domain}
+                  label={{ value: 'Y축 (N-S)', angle: -90, position: 'left' }}
                 />
                 <ZAxis 
                   type="number" 
                   dataKey="z" 
-                  name="T-F"
-                  domain={[-1, 1]}
+                  name="Z"
+                  domain={domain}
                   range={[50, 400]}
+                  label={{ value: 'Z축 (F-T)', position: 'insideRight' }}
                 />
                 <Tooltip 
                   cursor={{ strokeDasharray: '3 3' }}
@@ -143,25 +120,23 @@ export default function Universe() {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload as DataPoint;
                       return (
-                        <div className="bg-white p-2 rounded shadow">
-                          <p className="font-bold">{data.name}</p>
-                          <p>X: {data.x.toFixed(2)}</p>
-                          <p>Y: {data.y.toFixed(2)}</p>
-                          <p>Z: {data.z.toFixed(2)}</p>
+                        <div className="bg-white p-3 rounded-lg shadow-lg border">
+                          <p className="font-bold text-lg mb-2">{data.name}</p>
+                          <p className="text-sm">X (E-I): {data.x.toFixed(2)}</p>
+                          <p className="text-sm">Y (N-S): {data.y.toFixed(2)}</p>
+                          <p className="text-sm">Z (F-T): {data.z.toFixed(2)}</p>
                         </div>
                       );
                     }
                     return null;
                   }}
                 />
-                {data.map((point, index) => (
-                  <Scatter
-                    key={index}
-                    name={point.name}
-                    data={[point]}
-                    fill={point.color}
-                  />
-                ))}
+                <Scatter
+                  name={result.result}
+                  data={data}
+                  fill="#8884d8"
+                  shape="star"
+                />
               </ScatterChart>
             </ResponsiveContainer>
           </div>
