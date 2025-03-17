@@ -144,22 +144,12 @@ export default function Result() {
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-center gap-4 text-lg text-gray-600">
-                  {Object.keys(dimensionColors).map((dimension, index) => (
-                    <span 
-                      key={index}
-                      className="font-medium"
-                      style={{ color: dimensionColors[dimension] }}
-                    >
-                      {dimension}
-                    </span>
-                  ))}
-                </div>
-              </div>
 
-              <p className="text-lg text-gray-600 mb-8 text-center">
-                {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
-              </p>
+                <p className="text-lg text-gray-600 mb-8 text-center">
+                  {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
+                </p>
+
+              </div>
 
               <div className="space-y-4">
                 {facetGroups.map((group, index) => (
