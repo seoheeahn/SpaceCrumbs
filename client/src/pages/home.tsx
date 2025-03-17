@@ -35,6 +35,8 @@ export default function Home() {
       const response = await apiRequest("POST", "/api/mbti-results/login", data);
       const result = await response.json();
       if (result.id) {
+        form.reset();
+        setIsDialogOpen(false); // Close dialog only on success
         setLocation(`/result/${result.id}`);
       } else {
         setShowErrorDialog(true);
