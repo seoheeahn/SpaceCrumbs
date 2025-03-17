@@ -20,8 +20,7 @@ export default function Universe() {
     coordinateY: number | null;
     coordinateZ: number | null;
   }>({
-    queryKey: [`/api/mbti-results/${id}`],
-    enabled: !!id
+    queryKey: [`/api/mbti-results/${id}`]
   });
 
   if (!id) {
@@ -40,7 +39,7 @@ export default function Universe() {
     );
   }
 
-  if (error || !result || !result.coordinateX || !result.coordinateY || !result.coordinateZ) {
+  if (error || !result) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
         <p className="text-white">데이터를 불러올 수 없습니다.</p>
@@ -48,20 +47,21 @@ export default function Universe() {
     );
   }
 
-  // Create data point for the scatter plot using actual coordinates
+  // Ensure coordinates are numbers and handle null/undefined values
+  const x = result.coordinateX ? Number(result.coordinateX) : 0;
+  const y = result.coordinateY ? Number(result.coordinateY) : 0;
+  const z = result.coordinateZ ? Number(result.coordinateZ) : 0;
+
+  // Create data point for the scatter plot
   const data: DataPoint[] = [{
     name: result.result,
-    x: result.coordinateX,
-    y: result.coordinateY,
-    z: result.coordinateZ
+    x,
+    y,
+    z
   }];
 
   // Calculate domain based on coordinates
-  const maxValue = Math.max(
-    Math.abs(result.coordinateX),
-    Math.abs(result.coordinateY),
-    Math.abs(result.coordinateZ)
-  );
+  const maxValue = Math.max(Math.abs(x), Math.abs(y), Math.abs(z));
   const domain = [-maxValue, maxValue];
 
   return (
@@ -77,9 +77,9 @@ export default function Universe() {
           <p className="text-center mb-8 text-gray-600">
             당신의 MBTI 유형({result.result})의 우주 좌표:
             <br />
-            X: {result.coordinateX.toFixed(2)}, 
-            Y: {result.coordinateY.toFixed(2)}, 
-            Z: {result.coordinateZ.toFixed(2)}
+            X: {x.toFixed(2)}, 
+            Y: {y.toFixed(2)}, 
+            Z: {z.toFixed(2)}
           </p>
           <div className="w-full h-[600px]">
             <ResponsiveContainer width="100%" height="100%">
