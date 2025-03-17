@@ -156,6 +156,16 @@ export default function Result() {
           <h1 className="text-3xl font-bold text-center mb-6">
             당신의 우주좌표는
           </h1>
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-3">{result.result}</h2>
+            <p className="text-lg text-primary font-semibold">우주좌표값:</p>
+            <p className="text-gray-600 text-xl mt-2">
+              X: {result.coordinateX !== null ? Number(result.coordinateX).toFixed(2) : '0.00'} |
+              Y: {result.coordinateY !== null ? Number(result.coordinateY).toFixed(2) : '0.00'} |
+              Z: {result.coordinateZ !== null ? Number(result.coordinateZ).toFixed(2) : '0.00'}
+            </p>
+          </div>
+
           <div className="flex justify-center gap-8 mb-8">
             {result.result.split("").map((letter, index) => {
               const dimension = Object.keys(dimensionColors)[index] as DimensionKey;
@@ -177,15 +187,6 @@ export default function Result() {
                 </div>
               );
             })}
-          </div>
-
-          <div className="text-center mb-6">
-            <p className="text-lg text-primary font-semibold">우주좌표값:</p>
-            <p className="text-gray-600">
-              X: {result.coordinateX !== null ? Number(result.coordinateX).toFixed(2) : '0.00'} | 
-              Y: {result.coordinateY !== null ? Number(result.coordinateY).toFixed(2) : '0.00'} | 
-              Z: {result.coordinateZ !== null ? Number(result.coordinateZ).toFixed(2) : '0.00'}
-            </p>
           </div>
 
           {result.analysis && (() => {
