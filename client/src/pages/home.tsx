@@ -8,18 +8,19 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { loginSchema, type LoginInput } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 
 export default function Home() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [shouldRefresh, setShouldRefresh] = useState(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -29,6 +30,14 @@ export default function Home() {
     },
   });
 
+  // Handle auto-refresh after error dialog closes
+  useEffect(() => {
+    if (!showErrorDialog && shouldRefresh) {
+      setShouldRefresh(false);
+      window.location.reload();
+    }
+  }, [showErrorDialog, shouldRefresh]);
+
   const onSubmit = async (data: LoginInput) => {
     try {
       setIsLoading(true);
@@ -36,12 +45,14 @@ export default function Home() {
       const result = await response.json();
       if (result.id) {
         form.reset();
-        setIsDialogOpen(false); // Close dialog only on success
+        setIsDialogOpen(false);
         setLocation(`/result/${result.id}`);
       } else {
+        setShouldRefresh(true);
         setShowErrorDialog(true);
       }
     } catch (error) {
+      setShouldRefresh(true);
       setShowErrorDialog(true);
     } finally {
       setIsLoading(false);
