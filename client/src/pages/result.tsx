@@ -4,10 +4,13 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
-import { MdPerson, MdSettings, MdFlashOn, MdFavorite, MdFavoriteBorder, MdCloud } from "react-icons/md";
+import { MdPerson, MdSettings, MdFlashOn, MdFavorite, MdFavoriteBorder, MdStarBorder, MdChecklist } from "react-icons/md";
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import html2canvas from 'html2canvas';
+import { useRef, useState } from 'react';
 
 function getFacetWeights(value: number): { A: number; B: number } {
   if (value === 1) return { A: 100, B: 0 };
@@ -32,6 +35,8 @@ type FacetGroup = {
 export default function Result() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
+  const resultRef = useRef<HTMLDivElement>(null);
+  const [previewImage, setPreviewImage] = useState<string>('');
 
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`]
@@ -55,17 +60,17 @@ export default function Result() {
 
   const dimensionScores = calculateDimensionScores(result.answers);
   const dimensionColors = {
-    "외향성/내향성": "hsl(36, 70%, 80%)",  // 크림색
-    "감각/직관": "hsl(12, 70%, 75%)",      // 연어색
-    "사고/감정": "hsl(160, 70%, 75%)",     // 민트색
-    "판단/인식": "hsl(45, 70%, 65%)"       // 황금빛 갈색
+    "외향성/내향성": "hsl(220, 70%, 65%)",  // 블루계열
+    "감각/직관": "hsl(12, 75%, 65%)",      // 진한 연어색
+    "사고/감정": "hsl(160, 75%, 65%)",     // 진한 민트색
+    "판단/인식": "hsl(45, 75%, 60%)"       // 진한 황금색
   };
 
   const facetColors = {
-    "외향성/내향성": ["hsl(36, 70%, 60%)", "hsl(36, 60%, 90%)"],
-    "감각/직관": ["hsl(12, 70%, 60%)", "hsl(12, 60%, 90%)"],
-    "사고/감정": ["hsl(160, 70%, 60%)", "hsl(160, 60%, 90%)"],
-    "판단/인식": ["hsl(45, 70%, 55%)", "hsl(45, 60%, 85%)"]
+    "외향성/내향성": ["hsl(220, 70%, 60%)", "hsl(220, 60%, 85%)"],
+    "감각/직관": ["hsl(12, 75%, 60%)", "hsl(12, 65%, 85%)"],
+    "사고/감정": ["hsl(160, 75%, 60%)", "hsl(160, 65%, 85%)"],
+    "판단/인식": ["hsl(45, 75%, 55%)", "hsl(45, 65%, 80%)"]
   };
 
   // 질문들을 MBTI 차원별로 그룹화
@@ -98,14 +103,10 @@ export default function Result() {
   });
 
   const handleShare = async () => {
-    try {
-      await navigator.share({
-        title: "My MBTI Result",
-        text: `My MBTI type is ${result.result}`,
-        url: window.location.href
-      });
-    } catch (err) {
-      console.error("Share failed:", err);
+    if (resultRef.current) {
+      const canvas = await html2canvas(resultRef.current);
+      const image = canvas.toDataURL('image/png');
+      setPreviewImage(image);
     }
   };
 
@@ -116,13 +117,13 @@ export default function Result() {
     N: <MdFlashOn className="w-12 h-12 drop-shadow-lg" />,
     T: <MdFavoriteBorder className="w-12 h-12 drop-shadow-lg" />,
     F: <MdFavorite className="w-12 h-12 drop-shadow-lg" />,
-    J: <MdCloud className="w-12 h-12 drop-shadow-lg" />,
-    P: <MdCloud className="w-12 h-12 rotate-180 drop-shadow-lg" />
+    J: <MdChecklist className="w-12 h-12 drop-shadow-lg" />,
+    P: <MdStarBorder className="w-12 h-12 drop-shadow-lg" />
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-      <div className="max-w-2xl mx-auto pt-8">
+      <div className="max-w-2xl mx-auto pt-8" ref={resultRef}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -148,7 +149,7 @@ export default function Result() {
                       <div
                         key={index}
                         className="w-28 h-28 rounded-2xl flex items-center justify-center flex-col"
-                        style={{ 
+                        style={{
                           backgroundColor: `${dimensionColors[Object.keys(dimensionColors)[index]]}40`,
                           color: dimensionColors[Object.keys(dimensionColors)[index]]
                         }}
@@ -169,7 +170,7 @@ export default function Result() {
               <div className="space-y-4">
                 {facetGroups.map((group, index) => (
                   <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                    <h2 className="text-lg font-semibold mb-3 text-center" 
+                    <h2 className="text-lg font-semibold mb-3 text-center"
                       style={{ color: dimensionColors[group.title] }}>
                       {group.title}
                     </h2>
@@ -184,13 +185,13 @@ export default function Result() {
                           <div key={facet.id} className="bg-gray-50 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
                             <div className="flex items-center gap-3">
                               <div className={`text-sm font-medium text-right w-24 shrink-0 transition-all ${
-                                isADominant 
+                                isADominant
                                   ? `font-bold`
                                   : "text-gray-600"
                               }`}
-                              style={{ 
-                                color: isADominant ? dimensionColors[group.title] : undefined
-                              }}>
+                                style={{
+                                  color: isADominant ? dimensionColors[group.title] : undefined
+                                }}>
                                 {typeA}
                               </div>
                               <div className="grow h-5 relative bg-gray-200 rounded-full overflow-hidden">
@@ -210,13 +211,13 @@ export default function Result() {
                                 />
                               </div>
                               <div className={`text-sm font-medium w-24 shrink-0 transition-all ${
-                                isBDominant 
+                                isBDominant
                                   ? `font-bold`
                                   : "text-gray-600"
                               }`}
-                              style={{ 
-                                color: isBDominant ? dimensionColors[group.title] : undefined
-                              }}>
+                                style={{
+                                  color: isBDominant ? dimensionColors[group.title] : undefined
+                                }}>
                                 {typeB}
                               </div>
                             </div>
@@ -229,15 +230,53 @@ export default function Result() {
               </div>
 
               <div className="mt-8 space-y-4">
-                <Button
-                  onClick={handleShare}
-                  className="w-full bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary/80 transition-all duration-300"
-                  variant="outline"
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  결과 공유하기
-                </Button>
-
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      onClick={handleShare}
+                      className="w-full bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary/80 transition-all duration-300"
+                      variant="outline"
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      결과 공유하기
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold mb-4">MBTI 결과 공유</h3>
+                      {previewImage && (
+                        <div className="rounded-lg overflow-hidden shadow-lg">
+                          <img src={previewImage} alt="MBTI Result" className="w-full" />
+                        </div>
+                      )}
+                      <div className="flex gap-4 mt-4">
+                        <Button
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.download = 'mbti-result.png';
+                            link.href = previewImage;
+                            link.click();
+                          }}
+                          className="flex-1"
+                        >
+                          이미지 저장
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            navigator.share({
+                              title: "My MBTI Result",
+                              text: `My MBTI type is ${result?.result}`,
+                              url: window.location.href
+                            }).catch(console.error);
+                          }}
+                          className="flex-1"
+                        >
+                          링크 공유
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button
                   onClick={() => setLocation('/')}
                   className="w-full bg-white hover:bg-gray-50 text-primary hover:text-primary/80 transition-colors duration-300"
