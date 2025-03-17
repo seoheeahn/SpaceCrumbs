@@ -1,6 +1,48 @@
 import { questions, type Answer } from "./questions";
 import type { MbtiType } from "@shared/schema";
 
+export function calculateDimensionScores(answers: Answer[]) {
+  const scores = {
+    E: 0, I: 0,
+    S: 0, N: 0,
+    T: 0, F: 0,
+    J: 0, P: 0
+  };
+
+  answers.forEach(answer => {
+    const question = questions.find(q => q.id === answer.questionId);
+    if (!question) return;
+
+    const [dim1, dim2] = question.category.split("/") as [keyof typeof scores, keyof typeof scores];
+    const score = (answer.value - 3) * question.weight;
+
+    if (score > 0) {
+      scores[dim1] += Math.abs(score);
+    } else {
+      scores[dim2] += Math.abs(score);
+    }
+  });
+
+  // Calculate percentages
+  const total = {
+    EI: scores.E + scores.I,
+    SN: scores.S + scores.N,
+    TF: scores.T + scores.F,
+    JP: scores.J + scores.P
+  };
+
+  return {
+    E: (scores.E / total.EI) * 100,
+    I: (scores.I / total.EI) * 100,
+    S: (scores.S / total.SN) * 100,
+    N: (scores.N / total.SN) * 100,
+    T: (scores.T / total.TF) * 100,
+    F: (scores.F / total.TF) * 100,
+    J: (scores.J / total.JP) * 100,
+    P: (scores.P / total.JP) * 100
+  };
+}
+
 export function calculateMbti(answers: Answer[]): MbtiType {
   const scores = {
     E: 0, I: 0,
