@@ -6,21 +6,50 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Suspense } from "react";
+import * as THREE from "three";
+
+// Normalize each axis independently
+function normalizeByAxis(coordinates: [number, number, number][]): [number, number, number][] {
+  // Extract arrays for each axis
+  const xValues = coordinates.map(coord => coord[0]);
+  const yValues = coordinates.map(coord => coord[1]);
+  const zValues = coordinates.map(coord => coord[2]);
+
+  // Function to normalize a single value within its axis range
+  const normalizeValue = (value: number, values: number[]) => {
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    return ((value - min) / (max - min)) * 100;
+  };
+
+  // Normalize each coordinate using axis-specific min/max
+  return coordinates.map(([x, y, z]) => [
+    normalizeValue(x, xValues),
+    normalizeValue(y, yValues),
+    normalizeValue(z, zValues)
+  ]);
+}
 
 function Scene({ coordinates }: { coordinates: [number, number, number] }) {
   // Center the coordinates by subtracting 50
   const [x, y, z] = coordinates.map(coord => coord - 50);
+
+  // Create sphere geometry once
+  const sphereGeometry = new THREE.SphereGeometry(2, 32, 32);
+  const material = new THREE.MeshStandardMaterial({ 
+    color: "#00ffcc",
+    roughness: 0.3,
+    metalness: 0.7
+  });
 
   return (
     <>
       <OrbitControls />
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
+      <color attach="background" args={["#1e1e1e"]} />
 
-      <mesh position={[x, y, z]}>
-        <sphereGeometry args={[2, 32, 32]} />
-        <meshStandardMaterial color="#00ffcc" />
-      </mesh>
+      <mesh position={[x, y, z]} geometry={sphereGeometry} material={material} />
     </>
   );
 }
@@ -55,12 +84,12 @@ export default function Universe() {
     );
   }
 
-  // Get coordinates from database (already normalized 0-100)
-  const coordinates: [number, number, number] = [
+  // Get coordinates and normalize using axis-specific ranges
+  const normalizedCoords = normalizeByAxis([[
     Number(result.coordinateX),
     Number(result.coordinateY),
     Number(result.coordinateZ)
-  ];
+  ]])[0];
 
   return (
     <motion.div 
@@ -75,17 +104,16 @@ export default function Universe() {
           <p className="text-center mb-8 text-gray-600">
             당신의 MBTI 유형({result.result})의 우주 좌표:
             <br />
-            X: {coordinates[0].toFixed(2)}, 
-            Y: {coordinates[1].toFixed(2)}, 
-            Z: {coordinates[2].toFixed(2)}
+            X: {normalizedCoords[0].toFixed(2)}, 
+            Y: {normalizedCoords[1].toFixed(2)}, 
+            Z: {normalizedCoords[2].toFixed(2)}
           </p>
           <div className="w-full h-[600px] bg-gray-900 rounded-lg overflow-hidden">
             <Canvas
               camera={{ position: [50, 50, 150], fov: 50 }}
-              style={{ background: '#1e1e1e' }}
             >
               <Suspense fallback={<ErrorFallback />}>
-                <Scene coordinates={coordinates} />
+                <Scene coordinates={normalizedCoords} />
               </Suspense>
             </Canvas>
           </div>
