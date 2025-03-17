@@ -5,14 +5,14 @@ import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ExternalLink, Sparkles } from "lucide-react";
+import { RefreshCw, ExternalLink, Sparkles, Users, UserPlus } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { adminLoginSchema, type AdminLoginInput, adminCreationSchema, type AdminCreationInput } from "@shared/schema";
+import { adminLoginSchema, type AdminLoginInput, adminCreationSchema, type CreateAdminInput } from "@shared/schema";
 import {
   Table,
   TableBody,
@@ -22,16 +22,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+type AdminView = "results" | "createAdmin";
+
 export default function Admin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentView, setCurrentView] = useState<AdminView>("results");
 
   // Always define hooks at the top level
   const { data: results, isLoading } = useQuery<MbtiResult[]>({
     queryKey: ["/api/admin/mbti-results"],
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated,
   });
 
   const form = useForm<AdminLoginInput>({
@@ -105,7 +108,7 @@ export default function Admin() {
     },
   });
 
-  const createAdminForm = useForm<AdminCreationInput>({
+  const createAdminForm = useForm<CreateAdminInput>({
     resolver: zodResolver(adminCreationSchema),
     defaultValues: {
       username: "",
@@ -114,7 +117,7 @@ export default function Admin() {
   });
 
   const createAdminMutation = useMutation({
-    mutationFn: async (data: AdminCreationInput) => {
+    mutationFn: async (data: CreateAdminInput) => {
       const response = await apiRequest("POST", "/api/admin/create", data);
       return response.json();
     },
@@ -134,16 +137,6 @@ export default function Admin() {
     },
   });
 
-  // Show loading state only when authenticated and loading data
-  if (isAuthenticated && isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>데이터를 불러오는 중...</p>
-      </div>
-    );
-  }
-
-  // Show login form when not authenticated
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
@@ -200,18 +193,21 @@ export default function Admin() {
     );
   }
 
-  // Show admin dashboard when authenticated
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-      <div className="max-w-7xl mx-auto pt-4 sm:pt-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <p>데이터를 불러오는 중...</p>
+        </div>
+      );
+    }
+
+    switch (currentView) {
+      case "results":
+        return (
           <Card>
             <CardContent className="pt-6">
               <h1 className="text-2xl sm:text-3xl font-bold mb-6">MBTI 결과 관리</h1>
-
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -273,55 +269,95 @@ export default function Admin() {
                   </TableBody>
                 </Table>
               </div>
-
-              {/* Admin Creation Form */}
-              <div className="mt-8">
-                <Card>
-                  <CardContent className="pt-6">
-                    <h2 className="text-xl font-semibold mb-4">관리자 계정 생성</h2>
-                    <Form {...createAdminForm}>
-                      <form onSubmit={createAdminForm.handleSubmit((data) => createAdminMutation.mutate(data))} className="space-y-4">
-                        <FormField
-                          control={createAdminForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>아이디</FormLabel>
-                              <FormControl>
-                                <Input placeholder="새 관리자 아이디" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={createAdminForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>비밀번호</FormLabel>
-                              <FormControl>
-                                <Input type="password" placeholder="새 관리자 비밀번호" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="submit"
-                          className="w-full"
-                          disabled={createAdminMutation.isPending}
-                        >
-                          관리자 계정 생성
-                        </Button>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-              </div>
             </CardContent>
           </Card>
-        </motion.div>
+        );
+
+      case "createAdmin":
+        return (
+          <Card>
+            <CardContent className="pt-6">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-6">관리자 계정 생성</h2>
+              <Form {...createAdminForm}>
+                <form onSubmit={createAdminForm.handleSubmit((data) => createAdminMutation.mutate(data))} className="space-y-4">
+                  <FormField
+                    control={createAdminForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>아이디</FormLabel>
+                        <FormControl>
+                          <Input placeholder="새 관리자 아이디" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={createAdminForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>비밀번호</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="새 관리자 비밀번호" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={createAdminMutation.isPending}
+                  >
+                    관리자 계정 생성
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5">
+      <div className="flex h-screen">
+        {/* Sidebar */}
+        <div className="w-64 bg-white shadow-lg">
+          <div className="p-4">
+            <h2 className="text-lg font-semibold text-primary mb-4">관리자 메뉴</h2>
+            <nav className="space-y-2">
+              <Button
+                variant={currentView === "results" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setCurrentView("results")}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                MBTI 결과 관리
+              </Button>
+              <Button
+                variant={currentView === "createAdmin" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setCurrentView("createAdmin")}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                관리자 계정 생성
+              </Button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 p-8 overflow-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {renderContent()}
+          </motion.div>
+        </div>
       </div>
     </div>
   );
