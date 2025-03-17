@@ -30,7 +30,7 @@ function Scene({ coordinates }: { coordinates: Coordinate[] }) {
       {coordinates.map((coord, index) => (
         <Planet
           key={index}
-          position={[coord.coordinates.x, coord.coordinates.y, coord.coordinates.z]}
+          position={[coord.coordinateX || 0, coord.coordinateY || 0, coord.coordinateZ || 0]}
         />
       ))}
       <OrbitControls />
