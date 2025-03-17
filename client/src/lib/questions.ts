@@ -27,10 +27,37 @@ export const questions: Question[] = [
     category: "S/N",
     weight: 2
   },
-  // Add 18 more questions here for all MBTI dimensions
+  {
+    id: 3,
+    text: {
+      ko: "논리적인 분석을 통해 결정을 내리는 것을 선호한다",
+      en: "I prefer making decisions through logical analysis"
+    },
+    category: "T/F",
+    weight: 2
+  },
+  {
+    id: 4,
+    text: {
+      ko: "계획을 세우고 그대로 실행하는 것을 좋아한다",
+      en: "I like to plan things and follow the plan"
+    },
+    category: "J/P",
+    weight: 2
+  },
+  {
+    id: 5,
+    text: {
+      ko: "대화할 때 다른 사람의 감정을 잘 고려한다",
+      en: "I consider others' feelings when conversing"
+    },
+    category: "T/F",
+    weight: 1.5
+  },
+  // More questions can be added here...
 ];
 
 export type Answer = {
   questionId: number;
-  value: number; // 1-5 scale
+  value: number; // 1-5 scale where 1: Strongly Disagree, 5: Strongly Agree
 };

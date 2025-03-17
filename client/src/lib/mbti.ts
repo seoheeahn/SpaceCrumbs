@@ -1,4 +1,4 @@
-import type { Answer } from "./questions";
+import { questions, type Answer } from "./questions";
 import type { MbtiType } from "@shared/schema";
 
 export function calculateMbti(answers: Answer[]): MbtiType {
@@ -13,7 +13,7 @@ export function calculateMbti(answers: Answer[]): MbtiType {
     const question = questions.find(q => q.id === answer.questionId);
     if (!question) return;
 
-    const [dim1, dim2] = question.category.split("/");
+    const [dim1, dim2] = question.category.split("/") as [keyof typeof scores, keyof typeof scores];
     const score = (answer.value - 3) * question.weight;
 
     if (score > 0) {
@@ -33,10 +33,69 @@ export function calculateMbti(answers: Answer[]): MbtiType {
   return type;
 }
 
-export const mbtiDescriptions = {
+export const mbtiDescriptions: Record<MbtiType, {ko: string; en: string}> = {
   ISTJ: {
     ko: "신중하고 조용하며 집중력이 강하고 매사에 철저합니다.",
     en: "Quiet, serious, thorough and dependable."
   },
-  // Add descriptions for all 16 types
+  ISFJ: {
+    ko: "차분하고 친근하며 책임감이 있고 헌신적입니다.",
+    en: "Quiet, friendly, responsible and conscientious."
+  },
+  INFJ: {
+    ko: "통찰력이 있고 헌신적이며 창의적입니다.",
+    en: "Insightful, devoted and creative."
+  },
+  INTJ: {
+    ko: "독창적인 사고와 강한 추진력을 가지고 있습니다.",
+    en: "Original mind and great drive."
+  },
+  ISTP: {
+    ko: "관용적이고 유연하며 실용적인 문제해결에 능합니다.",
+    en: "Tolerant, flexible and practical problem-solver."
+  },
+  ISFP: {
+    ko: "다정하고 친절하며 현재의 삶을 즐깁니다.",
+    en: "Friendly, sensitive and lives in the present."
+  },
+  INFP: {
+    ko: "이상주의적이고 충실하며 적응력이 좋습니다.",
+    en: "Idealistic, loyal and adaptable."
+  },
+  INTP: {
+    ko: "논리적이고 독창적이며 지적 호기심이 많습니다.",
+    en: "Logical, original and curious."
+  },
+  ESTP: {
+    ko: "활동적이고 사교적이며 실용적입니다.",
+    en: "Active, sociable and practical."
+  },
+  ESFP: {
+    ko: "외향적이고 친절하며 수용력이 좋습니다.",
+    en: "Outgoing, friendly and accepting."
+  },
+  ENFP: {
+    ko: "열정적이고 창의적이며 융통성이 있습니다.",
+    en: "Enthusiastic, creative and flexible."
+  },
+  ENTP: {
+    ko: "독창적이고 다재다능하며 도전을 즐깁니다.",
+    en: "Inventive, versatile and enjoys challenges."
+  },
+  ESTJ: {
+    ko: "실제적이고 현실적이며 체계적입니다.",
+    en: "Practical, realistic and systematic."
+  },
+  ESFJ: {
+    ko: "사교적이고 협조적이며 배려심이 많습니다.",
+    en: "Sociable, cooperative and considerate."
+  },
+  ENFJ: {
+    ko: "사려깊고 이해심이 많으며 책임감이 강합니다.",
+    en: "Responsive, responsible and caring."
+  },
+  ENTJ: {
+    ko: "선도적이고 결단력이 있으며 계획적입니다.",
+    en: "Leader, decisive and planned."
+  }
 };
