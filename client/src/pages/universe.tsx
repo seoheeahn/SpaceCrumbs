@@ -4,53 +4,49 @@ import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Grid } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { Suspense } from "react";
+import * as THREE from "three";
 
-function Sphere({ position }: { position: [number, number, number] }) {
+function CoordinateAxes() {
+  return (
+    <group>
+      {/* X axis (red) */}
+      <line>
+        <bufferGeometry attach="geometry" args={[new Float32Array([-50, 0, 0, 50, 0, 0])]} />
+        <lineBasicMaterial attach="material" color="red" />
+      </line>
+      {/* Y axis (green) */}
+      <line>
+        <bufferGeometry attach="geometry" args={[new Float32Array([0, -50, 0, 0, 50, 0])]} />
+        <lineBasicMaterial attach="material" color="green" />
+      </line>
+      {/* Z axis (blue) */}
+      <line>
+        <bufferGeometry attach="geometry" args={[new Float32Array([0, 0, -50, 0, 0, 50])]} />
+        <lineBasicMaterial attach="material" color="blue" />
+      </line>
+    </group>
+  );
+}
+
+function DataPoint({ position }: { position: [number, number, number] }) {
   return (
     <mesh position={position}>
-      <sphereGeometry args={[2, 32, 32]} />
-      <meshStandardMaterial
-        color="#00ffcc"
-        roughness={0.3}
-        metalness={0.7}
-      />
+      <sphereGeometry args={[2, 16, 16]} />
+      <meshStandardMaterial color="#00ffcc" metalness={0.7} roughness={0.3} />
     </mesh>
   );
 }
 
 function Scene({ coordinates }: { coordinates: [number, number, number] }) {
-  // Move coordinates to center (0,0,0)
-  const [x, y, z] = coordinates.map(coord => coord - 50);
-
   return (
     <>
-      <OrbitControls makeDefault />
+      <OrbitControls />
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} intensity={1.5} />
-
-      {/* Main sphere */}
-      <Sphere position={[x, y, z]} />
-
-      {/* Grid */}
-      <Grid
-        position={[0, -50, 0]}
-        args={[100, 100]}
-        cellSize={10}
-        cellThickness={1}
-        cellColor="#444444"
-        sectionSize={20}
-      />
-      <Grid
-        position={[0, 0, -50]}
-        args={[100, 100]}
-        cellSize={10}
-        cellThickness={1}
-        cellColor="#444444"
-        sectionSize={20}
-        rotation={[Math.PI / 2, 0, 0]}
-      />
+      <CoordinateAxes />
+      <DataPoint position={coordinates} />
     </>
   );
 }
@@ -75,30 +71,17 @@ export default function Universe() {
     enabled: !!id
   });
 
-  if (!id) {
+  if (!id || isLoading || error || !result || !result.coordinateX || !result.coordinateY || !result.coordinateZ) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
-        <p className="text-gray-800">잘못된 접근입니다.</p>
+        <p className="text-gray-800">
+          {!id ? "잘못된 접근입니다." : isLoading ? "우주를 생성하는 중..." : "데이터를 불러올 수 없습니다."}
+        </p>
       </div>
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
-        <p className="text-gray-800">우주를 생성하는 중...</p>
-      </div>
-    );
-  }
-
-  if (error || !result || !result.coordinateX || !result.coordinateY || !result.coordinateZ) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
-        <p className="text-gray-800">데이터를 불러올 수 없습니다. (ID: {id})</p>
-      </div>
-    );
-  }
-
+  // Get normalized coordinates from database
   const coordinates: [number, number, number] = [
     Number(result.coordinateX),
     Number(result.coordinateY),
@@ -125,7 +108,7 @@ export default function Universe() {
           <div className="w-full h-[600px] bg-gray-900 rounded-lg overflow-hidden">
             <Canvas
               gl={{ antialias: true }}
-              camera={{ position: [50, 50, 150], fov: 50 }}
+              camera={{ position: [50, 50, 50], fov: 60 }}
               style={{ background: '#1e1e1e' }}
             >
               <Suspense fallback={<ErrorFallback />}>
