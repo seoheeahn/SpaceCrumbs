@@ -9,37 +9,43 @@ export function calculateDimensionScores(answers: Answer[]) {
     J: 0, P: 0
   };
 
+  // 각 차원별로 5개 문항씩 있음
+  const questionsPerTrait = 5;
+
   answers.forEach(answer => {
     const question = questions.find(q => q.id === answer.questionId);
     if (!question) return;
 
-    const [dim1, dim2] = question.category.split("/") as [keyof typeof scores, keyof typeof scores];
-    const score = (answer.value - 3) * question.weight;
+    const [trait1, trait2] = question.category.split("/") as [keyof typeof scores, keyof typeof scores];
 
-    if (score > 0) {
-      scores[dim1] += Math.abs(score);
-    } else {
-      scores[dim2] += Math.abs(score);
+    // answer.value는 1~5 사이의 값
+    // 1,2는 trait1에 해당, 4,5는 trait2에 해당, 3은 중립
+    if (answer.value <= 2) {
+      scores[trait1] += question.weight;
+    } else if (answer.value >= 4) {
+      scores[trait2] += question.weight;
     }
+    // 3(중립)인 경우 양쪽 다 점수를 주지 않음
   });
 
-  // Calculate percentages
-  const total = {
-    EI: scores.E + scores.I,
-    SN: scores.S + scores.N,
-    TF: scores.T + scores.F,
-    JP: scores.J + scores.P
+  // 각 차원별 최대 점수 계산 (weight의 합)
+  const maxScores = {
+    EI: questions.filter(q => q.category === "E/I").reduce((sum, q) => sum + q.weight, 0),
+    SN: questions.filter(q => q.category === "S/N").reduce((sum, q) => sum + q.weight, 0),
+    TF: questions.filter(q => q.category === "T/F").reduce((sum, q) => sum + q.weight, 0),
+    JP: questions.filter(q => q.category === "J/P").reduce((sum, q) => sum + q.weight, 0)
   };
 
+  // 백분율 계산
   return {
-    E: (scores.E / total.EI) * 100,
-    I: (scores.I / total.EI) * 100,
-    S: (scores.S / total.SN) * 100,
-    N: (scores.N / total.SN) * 100,
-    T: (scores.T / total.TF) * 100,
-    F: (scores.F / total.TF) * 100,
-    J: (scores.J / total.JP) * 100,
-    P: (scores.P / total.JP) * 100
+    E: (scores.E / maxScores.EI) * 100,
+    I: (scores.I / maxScores.EI) * 100,
+    S: (scores.S / maxScores.SN) * 100,
+    N: (scores.N / maxScores.SN) * 100,
+    T: (scores.T / maxScores.TF) * 100,
+    F: (scores.F / maxScores.TF) * 100,
+    J: (scores.J / maxScores.JP) * 100,
+    P: (scores.P / maxScores.JP) * 100
   };
 }
 
@@ -55,13 +61,12 @@ export function calculateMbti(answers: Answer[]): MbtiType {
     const question = questions.find(q => q.id === answer.questionId);
     if (!question) return;
 
-    const [dim1, dim2] = question.category.split("/") as [keyof typeof scores, keyof typeof scores];
-    const score = (answer.value - 3) * question.weight;
+    const [trait1, trait2] = question.category.split("/") as [keyof typeof scores, keyof typeof scores];
 
-    if (score > 0) {
-      scores[dim1] += Math.abs(score);
-    } else {
-      scores[dim2] += Math.abs(score);
+    if (answer.value <= 2) {
+      scores[trait1] += question.weight;
+    } else if (answer.value >= 4) {
+      scores[trait2] += question.weight;
     }
   });
 
