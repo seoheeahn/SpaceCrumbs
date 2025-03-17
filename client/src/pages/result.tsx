@@ -9,6 +9,17 @@ import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
+type FacetGroup = {
+  category: string;
+  title: string;
+  facets: {
+    id: number;
+    facet: string;
+    selected: "A" | "B" | "neutral";
+    text: string;
+  }[];
+};
+
 export default function Result() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
@@ -68,6 +79,35 @@ export default function Result() {
       selected: result.result.includes("P") ? "P" : "J"
     }
   ];
+
+  // 질문들을 MBTI 차원별로 그룹화
+  const facetGroups: FacetGroup[] = dimensionChartData.map(dimension => {
+    const categoryQuestions = questions.filter(q => q.category === dimension.dimension);
+    const answers = result.answers;
+
+    return {
+      category: dimension.dimension,
+      title: {
+        "E/I": "외향성/내향성",
+        "S/N": "감각/직관",
+        "T/F": "사고/감정",
+        "J/P": "판단/인식"
+      }[dimension.dimension],
+      facets: categoryQuestions.map(q => {
+        const answer = answers.find(a => a.questionId === q.id);
+        const selected = answer
+          ? (answer.value <= 2 ? "A" : answer.value >= 4 ? "B" : "neutral")
+          : "neutral";
+        const [facetA, facetB] = q.facet.split("-");
+        return {
+          id: q.id,
+          facet: q.facet,
+          selected,
+          text: q.text.ko
+        };
+      })
+    };
+  });
 
   const handleShare = async () => {
     try {
@@ -138,42 +178,37 @@ export default function Result() {
                 ))}
               </div>
 
-              <div className="mb-8 bg-white p-6 rounded-xl shadow-lg">
-                <h2 className="text-xl font-semibold mb-6 text-center text-primary">응답 내역</h2>
-                <div className="space-y-4">
-                  {result.answers.map((answer) => {
-                    const question = questions.find(q => q.id === answer.questionId);
-                    if (!question) return null;
-
-                    const isOptionA = answer.value <= 2;
-                    const isOptionB = answer.value >= 4;
-                    const isNeutral = answer.value === 3;
-                    const [facetA, facetB] = question.facet.split("-");
-
-                    return (
-                      <div key={answer.questionId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <p className="text-lg font-semibold mb-3 text-center text-primary/90">
-                          {question.text.ko}
-                        </p>
-                        <div className="text-sm text-gray-500 mb-3 text-center">
-                          [ {facetA} vs {facetB} ]
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className={`p-3 rounded text-center ${
-                            isOptionA || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"
-                          }`}>
-                            {question.options.A}
+              <div className="mb-8 space-y-6">
+                {facetGroups.map((group, index) => (
+                  <div key={index} className="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 className="text-xl font-semibold mb-4 text-center text-primary">
+                      {group.title} ({group.category})
+                    </h2>
+                    <div className="space-y-3">
+                      {group.facets.map((facet) => {
+                        const [typeA, typeB] = facet.facet.split("-");
+                        return (
+                          <div key={facet.id} className="bg-gray-50 p-3 rounded-lg">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className={`p-2 rounded text-center ${
+                                facet.selected === "A" ? "bg-primary/10 font-bold text-primary" : 
+                                facet.selected === "neutral" ? "bg-primary/5 text-primary" : "text-gray-500"
+                              }`}>
+                                {typeA}
+                              </div>
+                              <div className={`p-2 rounded text-center ${
+                                facet.selected === "B" ? "bg-primary/10 font-bold text-primary" : 
+                                facet.selected === "neutral" ? "bg-primary/5 text-primary" : "text-gray-500"
+                              }`}>
+                                {typeB}
+                              </div>
+                            </div>
                           </div>
-                          <div className={`p-3 rounded text-center ${
-                            isOptionB || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"
-                          }`}>
-                            {question.options.B}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <Button
