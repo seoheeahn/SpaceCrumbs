@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { adminLoginSchema, type AdminLoginInput, adminCreationSchema, type AdminCreationInput } from "@shared/schema"; // Added import for admin creation schema
+import { adminLoginSchema, type AdminLoginInput, adminCreationSchema, type AdminCreationInput } from "@shared/schema";
 import {
   Table,
   TableBody,
@@ -27,6 +27,12 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Always define hooks at the top level
+  const { data: results, isLoading } = useQuery<MbtiResult[]>({
+    queryKey: ["/api/admin/mbti-results"],
+    enabled: isAuthenticated, // Only fetch when authenticated
+  });
 
   const form = useForm<AdminLoginInput>({
     resolver: zodResolver(adminLoginSchema),
@@ -107,7 +113,7 @@ export default function Admin() {
     },
   });
 
-  const createAdminMutation = useMutation({ // Added mutation for admin creation
+  const createAdminMutation = useMutation({
     mutationFn: async (data: AdminCreationInput) => {
       const response = await apiRequest("POST", "/api/admin/create", data);
       return response.json();
@@ -117,6 +123,7 @@ export default function Admin() {
         title: "관리자 계정 생성 성공",
         description: "새로운 관리자 계정이 생성되었습니다.",
       });
+      createAdminForm.reset();
     },
     onError: (error) => {
       toast({
@@ -127,7 +134,16 @@ export default function Admin() {
     },
   });
 
+  // Show loading state only when authenticated and loading data
+  if (isAuthenticated && isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>데이터를 불러오는 중...</p>
+      </div>
+    );
+  }
 
+  // Show login form when not authenticated
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
@@ -184,18 +200,7 @@ export default function Admin() {
     );
   }
 
-  const { data: results, isLoading } = useQuery<MbtiResult[]>({
-    queryKey: ["/api/admin/mbti-results"],
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>데이터를 불러오는 중...</p>
-      </div>
-    );
-  }
-
+  // Show admin dashboard when authenticated
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
       <div className="max-w-7xl mx-auto pt-4 sm:pt-8">
@@ -269,7 +274,7 @@ export default function Admin() {
                 </Table>
               </div>
 
-              {/* Added Admin Creation Form */}
+              {/* Admin Creation Form */}
               <div className="mt-8">
                 <Card>
                   <CardContent className="pt-6">
