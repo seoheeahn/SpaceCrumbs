@@ -27,15 +27,43 @@ function getFacetWeights(value: number): { A: number; B: number } {
   return { A: 50, B: 50 };
 }
 
+type DimensionKey = "외향성/내향성" | "감각/직관" | "사고/감정" | "판단/인식";
+type MbtiLetter = "E" | "I" | "S" | "N" | "T" | "F" | "J" | "P";
+
+const dimensionColors: Record<DimensionKey, string> = {
+  "외향성/내향성": "hsl(220, 70%, 65%)",  // 블루계열
+  "감각/직관": "hsl(12, 75%, 65%)",      // 진한 연어색
+  "사고/감정": "hsl(160, 75%, 65%)",     // 진한 민트색
+  "판단/인식": "hsl(45, 75%, 60%)"       // 진한 황금색
+} as const;
+
+const facetColors: Record<DimensionKey, [string, string]> = {
+  "외향성/내향성": ["hsl(220, 70%, 60%)", "hsl(220, 60%, 85%)"],
+  "감각/직관": ["hsl(12, 75%, 60%)", "hsl(12, 65%, 85%)"],
+  "사고/감정": ["hsl(160, 75%, 60%)", "hsl(160, 65%, 85%)"],
+  "판단/인식": ["hsl(45, 75%, 55%)", "hsl(45, 65%, 80%)"]
+} as const;
+
 type FacetGroup = {
-  category: string;
-  title: string;
+  category: DimensionKey;
+  title: DimensionKey;
   facets: {
     id: number;
     facet: string;
     selected: "A" | "B" | "neutral";
     weights: { A: number; B: number };
   }[];
+};
+
+const mbtiIcons: Record<MbtiLetter, JSX.Element> = {
+  E: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
+  I: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
+  S: <MdSettings className="w-12 h-12 drop-shadow-lg" />,
+  N: <MdFlashOn className="w-12 h-12 drop-shadow-lg" />,
+  T: <MdFavoriteBorder className="w-12 h-12 drop-shadow-lg" />,
+  F: <MdFavorite className="w-12 h-12 drop-shadow-lg" />,
+  J: <MdChecklist className="w-12 h-12 drop-shadow-lg" />,
+  P: <MdStarBorder className="w-12 h-12 drop-shadow-lg" />
 };
 
 export default function Result() {
@@ -67,35 +95,29 @@ export default function Result() {
   }
 
   const dimensionScores = calculateDimensionScores(result.answers as Answer[]);
-  const dimensionColors = {
-    "외향성/내향성": "hsl(220, 70%, 65%)",  // 블루계열
-    "감각/직관": "hsl(12, 75%, 65%)",      // 진한 연어색
-    "사고/감정": "hsl(160, 75%, 65%)",     // 진한 민트색
-    "판단/인식": "hsl(45, 75%, 60%)"       // 진한 황금색
-  } as const;
 
-  const facetColors = {
-    "외향성/내향성": ["hsl(220, 70%, 60%)", "hsl(220, 60%, 85%)"],
-    "감각/직관": ["hsl(12, 75%, 60%)", "hsl(12, 65%, 85%)"],
-    "사고/감정": ["hsl(160, 75%, 60%)", "hsl(160, 65%, 85%)"],
-    "판단/인식": ["hsl(45, 75%, 55%)", "hsl(45, 65%, 80%)"]
-  } as const;
+  // Mapping from dimension key to MBTI letter pairs
+  const dimensionToLetters: Record<DimensionKey, [MbtiLetter, MbtiLetter]> = {
+    "외향성/내향성": ["E", "I"],
+    "감각/직관": ["S", "N"],
+    "사고/감정": ["T", "F"],
+    "판단/인식": ["J", "P"]
+  };
 
-  // 질문들을 MBTI 차원별로 그룹화
-  const facetGroups: FacetGroup[] = Object.keys(dimensionColors).map(dimension => {
+  // Generate facet groups with proper typing
+  const facetGroups: FacetGroup[] = (Object.keys(dimensionColors) as DimensionKey[]).map(dimension => {
     const categoryQuestions = questions.filter(q =>
       q.category === dimension.replace("외향성/내향성", "E/I")
         .replace("감각/직관", "S/N")
         .replace("사고/감정", "T/F")
         .replace("판단/인식", "J/P")
     );
-    const answers = result.answers;
 
     return {
       category: dimension,
       title: dimension,
       facets: categoryQuestions.map(q => {
-        const answer = answers.find(a => a.questionId === q.id);
+        const answer = result.answers.find(a => a.questionId === q.id);
         const selected = answer
           ? (answer.value <= 2 ? "A" : answer.value >= 4 ? "B" : "neutral")
           : "neutral";
@@ -127,17 +149,6 @@ export default function Result() {
     }
   };
 
-  const mbtiIcons = {
-    E: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
-    I: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
-    S: <MdSettings className="w-12 h-12 drop-shadow-lg" />,
-    N: <MdFlashOn className="w-12 h-12 drop-shadow-lg" />,
-    T: <MdFavoriteBorder className="w-12 h-12 drop-shadow-lg" />,
-    F: <MdFavorite className="w-12 h-12 drop-shadow-lg" />,
-    J: <MdChecklist className="w-12 h-12 drop-shadow-lg" />,
-    P: <MdStarBorder className="w-12 h-12 drop-shadow-lg" />
-  };
-
   const ResultContent = ({ showControls = true }) => (
     <Card className="shadow-xl hover:shadow-2xl transition-shadow duration-300">
       <CardContent className="pt-6">
@@ -147,25 +158,20 @@ export default function Result() {
           </h1>
           <div className="flex justify-center gap-8 mb-8">
             {result.result.split("").map((letter, index) => {
-              const dimensionKey = ["E/I", "S/N", "T/F", "J/P"][index];
-              const scores = {
-                "E/I": { E: dimensionScores.E, I: dimensionScores.I },
-                "S/N": { S: dimensionScores.S, N: dimensionScores.N },
-                "T/F": { T: dimensionScores.T, F: dimensionScores.F },
-                "J/P": { J: dimensionScores.J, P: dimensionScores.P }
-              }[dimensionKey];
-              const score = scores[letter as keyof typeof scores];
+              const dimension = Object.keys(dimensionColors)[index] as DimensionKey;
+              const [letterA, letterB] = dimensionToLetters[dimension];
+              const score = dimensionScores[letter as MbtiLetter];
 
               return (
                 <div
                   key={index}
                   className="w-28 h-28 rounded-2xl flex items-center justify-center flex-col"
                   style={{
-                    backgroundColor: `${dimensionColors[Object.keys(dimensionColors)[index]]}40`,
-                    color: dimensionColors[Object.keys(dimensionColors)[index]]
+                    backgroundColor: `${dimensionColors[dimension]}40`,
+                    color: dimensionColors[dimension]
                   }}
                 >
-                  {mbtiIcons[letter as keyof typeof mbtiIcons]}
+                  {mbtiIcons[letter as MbtiLetter]}
                   <span className="text-3xl font-bold mt-2">{letter}</span>
                   <span className="text-sm mt-1">{Math.round(score)}%</span>
                 </div>
@@ -174,7 +180,7 @@ export default function Result() {
           </div>
 
           <p className="text-lg text-gray-600 text-center">
-            {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
+            {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions]?.ko || '설명을 찾을 수 없습니다.'}
           </p>
         </div>
 
@@ -196,9 +202,7 @@ export default function Result() {
                     <div key={facet.id} className="bg-gray-50 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className={`text-sm font-medium text-right w-24 shrink-0 transition-all ${
-                          isADominant
-                            ? `font-bold`
-                            : "text-gray-600"
+                          isADominant ? `font-bold` : "text-gray-600"
                         }`}
                           style={{
                             color: isADominant ? dimensionColors[group.title] : undefined
@@ -222,9 +226,7 @@ export default function Result() {
                           />
                         </div>
                         <div className={`text-sm font-medium w-24 shrink-0 transition-all ${
-                          isBDominant
-                            ? `font-bold`
-                            : "text-gray-600"
+                          isBDominant ? `font-bold` : "text-gray-600"
                         }`}
                           style={{
                             color: isBDominant ? dimensionColors[group.title] : undefined
@@ -344,19 +346,22 @@ export default function Result() {
           <div className="bg-white rounded-3xl shadow-2xl p-12 w-full max-w-4xl">
             <h1 className="text-4xl font-bold mb-8 text-center">MBTI 성격 유형 결과</h1>
             <div className="flex gap-8 mb-8 justify-center">
-              {result.result.split("").map((letter, index) => (
-                <div
-                  key={index}
-                  className="w-40 h-40 rounded-3xl flex items-center justify-center flex-col"
-                  style={{
-                    backgroundColor: `${dimensionColors[Object.keys(dimensionColors)[index]]}40`,
-                    color: dimensionColors[Object.keys(dimensionColors)[index]]
-                  }}
-                >
-                  {mbtiIcons[letter as keyof typeof mbtiIcons]}
-                  <span className="text-5xl font-bold mt-4">{letter}</span>
-                </div>
-              ))}
+              {result.result.split("").map((letter, index) => {
+                const dimension = Object.keys(dimensionColors)[index] as DimensionKey;
+                return (
+                  <div
+                    key={index}
+                    className="w-40 h-40 rounded-3xl flex items-center justify-center flex-col"
+                    style={{
+                      backgroundColor: `${dimensionColors[dimension]}40`,
+                      color: dimensionColors[dimension]
+                    }}
+                  >
+                    {mbtiIcons[letter as MbtiLetter]}
+                    <span className="text-5xl font-bold mt-4">{letter}</span>
+                  </div>
+                );
+              })}
             </div>
             <p className="text-2xl text-gray-700 max-w-2xl text-center mx-auto">
               {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
