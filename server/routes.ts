@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMbtiResultSchema, loginSchema } from "@shared/schema";
+import { insertMbtiResultSchema, loginSchema, adminLoginSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { analyzeMbtiResult } from "./openai";
 import { calculateDimensionScores, calculateMbti } from "../client/src/lib/mbti";
@@ -36,6 +36,9 @@ function calculateCoordinates(answers: { questionId: number; value: number }[]) 
   // Normalize coordinates to 0-100 range
   return normalizeByAxis(x, y, z);
 }
+
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "mbti2024!";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use((req, res, next) => {
@@ -195,6 +198,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error reanalyzing MBTI result:", error);
       res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const data = adminLoginSchema.parse(req.body);
+
+      if (data.username === ADMIN_USERNAME && data.password === ADMIN_PASSWORD) {
+        res.json({ success: true });
+      } else {
+        res.status(401).json({ error: "잘못된 관리자 계정입니다" });
+      }
+    } catch (error) {
+      console.error("Error in admin login:", error);
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: "유효하지 않은 데이터입니다", details: error.errors });
+      } else {
+        res.status(500).json({ error: "서버 오류가 발생했습니다" });
+      }
     }
   });
 

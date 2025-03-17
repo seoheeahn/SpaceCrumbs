@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import html2canvas from 'html2canvas';
 import { useRef, useState } from 'react';
+import {AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel} from "@/components/ui/alert-dialog";
 
 interface Answer {
   questionId: number;
@@ -391,13 +392,27 @@ export default function Result() {
                     </Tabs>
                   </DialogContent>
                 </Dialog>
-                <Button
-                  onClick={() => setLocation(`/universe/${id}`)}
-                  className="w-full bg-gradient-to-r from-purple-500/80 to-purple-600 hover:from-purple-600 hover:to-purple-500/80 text-white transition-colors duration-300"
-                >
-                  <Stars className="w-4 h-4 mr-2" />
-                  우주에서 보기
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      className="w-full bg-gradient-to-r from-purple-500/80 to-purple-600 hover:from-purple-600 hover:to-purple-500/80 text-white transition-colors duration-300"
+                    >
+                      <Stars className="w-4 h-4 mr-2" />
+                      우주에서 보기
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>To be continued...</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        우주 시각화 기능은 곧 제공될 예정입니다. 기대해주세요!
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex justify-end">
+                      <AlertDialogCancel>확인</AlertDialogCancel>
+                    </div>
+                  </AlertDialogContent>
+                </AlertDialog>
                 <Button
                   onClick={() => setLocation('/')}
                   className="w-full bg-white hover:bg-gray-50 text-primary hover:text-primary/80 transition-colors duration-300"

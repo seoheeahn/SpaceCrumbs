@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -5,8 +6,13 @@ import type { MbtiResult } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, ExternalLink, Sparkles } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { adminLoginSchema, type AdminLoginInput } from "@shared/schema";
 import {
   Table,
   TableBody,
@@ -20,9 +26,35 @@ export default function Admin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const { data: results, isLoading } = useQuery<MbtiResult[]>({
-    queryKey: ["/api/admin/mbti-results"],
+  const form = useForm<AdminLoginInput>({
+    resolver: zodResolver(adminLoginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: async (data: AdminLoginInput) => {
+      const response = await apiRequest("POST", "/api/admin/login", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      setIsAuthenticated(true);
+      toast({
+        title: "로그인 성공",
+        description: "관리자 페이지에 접속했습니다.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "로그인 실패",
+        description: "아이디 또는 비밀번호를 확인해주세요.",
+        variant: "destructive",
+      });
+    },
   });
 
   const recalculateMutation = useMutation({
@@ -65,6 +97,66 @@ export default function Admin() {
         variant: "destructive",
       });
     },
+  });
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
+        <div className="max-w-md mx-auto pt-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card>
+              <CardContent className="pt-6">
+                <h2 className="text-xl font-semibold mb-6">관리자 로그인</h2>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>아이디</FormLabel>
+                          <FormControl>
+                            <Input placeholder="관리자 아이디" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>비밀번호</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="관리자 비밀번호" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={loginMutation.isPending}
+                    >
+                      로그인
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  const { data: results, isLoading } = useQuery<MbtiResult[]>({
+    queryKey: ["/api/admin/mbti-results"],
   });
 
   if (isLoading) {
