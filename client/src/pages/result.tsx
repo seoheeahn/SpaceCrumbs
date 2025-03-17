@@ -1,14 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Share2, Download, Home, Stars } from "lucide-react"; // Added Stars import
+import { Share2, Download, Home, Stars } from "lucide-react";
 import { MdPerson, MdSettings, MdFlashOn, MdFavorite, MdFavoriteBorder, MdStarBorder, MdChecklist } from "react-icons/md";
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, DialogHeader } from "@/components/ui/dialog"; // Added DialogHeader import
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, DialogHeader } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import html2canvas from 'html2canvas';
 import { useRef, useState } from 'react';
@@ -31,10 +31,10 @@ type DimensionKey = "외향성/내향성" | "감각/직관" | "사고/감정" | 
 type MbtiLetter = "E" | "I" | "S" | "N" | "T" | "F" | "J" | "P";
 
 const dimensionColors: Record<DimensionKey, string> = {
-  "외향성/내향성": "hsl(220, 70%, 65%)",  // 블루계열
-  "감각/직관": "hsl(12, 75%, 65%)",      // 진한 연어색
-  "사고/감정": "hsl(160, 75%, 65%)",     // 진한 민트색
-  "판단/인식": "hsl(45, 75%, 60%)"       // 진한 황금색
+  "외향성/내향성": "hsl(220, 70%, 65%)",
+  "감각/직관": "hsl(12, 75%, 65%)",
+  "사고/감정": "hsl(160, 75%, 65%)",
+  "판단/인식": "hsl(45, 75%, 60%)"
 } as const;
 
 const facetColors: Record<DimensionKey, [string, string]> = {
@@ -95,12 +95,11 @@ export default function Result() {
     );
   }
 
-  // Try parsing analysis JSON
   let analysisData = null;
   try {
     if (result.analysis) {
       analysisData = JSON.parse(result.analysis);
-      console.log("Parsed analysis data:", analysisData); // Debug log
+      console.log("Parsed analysis data:", analysisData);
     }
   } catch (error) {
     console.error("Error parsing analysis JSON:", error);
@@ -108,7 +107,6 @@ export default function Result() {
 
   const dimensionScores = calculateDimensionScores(result.answers as Answer[]);
 
-  // Mapping from dimension key to MBTI letter pairs
   const dimensionToLetters: Record<DimensionKey, [MbtiLetter, MbtiLetter]> = {
     "외향성/내향성": ["E", "I"],
     "감각/직관": ["S", "N"],
@@ -116,7 +114,6 @@ export default function Result() {
     "판단/인식": ["J", "P"]
   };
 
-  // Generate facet groups with proper typing
   const facetGroups: FacetGroup[] = (Object.keys(dimensionColors) as DimensionKey[]).map(dimension => {
     const categoryQuestions = questions.filter(q =>
       q.category === dimension.replace("외향성/내향성", "E/I")
@@ -161,10 +158,11 @@ export default function Result() {
     }
   };
 
-  const ResultContent = ({ showControls = true }) => (
-    <Card className="shadow-xl hover:shadow-2xl transition-shadow duration-300">
-      <CardContent className="pt-6">
-        <div className="mb-8">
+  function ResultContent({ showControls = true }) {
+    return (
+      <Card className="shadow-xl hover:shadow-2xl transition-shadow duration-300">
+        <CardContent className="pt-6">
+          <div className="mb-8">
             <h1 className="text-2xl sm:text-3xl font-pretendard font-bold text-center mb-4 sm:mb-6">
               당신의 우주좌표는
             </h1>
@@ -269,43 +267,33 @@ export default function Result() {
                   <div className="space-y-1">
                     {group.facets.map((facet) => {
                       const [typeA, typeB] = facet.facet.split("-");
-                      const [colorA, colorB] = facetColors[group.title];
+                      const [colorDark, colorLight] = facetColors[group.title];
                       const isADominant = facet.weights.A > facet.weights.B;
-                      const isBDominant = facet.weights.B > facet.weights.A;
+                      const dominantWeight = isADominant ? facet.weights.A : facet.weights.B;
+                      const dominantColor = isADominant ? colorDark : colorLight;
 
                       return (
                         <div key={facet.id} className="bg-gray-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-gray-100 transition-colors">
                           <div className="flex items-center gap-2 sm:gap-3">
-                            <div className={`text-xs sm:text-sm font-medium text-right w-16 sm:w-24 shrink-0 transition-all ${
-                              isADominant ? `font-bold` : "text-gray-600"
-                            }`}
-                              style={{
-                                color: isADominant ? dimensionColors[group.title] : undefined
-                              }}>
+                            <div className={`text-xs sm:text-sm font-medium text-right w-16 sm:w-24 shrink-0 ${
+                              isADominant ? 'font-bold text-[' + colorDark + ']' : 'text-gray-600'
+                            }`}>
                               {typeA}
                             </div>
                             <div className="grow h-4 sm:h-5 relative bg-gray-200 rounded-full overflow-hidden">
                               <div
-                                className="absolute inset-y-0 left-0 transition-all duration-500"
+                                className={`absolute inset-y-0 transition-all duration-500 ${
+                                  isADominant ? 'left-0' : 'right-0'
+                                }`}
                                 style={{
-                                  width: `${facet.weights.A}%`,
-                                  backgroundColor: dimensionColors[group.title]
-                                }}
-                              />
-                              <div
-                                className="absolute inset-y-0 right-0 transition-all duration-500"
-                                style={{
-                                  width: `${facet.weights.B}%`,
-                                  backgroundColor: `${dimensionColors[group.title]}40`
+                                  width: `${dominantWeight}%`,
+                                  backgroundColor: dominantColor
                                 }}
                               />
                             </div>
-                            <div className={`text-xs sm:text-sm font-medium w-16 sm:w-24 shrink-0 transition-all ${
-                              isBDominant ? `font-bold` : "text-gray-600"
-                            }`}
-                              style={{
-                                color: isBDominant ? dimensionColors[group.title] : undefined
-                              }}>
+                            <div className={`text-xs sm:text-sm font-medium w-16 sm:w-24 shrink-0 ${
+                              !isADominant ? 'font-bold text-[' + colorLight + ']' : 'text-gray-600'
+                            }`}>
                               {typeB}
                             </div>
                           </div>
@@ -317,114 +305,116 @@ export default function Result() {
               ))}
             </div>
 
-            <div className="mt-8 space-y-3 sm:space-y-4">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    onClick={() => {
-                      handleShare('sns');
-                      handleShare('full');
-                    }}
-                    className="w-full bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary/80 transition-all duration-300"
-                    variant="outline"
-                  >
-                    <Share2 className="w-4 h-4 mr-2" />
-                    결과 공유하기
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="w-[90vw] max-w-3xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>MBTI 결과 공유</DialogTitle>
-                    <DialogDescription>
-                      원하시는 형식을 선택하여 저장하거나 공유하세요
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Tabs defaultValue="sns" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="sns">SNS 공유용</TabsTrigger>
-                      <TabsTrigger value="full">상세 리포트</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="sns" className="overflow-y-auto">
-                      {snsImage && (
-                        <div className="rounded-lg overflow-hidden shadow-lg">
-                          <img src={snsImage} alt="MBTI Result for SNS" className="w-full" />
-                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4">
-                            <Button
-                              onClick={() => {
-                                const link = document.createElement('a');
-                                link.download = 'mbti-result-sns.png';
-                                link.href = snsImage;
-                                link.click();
-                              }}
-                              className="flex-1"
-                            >
-                              <Download className="w-4 h-4 mr-2" />
-                              이미지 저장
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                navigator.share({
-                                  title: "My MBTI Result",
-                                  text: `My MBTI type is ${result?.result}`,
-                                  files: [new File([snsImage], 'mbti-result.png', { type: 'image/png' })]
-                                }).catch(console.error);
-                              }}
-                              className="flex-1"
-                            >
-                              <Share2 className="w-4 h-4 mr-2" />
-                              공유하기
-                            </Button>
+            {showControls && (
+              <div className="mt-8 space-y-3 sm:space-y-4">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      onClick={() => {
+                        handleShare('sns');
+                        handleShare('full');
+                      }}
+                      className="w-full bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary/80 transition-all duration-300"
+                      variant="outline"
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      결과 공유하기
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="w-[90vw] max-w-3xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>MBTI 결과 공유</DialogTitle>
+                      <DialogDescription>
+                        원하시는 형식을 선택하여 저장하거나 공유하세요
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Tabs defaultValue="sns" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="sns">SNS 공유용</TabsTrigger>
+                        <TabsTrigger value="full">상세 리포트</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="sns" className="overflow-y-auto">
+                        {snsImage && (
+                          <div className="rounded-lg overflow-hidden shadow-lg">
+                            <img src={snsImage} alt="MBTI Result for SNS" className="w-full" />
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4">
+                              <Button
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.download = 'mbti-result-sns.png';
+                                  link.href = snsImage;
+                                  link.click();
+                                }}
+                                className="flex-1"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                이미지 저장
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  navigator.share({
+                                    title: "My MBTI Result",
+                                    text: `My MBTI type is ${result?.result}`,
+                                    files: [new File([snsImage], 'mbti-result.png', { type: 'image/png' })]
+                                  }).catch(console.error);
+                                }}
+                                className="flex-1"
+                              >
+                                <Share2 className="w-4 h-4 mr-2" />
+                                공유하기
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </TabsContent>
-                    <TabsContent value="full" className="overflow-y-auto max-h-[60vh]">
-                      {previewImage && (
-                        <div className="rounded-lg overflow-hidden shadow-lg">
-                          <ResultContent showControls={false} />
-                          <div className="flex gap-4 mt-4">
-                            <Button
-                              onClick={() => {
-                                const link = document.createElement('a');
-                                link.download = 'mbti-result-full.png';
-                                link.href = previewImage;
-                                link.click();
-                              }}
-                              className="flex-1"
-                            >
-                              <Download className="w-4 h-4 mr-2" />
-                              이미지 저장
-                            </Button>
+                        )}
+                      </TabsContent>
+                      <TabsContent value="full" className="overflow-y-auto max-h-[60vh]">
+                        {previewImage && (
+                          <div className="rounded-lg overflow-hidden shadow-lg">
+                            <ResultContent showControls={false} />
+                            <div className="flex gap-4 mt-4">
+                              <Button
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.download = 'mbti-result-full.png';
+                                  link.href = previewImage;
+                                  link.click();
+                                }}
+                                className="flex-1"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                이미지 저장
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </TabsContent>
-                  </Tabs>
-                </DialogContent>
-              </Dialog>
-              <Button
-                onClick={() => setLocation(`/universe/${id}`)}
-                className="w-full bg-gradient-to-r from-purple-500/80 to-purple-600 hover:from-purple-600 hover:to-purple-500/80 text-white transition-colors duration-300"
-              >
-                <Stars className="w-4 h-4 mr-2" />
-                우주에서 보기
-              </Button>
-              <Button
-                onClick={() => setLocation('/')}
-                className="w-full bg-white hover:bg-gray-50 text-primary hover:text-primary/80 transition-colors duration-300"
-              >
-                <Home className="w-4 h-4 mr-2" />
-                홈으로 돌아가기
-              </Button>
-            </div>
+                        )}
+                      </TabsContent>
+                    </Tabs>
+                  </DialogContent>
+                </Dialog>
+                <Button
+                  onClick={() => setLocation(`/universe/${id}`)}
+                  className="w-full bg-gradient-to-r from-purple-500/80 to-purple-600 hover:from-purple-600 hover:to-purple-500/80 text-white transition-colors duration-300"
+                >
+                  <Stars className="w-4 h-4 mr-2" />
+                  우주에서 보기
+                </Button>
+                <Button
+                  onClick={() => setLocation('/')}
+                  className="w-full bg-white hover:bg-gray-50 text-primary hover:text-primary/80 transition-colors duration-300"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  홈으로 돌아가기
+                </Button>
+              </div>
+            )}
           </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-      {/* SNS 공유용 숨겨진 컴포넌트 */}
       <div className="absolute left-[-9999px] top-[-9999px]">
         <div ref={snsRef} className="w-[1080px] h-[1080px] bg-gradient-to-b from-white to-gray-50 p-12 flex flex-col items-center justify-center">
           <div className="bg-white rounded-3xl shadow-2xl p-12 w-full max-w-4xl">
@@ -450,18 +440,18 @@ export default function Result() {
             {analysisData && (
               <div className="mt-8 p-6 bg-primary/5 rounded-2xl">
                 <h2 className="text-2xl font-semibold mb-4 text-primary">{analysisData.Description}</h2>
-                <p className="text-lg text-gray-700">
+                <p className="text-lg text-gray-700 mb-6">
                   {analysisData.Analysis}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {analysisData.Careers.map((career: string, index: number) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-primary/10 rounded-full text-primary"
-                    >
-                      {career}
-                    </span>
-                  ))}
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold mb-2">💪 강점</h3>
+                  <ul className="list-none space-y-2">
+                    {analysisData.Strengths.map((strength: string, index: number) => (
+                      <li key={index} className="flex items-center text-lg">
+                        <span className="mr-2">•</span>{strength}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             )}
