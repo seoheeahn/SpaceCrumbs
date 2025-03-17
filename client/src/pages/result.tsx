@@ -74,8 +74,9 @@ export default function Result() {
   const [previewImage, setPreviewImage] = useState<string>('');
   const [snsImage, setSnsImage] = useState<string>('');
 
-  const { data: result, isLoading } = useQuery<MbtiResult & { analysis?: string; coordinateX?: number | null; coordinateY?: number | null; coordinateZ?: number | null }>({
-    queryKey: [`/api/mbti-results/${id}`]
+  const { data: result, isLoading } = useQuery<MbtiResult>({
+    queryKey: [`/api/mbti-results/${id}`],
+    enabled: !!id
   });
 
   if (isLoading) {
@@ -92,6 +93,17 @@ export default function Result() {
         <p>결과를 찾을 수 없습니다.</p>
       </div>
     );
+  }
+
+  // Try parsing analysis JSON
+  let analysisData = null;
+  try {
+    if (result.analysis) {
+      analysisData = JSON.parse(result.analysis);
+      console.log("Parsed analysis data:", analysisData); // Debug log
+    }
+  } catch (error) {
+    console.error("Error parsing analysis JSON:", error);
   }
 
   const dimensionScores = calculateDimensionScores(result.answers as Answer[]);
@@ -187,72 +199,60 @@ export default function Result() {
             })}
           </div>
 
-          {result.analysis && (() => {
-            try {
-              const analysisData = JSON.parse(result.analysis);
-              return (
-                <Card className="mb-8 bg-primary/5 hover:bg-primary/10 transition-colors">
-                  <CardContent className="pt-4">
-                    <h2 className="text-lg font-semibold mb-3 text-primary">✨ AI 분석 결과</h2>
-                    <div className="space-y-3 text-sm">
-                      <div className="mb-3">
-                        <h3 className="font-medium mb-1">🎭 {analysisData.Description}</h3>
-                        <p className="text-gray-700">{analysisData.Analysis}</p>
-                      </div>
+          {analysisData && (
+            <Card className="mb-8 bg-primary/5 hover:bg-primary/10 transition-colors">
+              <CardContent className="pt-4">
+                <h2 className="text-lg font-semibold mb-3 text-primary">✨ AI 분석 결과</h2>
+                <div className="space-y-3 text-sm">
+                  <div className="mb-3">
+                    <h3 className="font-medium mb-1">🎭 {analysisData.Description}</h3>
+                    <p className="text-gray-700">{analysisData.Analysis}</p>
+                  </div>
 
-                      <div className="mb-3">
-                        <h3 className="font-medium mb-1">💪 강점</h3>
-                        <ul className="list-none space-y-0.5">
-                          {analysisData.Strengths.map((strength: string, index: number) => (
-                            <li key={index} className="flex items-center">
-                              <span className="mr-1">•</span>{strength}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                  <div className="mb-3">
+                    <h3 className="font-medium mb-1">💪 강점</h3>
+                    <ul className="list-none space-y-0.5">
+                      {analysisData.Strengths.map((strength: string, index: number) => (
+                        <li key={index} className="flex items-center">
+                          <span className="mr-1">•</span>{strength}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                      <div className="mb-3">
-                        <h3 className="font-medium mb-1">🌱 성장 포인트</h3>
-                        <ul className="list-none space-y-0.5">
-                          {analysisData.Growth.map((point: string, index: number) => (
-                            <li key={index} className="flex items-center">
-                              <span className="mr-1">•</span>{point}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                  <div className="mb-3">
+                    <h3 className="font-medium mb-1">🌱 성장 포인트</h3>
+                    <ul className="list-none space-y-0.5">
+                      {analysisData.Growth.map((point: string, index: number) => (
+                        <li key={index} className="flex items-center">
+                          <span className="mr-1">•</span>{point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                      <div className="mb-3">
-                        <h3 className="font-medium mb-1">👥 대인관계 특징</h3>
-                        <p className="text-gray-700">{analysisData.Social}</p>
-                      </div>
+                  <div className="mb-3">
+                    <h3 className="font-medium mb-1">👥 대인관계 특징</h3>
+                    <p className="text-gray-700">{analysisData.Social}</p>
+                  </div>
 
-                      <div>
-                        <h3 className="font-medium mb-1">💼 추천 직업</h3>
-                        <div className="flex flex-wrap gap-1">
-                          {analysisData.Careers.map((career: string, index: number) => (
-                            <span
-                              key={index}
-                              className="px-2 py-0.5 bg-primary/10 rounded-full text-primary text-xs"
-                            >
-                              {career}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                  <div>
+                    <h3 className="font-medium mb-1">💼 추천 직업</h3>
+                    <div className="flex flex-wrap gap-1">
+                      {analysisData.Careers.map((career: string, index: number) => (
+                        <span
+                          key={index}
+                          className="px-2 py-0.5 bg-primary/10 rounded-full text-primary text-xs"
+                        >
+                          {career}
+                        </span>
+                      ))}
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            } catch (error) {
-              console.error("Error parsing analysis JSON:", error);
-              return (
-                <div className="text-red-500">
-                  분석 결과를 표시하는 중 오류가 발생했습니다.
+                  </div>
                 </div>
-              );
-            }
-          })()}
+              </CardContent>
+            </Card>
+          )}
           <div className="space-y-4">
             {facetGroups.map((group, index) => (
               <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
@@ -443,7 +443,7 @@ export default function Result() {
                 );
               })}
             </div>
-            {result.analysis && (
+            {analysisData && (
               <div className="mt-8 p-6 bg-primary/5 rounded-2xl">
                 <h2 className="text-2xl font-semibold mb-4 text-primary">AI 분석 결과</h2>
                 <p className="text-lg text-gray-700">
