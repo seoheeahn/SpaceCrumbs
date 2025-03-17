@@ -155,14 +155,16 @@ export default function Result() {
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={dimension.scores}
-                          layout="vertical"
-                          margin={{ top: 5, right: 10, bottom: 5, left: 10 }}
+                          layout="horizontal"
+                          barGap={0}
+                          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                           <XAxis type="number" domain={[0, 100]} hide />
                           <YAxis type="category" hide />
                           <Bar
                             dataKey="value"
+                            stackId="stack"
                             fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
                             radius={[4, 4, 4, 4]}
                           />
