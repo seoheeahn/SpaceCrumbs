@@ -7,6 +7,7 @@ export interface IStorage {
   getMbtiResult(id: number): Promise<MbtiResult | undefined>;
   getMbtiResultByCredentials(userId: string, password: string): Promise<MbtiResult | undefined>;
   checkDuplicateUserId(userId: string): Promise<boolean>;
+  updateMbtiResult(id: number, update: { analysis?: string; openaiRequestId?: string }): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -37,6 +38,13 @@ export class DatabaseStorage implements IStorage {
       .from(mbtiResults)
       .where(eq(mbtiResults.userId, userId));
     return !!result;
+  }
+
+  async updateMbtiResult(id: number, update: { analysis?: string; openaiRequestId?: string }): Promise<void> {
+    await db
+      .update(mbtiResults)
+      .set(update)
+      .where(eq(mbtiResults.id, id));
   }
 }
 

@@ -46,8 +46,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       try {
-        const analysis = await Promise.race([analysisPromise, timeoutPromise]);
+        const { analysis, requestId } = await Promise.race([analysisPromise, timeoutPromise]) as { analysis: string; requestId: string };
         console.log(`[${new Date().toISOString()}] OpenAI analysis completed successfully`);
+
+        // Update the result with the analysis and request ID
+        await storage.updateMbtiResult(id, { analysis, openaiRequestId: requestId });
+
         res.json({ ...result, analysis });
       } catch (error) {
         console.error("Error or timeout in OpenAI analysis:", error);

@@ -6,27 +6,32 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-export async function analyzeMbtiResult(result: MbtiResult): Promise<string> {
+export async function analyzeMbtiResult(result: MbtiResult): Promise<{ analysis: string; requestId: string }> {
   const dimensionScores = calculateDimensionScores(result.answers);
 
   const prompt = `
-As an MBTI expert, analyze the following MBTI test result and provide detailed insights:
+당신은 MBTI 전문가입니다.  
+아래 MBTI 테스트 결과를 바탕으로 300자 이내로 분석을 제공하세요.
 
-MBTI Type: ${result.result}
+### 입력 데이터  
+- MBTI 유형: ${result.result}  
+- 성향 점수:  
+  - E/I: E(${Math.round(dimensionScores.E)}%) vs I(${Math.round(dimensionScores.I)}%)  
+  - S/N: S(${Math.round(dimensionScores.S)}%) vs N(${Math.round(dimensionScores.N)}%)  
+  - T/F: T(${Math.round(dimensionScores.T)}%) vs F(${Math.round(dimensionScores.F)}%)  
+  - J/P: J(${Math.round(dimensionScores.J)}%) vs P(${Math.round(dimensionScores.P)}%)  
 
-Dimension Scores:
-- E/I: E(${Math.round(dimensionScores.E)}%) vs I(${Math.round(dimensionScores.I)}%)
-- S/N: S(${Math.round(dimensionScores.S)}%) vs N(${Math.round(dimensionScores.N)}%)
-- T/F: T(${Math.round(dimensionScores.T)}%) vs F(${Math.round(dimensionScores.F)}%)
-- J/P: J(${Math.round(dimensionScores.J)}%) vs P(${Math.round(dimensionScores.P)}%)
+아래 JSON 형식으로 응답해주세요:
 
-Please provide:
-1. A detailed personality analysis based on the dimension scores
-2. Key strengths and potential areas for growth
-3. How this type typically interacts with others
-4. Career paths that might be well-suited for this personality type
-
-Format the response in natural, conversational Korean language. Keep the tone professional but approachable.
+{
+    "MBTI": "${result.result}",
+    "Description": "[MBTI 유형의 별칭]",
+    "Analysis": "[각 지표 점수를 반영한 간략한 분석]",
+    "Strengths": ["강점1", "강점2", "강점3"],
+    "Growth": ["성장 포인트1", "성장 포인트2"],
+    "Social": "[대인관계 특징]",
+    "Careers": ["추천 직업1", "추천 직업2", "추천 직업3"]
+}
 `;
 
   try {
@@ -35,7 +40,7 @@ Format the response in natural, conversational Korean language. Keep the tone pr
       messages: [
         {
           role: "system",
-          content: "You are an expert MBTI analyst providing detailed, personalized insights in Korean language."
+          content: "당신은 MBTI 전문가로서 한국어로 상세한 MBTI 분석 결과를 제공합니다."
         },
         {
           role: "user",
@@ -46,9 +51,15 @@ Format the response in natural, conversational Korean language. Keep the tone pr
       max_tokens: 1000
     });
 
-    return response.choices[0].message.content || "분석을 생성하지 못했습니다.";
+    const content = response.choices[0].message.content || "분석을 생성하지 못했습니다.";
+
+    // Return both the analysis content and the request ID
+    return {
+      analysis: content,
+      requestId: response.id
+    };
   } catch (error) {
     console.error("OpenAI API Error:", error);
-    return "죄송합니다. 현재 AI 분석을 제공할 수 없습니다.";
+    throw new Error("AI 분석 생성 중 오류가 발생했습니다.");
   }
 }
