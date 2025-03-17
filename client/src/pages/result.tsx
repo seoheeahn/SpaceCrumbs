@@ -157,7 +157,7 @@ export default function Result() {
             당신의 우주좌표는
           </h1>
           <div className="text-center mb-8">
-            <p className="text-purple-600 text-5xl font-bold mt-2"> {/* Changed color and size */}
+            <p className="text-purple-600 text-4xl font-bold mt-2"> {/* Reduced size from 5xl to 4xl */}
               X: {result.coordinateX !== null ? Number(result.coordinateX).toFixed(2) : '0.00'} |{' '}
               Y: {result.coordinateY !== null ? Number(result.coordinateY).toFixed(2) : '0.00'} |{' '}
               Z: {result.coordinateZ !== null ? Number(result.coordinateZ).toFixed(2) : '0.00'}
