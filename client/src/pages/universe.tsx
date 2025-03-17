@@ -3,23 +3,8 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Text, Line, Html } from "@react-three/drei";
 import { Suspense, useState, useEffect } from "react";
 import * as THREE from "three";
-
-interface UniverseData {
-  userId: string;
-  result: string;
-  scores: {
-    "E-I": { E: number; I: number };
-    "S-N": { S: number; N: number };
-    "T-F": { T: number; F: number };
-    "J-P": { J: number; P: number };
-  };
-  facets: {
-    "E-I": Record<string, { [key: string]: number }>;
-    "S-N": Record<string, { [key: string]: number }>;
-    "T-F": Record<string, { [key: string]: number }>;
-    "J-P": Record<string, { [key: string]: number }>;
-  };
-}
+import { useParams } from "wouter";
+import type { MbtiResult } from "@shared/schema";
 
 // 축 레이블 컴포넌트
 function AxisLabel({ position, text }: { position: [number, number, number]; text: string }) {
@@ -52,15 +37,15 @@ function GridLines() {
 }
 
 // 행성 컴포넌트
-function Planet({ 
-  position, 
-  size, 
-  color, 
-  label, 
-  score 
-}: { 
-  position: [number, number, number]; 
-  size: number; 
+function Planet({
+  position,
+  size,
+  color,
+  label,
+  score
+}: {
+  position: [number, number, number];
+  size: number;
   color: string;
   label: string;
   score: number;
@@ -95,8 +80,10 @@ function Planet({
 }
 
 export default function Universe() {
-  const { data: universeData, isLoading } = useQuery<UniverseData>({
-    queryKey: ["/api/universe-data"],
+  const { id } = useParams(); // Get result ID from URL params
+
+  const { data: result, isLoading } = useQuery<MbtiResult>({
+    queryKey: [`/api/mbti-results/${id}`],
   });
 
   if (isLoading) {
@@ -107,7 +94,7 @@ export default function Universe() {
     );
   }
 
-  if (!universeData) {
+  if (!result) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
         <p className="text-white">데이터를 불러올 수 없습니다.</p>
@@ -115,13 +102,21 @@ export default function Universe() {
     );
   }
 
-  const scale = 0.2; // 전체적인 스케일 조정
+  const scale = 0.2;
   const dimensions = ["E-I", "S-N", "T-F", "J-P"];
   const dimensionColors = {
     "E-I": "#ff9500",
     "S-N": "#34c759",
     "T-F": "#007aff",
     "J-P": "#af52de"
+  };
+
+  // Calculate scores from result data
+  const dimensionScores = {
+    "E-I": { E: result.scores["E-I"].E, I: result.scores["E-I"].I },
+    "S-N": { S: result.scores["S-N"].S, N: result.scores["S-N"].N },
+    "T-F": { T: result.scores["T-F"].T, F: result.scores["T-F"].F },
+    "J-P": { J: result.scores["J-P"].J, P: result.scores["J-P"].P }
   };
 
   return (
@@ -144,8 +139,7 @@ export default function Universe() {
 
           {/* MBTI 점수 행성들 */}
           {dimensions.map((dim, i) => {
-            const scores = universeData.scores[dim as keyof typeof universeData.scores];
-            const facets = universeData.facets[dim as keyof typeof universeData.facets];
+            const scores = dimensionScores[dim as keyof typeof dimensionScores];
             const color = dimensionColors[dim as keyof typeof dimensionColors];
 
             return Object.entries(scores).map(([trait, score], j) => {
