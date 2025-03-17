@@ -3,70 +3,24 @@ import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Suspense, useRef } from "react";
-import * as THREE from "three";
-
-function CoordinateAxis({ start, end, color }: { start: THREE.Vector3; end: THREE.Vector3; color: string }) {
-  const ref = useRef<THREE.Line>(null);
-
-  return (
-    <line ref={ref}>
-      <bufferGeometry>
-        <float32BufferAttribute 
-          attach="attributes-position" 
-          args={[new Float32Array([start.x, start.y, start.z, end.x, end.y, end.z]), 3]} 
-        />
-      </bufferGeometry>
-      <lineBasicMaterial color={color} />
-    </line>
-  );
-}
-
-function CoordinateAxes() {
-  const length = 50;
-  return (
-    <group>
-      <CoordinateAxis 
-        start={new THREE.Vector3(-length, 0, 0)} 
-        end={new THREE.Vector3(length, 0, 0)} 
-        color="red" 
-      />
-      <CoordinateAxis 
-        start={new THREE.Vector3(0, -length, 0)} 
-        end={new THREE.Vector3(0, length, 0)} 
-        color="green" 
-      />
-      <CoordinateAxis 
-        start={new THREE.Vector3(0, 0, -length)} 
-        end={new THREE.Vector3(0, 0, length)} 
-        color="blue" 
-      />
-    </group>
-  );
-}
-
-function DataPoint({ position }: { position: [number, number, number] }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const { scene } = useThree();
-
-  return (
-    <mesh ref={meshRef} position={position}>
-      <sphereGeometry args={[2, 32, 32]} />
-      <meshStandardMaterial color="#00ffcc" metalness={0.7} roughness={0.3} />
-    </mesh>
-  );
-}
+import { Suspense } from "react";
 
 function Scene({ coordinates }: { coordinates: [number, number, number] }) {
+  // Center the coordinates by subtracting 50
+  const [x, y, z] = coordinates.map(coord => coord - 50);
+
   return (
     <>
       <OrbitControls />
       <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1.5} />
-      <CoordinateAxes />
-      <DataPoint position={coordinates} />
+      <pointLight position={[10, 10, 10]} />
+
+      <mesh position={[x, y, z]}>
+        <sphereGeometry args={[2, 32, 32]} />
+        <meshStandardMaterial color="#00ffcc" />
+      </mesh>
     </>
   );
 }
@@ -83,9 +37,9 @@ export default function Universe() {
   const { id } = useParams();
 
   const { data: result, isLoading, error } = useQuery<MbtiResult & { 
-    coordinateX: number | null; 
-    coordinateY: number | null; 
-    coordinateZ: number | null; 
+    coordinateX: number | null;
+    coordinateY: number | null;
+    coordinateZ: number | null;
   }>({
     queryKey: [`/api/mbti-results/${id}`],
     enabled: !!id
@@ -101,7 +55,7 @@ export default function Universe() {
     );
   }
 
-  // Get normalized coordinates from database
+  // Get coordinates from database (already normalized 0-100)
   const coordinates: [number, number, number] = [
     Number(result.coordinateX),
     Number(result.coordinateY),
@@ -127,8 +81,7 @@ export default function Universe() {
           </p>
           <div className="w-full h-[600px] bg-gray-900 rounded-lg overflow-hidden">
             <Canvas
-              gl={{ antialias: true }}
-              camera={{ position: [50, 50, 50], fov: 60 }}
+              camera={{ position: [50, 50, 150], fov: 50 }}
               style={{ background: '#1e1e1e' }}
             >
               <Suspense fallback={<ErrorFallback />}>
