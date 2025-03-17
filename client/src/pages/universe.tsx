@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Text } from "@react-three/drei";
+import { OrbitControls, Text, Sphere, Line } from "@react-three/drei";
 import { useState, Suspense } from "react";
 import { useParams } from "wouter";
 import type { MbtiResult } from "@shared/schema";
@@ -22,22 +22,48 @@ function AxisLabel({ position, text }: { position: [number, number, number]; tex
   );
 }
 
+// Custom Grid Line Component
+function CustomGridLine({ start, end, color }: { start: [number, number, number], end: [number, number, number], color: string }) {
+  return (
+    <Line
+      points={[start, end]}
+      color={color}
+      lineWidth={1}
+      dashed={false}
+    />
+  );
+}
+
 // 그리드 라인 컴포넌트
 function GridLines() {
   const size = 30;
   const divisions = 30;
-  const color = new THREE.Color(0x444444);
+  const color = "#444444";
+  const lines = [];
 
-  return (
-    <>
-      <gridHelper args={[size, divisions, color, color]} rotation={[0, 0, 0]} />
-      <gridHelper args={[size, divisions, color, color]} rotation={[Math.PI / 2, 0, 0]} />
-      <gridHelper args={[size, divisions, color, color]} rotation={[0, 0, Math.PI / 2]} />
-    </>
-  );
+  // Create grid lines
+  for (let i = -size/2; i <= size/2; i += size/divisions) {
+    // XZ plane
+    lines.push(
+      <CustomGridLine key={`xz-1-${i}`} start={[i, 0, -size/2]} end={[i, 0, size/2]} color={color} />,
+      <CustomGridLine key={`xz-2-${i}`} start={[-size/2, 0, i]} end={[size/2, 0, i]} color={color} />
+    );
+    // XY plane
+    lines.push(
+      <CustomGridLine key={`xy-1-${i}`} start={[i, -size/2, 0]} end={[i, size/2, 0]} color={color} />,
+      <CustomGridLine key={`xy-2-${i}`} start={[-size/2, i, 0]} end={[size/2, i, 0]} color={color} />
+    );
+    // YZ plane
+    lines.push(
+      <CustomGridLine key={`yz-1-${i}`} start={[0, i, -size/2]} end={[0, i, size/2]} color={color} />,
+      <CustomGridLine key={`yz-2-${i}`} start={[0, -size/2, i]} end={[0, size/2, i]} color={color} />
+    );
+  }
+
+  return <>{lines}</>;
 }
 
-// 행성 컴포넌트
+// Planet component using proper Three.js primitives
 function Planet({
   position,
   size,
@@ -59,8 +85,7 @@ function Planet({
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
-      <mesh>
-        <sphereGeometry args={[size, 32, 32]} />
+      <Sphere args={[size, 32, 32]}>
         <meshStandardMaterial
           color={color}
           roughness={0.5}
@@ -68,7 +93,7 @@ function Planet({
           emissive={hovered ? color : "#000000"}
           emissiveIntensity={hovered ? 0.5 : 0}
         />
-      </mesh>
+      </Sphere>
       {hovered && (
         <Text
           position={[0, size + 0.5, 0]}
@@ -84,7 +109,7 @@ function Planet({
   );
 }
 
-// Error Boundary for Three.js components
+// Error Boundary Component
 function ErrorFallback() {
   return (
     <div className="w-full h-screen flex items-center justify-center">
@@ -95,6 +120,7 @@ function ErrorFallback() {
 
 export default function Universe() {
   const { id } = useParams();
+  const scale = 0.2;
 
   const { data: result, isLoading, error } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
@@ -126,7 +152,6 @@ export default function Universe() {
   }
 
   const scores = calculateDimensionScores(result.answers);
-  const scale = 0.2;
 
   return (
     <div className="w-full h-screen bg-black">
