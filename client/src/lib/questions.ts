@@ -5,6 +5,7 @@ export interface Question {
     en: string;
   };
   category: "E/I" | "S/N" | "T/F" | "J/P";
+  facet: string;
   weight: number;
   options: {
     A: string;
@@ -21,6 +22,7 @@ export const questions: Question[] = [
       en: "When meeting new people, I..."
     },
     category: "E/I",
+    facet: "시작형-응대형",
     weight: 2,
     options: {
       A: "먼저 대화를 시작하는 편이다.",
@@ -34,6 +36,7 @@ export const questions: Question[] = [
       en: "After finishing daily tasks, I..."
     },
     category: "E/I",
+    facet: "표현형-절제형",
     weight: 2,
     options: {
       A: "사람들과 어울리며 에너지를 얻는다.",
@@ -47,6 +50,7 @@ export const questions: Question[] = [
       en: "In gatherings, I..."
     },
     category: "E/I",
+    facet: "사교형-친밀형",
     weight: 1.5,
     options: {
       A: "여러 사람들과 활발히 대화한다.",
@@ -60,6 +64,7 @@ export const questions: Question[] = [
       en: "My way of expressing emotions is..."
     },
     category: "E/I",
+    facet: "활동형-반성형",
     weight: 1.5,
     options: {
       A: "감정을 적극적으로 드러내는 편이다.",
@@ -73,6 +78,7 @@ export const questions: Question[] = [
       en: "In new environments, I..."
     },
     category: "E/I",
+    facet: "열정형-차분형",
     weight: 1,
     options: {
       A: "적극적으로 적응하고 먼저 행동한다.",
@@ -88,6 +94,7 @@ export const questions: Question[] = [
       en: "When processing information, I..."
     },
     category: "S/N",
+    facet: "구체적-추상적",
     weight: 2,
     options: {
       A: "구체적인 사실과 데이터를 중시한다.",
@@ -101,6 +108,7 @@ export const questions: Question[] = [
       en: "When solving problems, I..."
     },
     category: "S/N",
+    facet: "현실적-상상적",
     weight: 2,
     options: {
       A: "실제 경험과 검증된 방법을 따르는 편이다.",
@@ -114,6 +122,7 @@ export const questions: Question[] = [
       en: "When receiving explanations, I..."
     },
     category: "S/N",
+    facet: "실용적-개념적",
     weight: 1.5,
     options: {
       A: "구체적인 사례와 실용적인 정보를 선호한다.",
@@ -127,6 +136,7 @@ export const questions: Question[] = [
       en: "When making decisions, I..."
     },
     category: "S/N",
+    facet: "경험적-이론적",
     weight: 1.5,
     options: {
       A: "현재의 현실적인 요소를 중시한다.",
@@ -140,6 +150,7 @@ export const questions: Question[] = [
       en: "When learning something new, I..."
     },
     category: "S/N",
+    facet: "전통적-독창적",
     weight: 1,
     options: {
       A: "직접 체험하며 배우는 것이 효과적이다.",
@@ -155,6 +166,7 @@ export const questions: Question[] = [
       en: "When making decisions, I..."
     },
     category: "T/F",
+    facet: "논리적-공감적",
     weight: 2,
     options: {
       A: "논리적이고 객관적인 기준을 우선한다.",
@@ -168,6 +180,7 @@ export const questions: Question[] = [
       en: "When conflicts arise with others, I..."
     },
     category: "T/F",
+    facet: "합리적-동정적",
     weight: 2,
     options: {
       A: "문제의 원인을 분석하고 해결하려 한다.",
@@ -181,6 +194,7 @@ export const questions: Question[] = [
       en: "When sharing opinions, I..."
     },
     category: "T/F",
+    facet: "의문형-수용형",
     weight: 1.5,
     options: {
       A: "비판적으로 검토하며 논리적으로 접근한다.",
@@ -194,6 +208,7 @@ export const questions: Question[] = [
       en: "In team projects, I..."
     },
     category: "T/F",
+    facet: "비판적-수용적",
     weight: 1.5,
     options: {
       A: "효율성과 논리를 기반으로 역할을 분배한다.",
@@ -207,6 +222,7 @@ export const questions: Question[] = [
       en: "With people around me, I..."
     },
     category: "T/F",
+    facet: "강인형-부드러운",
     weight: 1,
     options: {
       A: "솔직하고 직설적인 피드백을 주는 편이다.",
@@ -222,6 +238,7 @@ export const questions: Question[] = [
       en: "When planning schedules, I..."
     },
     category: "J/P",
+    facet: "체계적-편안한",
     weight: 2,
     options: {
       A: "사전에 철저하게 계획하고 실행한다.",
@@ -235,6 +252,7 @@ export const questions: Question[] = [
       en: "When facing deadlines, I..."
     },
     category: "J/P",
+    facet: "계획형-개방형",
     weight: 2,
     options: {
       A: "미리 준비해서 여유롭게 끝낸다.",
@@ -248,6 +266,7 @@ export const questions: Question[] = [
       en: "When making decisions, I..."
     },
     category: "J/P",
+    facet: "조기 시작형-압박형",
     weight: 1.5,
     options: {
       A: "한 번 결정하면 쉽게 바꾸지 않는다.",
@@ -261,6 +280,7 @@ export const questions: Question[] = [
       en: "When planning trips, I..."
     },
     category: "J/P",
+    facet: "일정형-자발형",
     weight: 1.5,
     options: {
       A: "사전에 자세한 일정을 짜는 것이 좋다.",
@@ -274,6 +294,7 @@ export const questions: Question[] = [
       en: "When working, I..."
     },
     category: "J/P",
+    facet: "방법론적-발생형",
     weight: 1,
     options: {
       A: "체계적인 절차와 방법을 따르는 것이 중요하다.",

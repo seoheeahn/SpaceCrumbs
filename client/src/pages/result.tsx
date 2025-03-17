@@ -14,7 +14,7 @@ export default function Result() {
   const [, setLocation] = useLocation();
 
   const { data: result, isLoading } = useQuery<MbtiResult>({
-    queryKey: [`/api/mbti-results/${id}`],
+    queryKey: [`/api/mbti-results/${id}`]
   });
 
   if (isLoading) {
@@ -88,26 +88,26 @@ export default function Result() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="mb-6">
+          <Card>
             <CardContent className="pt-6">
               <h1 className="text-3xl font-bold text-center mb-6">
                 당신의 MBTI는 {result.result}입니다
               </h1>
 
-              <p className="text-lg text-gray-600 mb-8">
+              <p className="text-lg text-gray-600 mb-8 text-center">
                 {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
               </p>
 
               <div className="grid grid-cols-2 gap-6 mb-8 p-4 bg-white/50 rounded-2xl">
                 {dimensionChartData.map((dimension, index) => (
                   <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-                    <h3 className="text-sm font-medium mb-2 text-center text-gray-600">{dimension.dimension}</h3>
-                    <div className="h-20">
+                    <h3 className="text-sm font-medium mb-2 text-center">{dimension.dimension}</h3>
+                    <div className="h-16">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={dimension.scores}
                           layout="vertical"
-                          margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
+                          margin={{ top: 5, right: 10, bottom: 5, left: 10 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                           <XAxis type="number" domain={[0, 100]} hide />
@@ -116,27 +116,30 @@ export default function Result() {
                             dataKey="value"
                             fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
                             radius={[4, 4, 4, 4]}
-                            animationDuration={1000}
                           />
                         </BarChart>
                       </ResponsiveContainer>
-                      <div className="flex justify-between text-sm mt-2 px-2">
-                        {dimension.scores.map((score, i) => (
-                          <div
-                            key={i}
-                            className={score.name === dimension.selected ? "font-bold" : "text-gray-600"}
-                          >
-                            {score.name} {Math.round(score.value)}%
-                          </div>
-                        ))}
-                      </div>
+                    </div>
+                    <div className="flex justify-between text-sm mt-2">
+                      {dimension.scores.map((score, i) => (
+                        <div
+                          key={i}
+                          className={`px-2 py-1 rounded ${
+                            score.name === dimension.selected 
+                              ? "bg-primary/10 font-bold text-primary" 
+                              : "text-gray-600"
+                          }`}
+                        >
+                          {score.name} {Math.round(score.value)}%
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
               </div>
 
               <div className="mb-8 bg-white p-6 rounded-xl shadow-lg">
-                <h2 className="text-xl font-semibold mb-4 text-center text-primary">응답 내역</h2>
+                <h2 className="text-xl font-semibold mb-6 text-center text-primary">응답 내역</h2>
                 <div className="space-y-4">
                   {result.answers.map((answer) => {
                     const question = questions.find(q => q.id === answer.questionId);
@@ -145,15 +148,25 @@ export default function Result() {
                     const isOptionA = answer.value <= 2;
                     const isOptionB = answer.value >= 4;
                     const isNeutral = answer.value === 3;
+                    const [facetA, facetB] = question.facet.split("-");
 
                     return (
                       <div key={answer.questionId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <p className="text-lg font-semibold mb-3 text-center text-primary/90">{question.text.ko}</p>
+                        <p className="text-lg font-semibold mb-3 text-center text-primary/90">
+                          {question.text.ko}
+                        </p>
+                        <div className="text-sm text-gray-500 mb-3 text-center">
+                          [ {facetA} vs {facetB} ]
+                        </div>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className={`p-2 rounded text-center ${isOptionA || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
+                          <div className={`p-3 rounded text-center ${
+                            isOptionA || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"
+                          }`}>
                             {question.options.A}
                           </div>
-                          <div className={`p-2 rounded text-center ${isOptionB || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
+                          <div className={`p-3 rounded text-center ${
+                            isOptionB || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"
+                          }`}>
                             {question.options.B}
                           </div>
                         </div>
