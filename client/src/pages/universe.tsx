@@ -6,9 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid } from "@react-three/drei";
 import { Suspense } from "react";
-import * as THREE from "three";
 
-// 좌표 정규화 함수 (0~100 범위로)
 function normalize(x: number, y: number, z: number): [number, number, number] {
   const coordinates = [x, y, z];
   const min = Math.min(...coordinates);
@@ -67,8 +65,8 @@ function Scene({ coordinates }: { coordinates: [number, number, number] }) {
 // Error Boundary Component
 function ErrorFallback() {
   return (
-    <div className="w-full h-full flex items-center justify-center text-white">
-      <p>3D 우주를 불러오는데 문제가 발생했습니다.</p>
+    <div className="w-full h-screen flex items-center justify-center">
+      <p className="text-white">3D 우주를 불러오는데 문제가 발생했습니다.</p>
     </div>
   );
 }
@@ -77,11 +75,12 @@ export default function Universe() {
   const { id } = useParams();
 
   const { data: result, isLoading, error } = useQuery<MbtiResult & { 
-    coordinateX: number | null;
-    coordinateY: number | null;
-    coordinateZ: number | null;
+    coordinateX: number | null; 
+    coordinateY: number | null; 
+    coordinateZ: number | null; 
   }>({
-    queryKey: [`/api/mbti-results/${id}`]
+    queryKey: ['/api/mbti-results', id],
+    enabled: !!id
   });
 
   if (!id || isLoading || error || !result) {
@@ -95,9 +94,9 @@ export default function Universe() {
   }
 
   // Ensure coordinates are numbers and handle null/undefined values
-  const rawX = result.coordinateX ? Number(result.coordinateX) : 0;
-  const rawY = result.coordinateY ? Number(result.coordinateY) : 0;
-  const rawZ = result.coordinateZ ? Number(result.coordinateZ) : 0;
+  const rawX = result.coordinateX ?? 0;
+  const rawY = result.coordinateY ?? 0;
+  const rawZ = result.coordinateZ ?? 0;
 
   // Normalize coordinates
   const normalizedCoords = normalize(rawX, rawY, rawZ);
@@ -121,6 +120,7 @@ export default function Universe() {
           </p>
           <div className="w-full h-[600px] bg-gray-900 rounded-lg overflow-hidden">
             <Canvas
+              gl={{ antialias: true }}
               camera={{ position: [50, 50, 150], fov: 50 }}
               style={{ background: '#1e1e1e' }}
             >
