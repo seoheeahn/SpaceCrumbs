@@ -132,7 +132,7 @@ export default function Result() {
                 <h1 className="text-3xl font-bold text-center mb-6">
                   당신의 MBTI는
                 </h1>
-                <div className="flex justify-center gap-6 mb-6">
+                <div className="flex justify-center gap-8 mb-8">
                   {result.result.split("").map((letter, index) => {
                     const dimensionKey = ["E/I", "S/N", "T/F", "J/P"][index];
                     const scores = {
@@ -146,11 +146,11 @@ export default function Result() {
                     return (
                       <div
                         key={index}
-                        className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center flex-col"
+                        className="w-28 h-28 rounded-2xl bg-primary/10 flex items-center justify-center flex-col"
                         style={{ color: dimensionColors[Object.keys(dimensionColors)[index]] }}
                       >
                         {mbtiIcons[letter as keyof typeof mbtiIcons]}
-                        <span className="text-2xl font-bold mt-1">{letter}</span>
+                        <span className="text-3xl font-bold mt-2">{letter}</span>
                         <span className="text-sm mt-1">{Math.round(score)}%</span>
                       </div>
                     );
