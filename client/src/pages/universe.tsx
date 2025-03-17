@@ -3,37 +3,57 @@ import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Suspense } from "react";
+import { Suspense, useRef } from "react";
 import * as THREE from "three";
 
+function CoordinateAxis({ start, end, color }: { start: THREE.Vector3; end: THREE.Vector3; color: string }) {
+  const ref = useRef<THREE.Line>(null);
+
+  return (
+    <line ref={ref}>
+      <bufferGeometry>
+        <float32BufferAttribute 
+          attach="attributes-position" 
+          args={[new Float32Array([start.x, start.y, start.z, end.x, end.y, end.z]), 3]} 
+        />
+      </bufferGeometry>
+      <lineBasicMaterial color={color} />
+    </line>
+  );
+}
+
 function CoordinateAxes() {
+  const length = 50;
   return (
     <group>
-      {/* X axis (red) */}
-      <line>
-        <bufferGeometry attach="geometry" args={[new Float32Array([-50, 0, 0, 50, 0, 0])]} />
-        <lineBasicMaterial attach="material" color="red" />
-      </line>
-      {/* Y axis (green) */}
-      <line>
-        <bufferGeometry attach="geometry" args={[new Float32Array([0, -50, 0, 0, 50, 0])]} />
-        <lineBasicMaterial attach="material" color="green" />
-      </line>
-      {/* Z axis (blue) */}
-      <line>
-        <bufferGeometry attach="geometry" args={[new Float32Array([0, 0, -50, 0, 0, 50])]} />
-        <lineBasicMaterial attach="material" color="blue" />
-      </line>
+      <CoordinateAxis 
+        start={new THREE.Vector3(-length, 0, 0)} 
+        end={new THREE.Vector3(length, 0, 0)} 
+        color="red" 
+      />
+      <CoordinateAxis 
+        start={new THREE.Vector3(0, -length, 0)} 
+        end={new THREE.Vector3(0, length, 0)} 
+        color="green" 
+      />
+      <CoordinateAxis 
+        start={new THREE.Vector3(0, 0, -length)} 
+        end={new THREE.Vector3(0, 0, length)} 
+        color="blue" 
+      />
     </group>
   );
 }
 
 function DataPoint({ position }: { position: [number, number, number] }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const { scene } = useThree();
+
   return (
-    <mesh position={position}>
-      <sphereGeometry args={[2, 16, 16]} />
+    <mesh ref={meshRef} position={position}>
+      <sphereGeometry args={[2, 32, 32]} />
       <meshStandardMaterial color="#00ffcc" metalness={0.7} roughness={0.3} />
     </mesh>
   );
@@ -54,7 +74,7 @@ function Scene({ coordinates }: { coordinates: [number, number, number] }) {
 function ErrorFallback() {
   return (
     <div className="w-full h-screen flex items-center justify-center">
-      <p className="text-white">3D 우주를 불러오는데 문제가 발생했습니다.</p>
+      <p className="text-gray-800">3D 우주를 불러오는데 문제가 발생했습니다.</p>
     </div>
   );
 }
