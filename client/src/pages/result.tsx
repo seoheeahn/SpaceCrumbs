@@ -54,17 +54,17 @@ export default function Result() {
 
   const dimensionScores = calculateDimensionScores(result.answers);
   const dimensionColors = {
-    "외향성/내향성": "hsl(200, 80%, 75%)",
-    "감각/직관": "hsl(150, 70%, 75%)",
-    "사고/감정": "hsl(260, 70%, 80%)",
-    "판단/인식": "hsl(30, 70%, 75%)"
+    "외향성/내향성": "hsl(200, 75%, 65%)",
+    "감각/직관": "hsl(150, 65%, 70%)",
+    "사고/감정": "hsl(260, 60%, 75%)",
+    "판단/인식": "hsl(30, 65%, 70%)"
   };
 
   const facetColors = {
-    "외향성/내향성": ["hsl(200, 80%, 65%)", "hsl(200, 80%, 85%)"],
-    "감각/직관": ["hsl(150, 70%, 65%)", "hsl(150, 70%, 85%)"],
-    "사고/감정": ["hsl(260, 70%, 70%)", "hsl(260, 70%, 90%)"],
-    "판단/인식": ["hsl(30, 70%, 65%)", "hsl(30, 70%, 85%)"]
+    "외향성/내향성": ["hsl(200, 75%, 60%)", "hsl(200, 65%, 85%)"],
+    "감각/직관": ["hsl(150, 65%, 60%)", "hsl(150, 55%, 85%)"],
+    "사고/감정": ["hsl(260, 60%, 65%)", "hsl(260, 50%, 85%)"],
+    "판단/인식": ["hsl(30, 65%, 60%)", "hsl(30, 55%, 85%)"]
   };
 
   const dimensionChartData = [
@@ -142,18 +142,21 @@ export default function Result() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card>
+          <Card className="shadow-xl hover:shadow-2xl transition-shadow duration-300">
             <CardContent className="pt-6">
-              <h1 className="text-3xl font-bold text-center mb-6">
-                당신의 MBTI는 {result.result}입니다
-              </h1>
+              <div className="relative mb-6">
+                <h1 className="text-3xl font-bold text-center">
+                  당신의 MBTI는 {result.result}입니다
+                </h1>
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 bg-gradient-to-r from-primary/30 via-primary to-primary/30 rounded-full"></div>
+              </div>
 
               <p className="text-lg text-gray-600 mb-8 text-center">
                 {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
               </p>
 
-              <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
-                <div className="grid gap-4">
+              <div className="bg-white p-6 rounded-xl shadow-lg mb-8 hover:shadow-xl transition-all duration-300">
+                <div className="grid gap-6">
                   {dimensionChartData.map((dimension, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="text-xl" style={{ color: dimension.color }}>
@@ -168,20 +171,20 @@ export default function Result() {
 
               <div className="space-y-4">
                 {facetGroups.map((group, index) => (
-                  <div key={index} className="bg-white p-4 rounded-xl shadow-lg">
-                    <h2 className="text-lg font-semibold mb-2 text-center" 
+                  <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                    <h2 className="text-lg font-semibold mb-3 text-center" 
                       style={{ color: dimensionColors[group.title] }}>
                       {group.title}
                     </h2>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {group.facets.map((facet) => {
                         const [typeA, typeB] = facet.facet.split("-");
                         const [colorA, colorB] = facetColors[group.title];
                         return (
-                          <div key={facet.id} className="bg-gray-50 px-2 py-1 rounded">
-                            <div className="flex items-center gap-2">
-                              <div className="text-sm text-right w-20 shrink-0">{typeA}</div>
-                              <div className="grow h-6 relative bg-gray-100 rounded overflow-hidden">
+                          <div key={facet.id} className="bg-gray-50 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="text-sm font-medium text-right w-24 shrink-0">{typeA}</div>
+                              <div className="grow h-5 relative bg-gray-200 rounded-full overflow-hidden">
                                 <div 
                                   className="absolute inset-y-0 left-0 transition-all duration-500" 
                                   style={{ 
@@ -197,7 +200,7 @@ export default function Result() {
                                   }}
                                 />
                               </div>
-                              <div className="text-sm w-20 shrink-0">{typeB}</div>
+                              <div className="text-sm font-medium w-24 shrink-0">{typeB}</div>
                             </div>
                           </div>
                         );
@@ -207,10 +210,10 @@ export default function Result() {
                 ))}
               </div>
 
-              <div className="mt-8">
+              <div className="mt-8 space-y-4">
                 <Button
                   onClick={handleShare}
-                  className="w-full mb-4"
+                  className="w-full bg-gradient-to-r from-primary/80 to-primary hover:from-primary hover:to-primary/80 transition-all duration-300"
                   variant="outline"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
@@ -219,7 +222,7 @@ export default function Result() {
 
                 <Button
                   onClick={() => setLocation('/')}
-                  className="w-full"
+                  className="w-full bg-white hover:bg-gray-50 text-primary hover:text-primary/80 transition-colors duration-300"
                 >
                   테스트 다시하기
                 </Button>

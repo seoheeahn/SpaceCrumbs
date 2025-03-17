@@ -1,0 +1,256 @@
+/* 전체 스타일 기본 설정 */
+:root {
+  --primary: #6a5acd;  /* 부드러운 보라색 */
+  --secondary: #a29bfe;
+  --accent: #ffb6c1;  /* 연한 핑크색 */
+  --text-dark: #333;
+  --text-light: #666;
+  --bg-light: #f9f7ff;
+  --border-radius: 16px;
+  --shadow: 0 6px 15px rgba(106, 90, 205, 0.1);
+}
+
+body {
+  font-family: 'Pretendard', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+/* 결과 컨테이너 */
+.result-container {
+  max-width: 700px;
+  margin: 40px auto;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 30px;
+  text-align: center;
+}
+
+/* 결과 헤더 */
+.result-header {
+  margin-bottom: 30px;
+}
+
+/* MBTI 결과 타이틀 */
+.mbti-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 15px;
+  display: inline-block;
+  position: relative;
+}
+
+.mbti-title::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 4px;
+  opacity: 0.3;
+}
+
+/* 부제목 */
+.mbti-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  margin-bottom: 30px;
+}
+
+/* 특성 카드 */
+.traits-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.trait-card {
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  text-align: left;
+}
+
+/* 특성 이름 */
+.trait-name {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.trait-name span {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-left: 8px;
+  color: var(--primary);
+}
+
+/* 특성 아이콘 */
+.trait-icon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+/* 특성 바 컨테이너 */
+.trait-bar-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* 특성 레이블 */
+.trait-label {
+  width: 30px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.trait-label:first-child {
+  color: #ff9500;
+}
+
+.trait-label:last-child {
+  color: #5856d6;
+}
+
+/* 특성 바 */
+.trait-bar {
+  flex: 1;
+  height: 12px;
+  background-color: #eee;
+  border-radius: 10px;
+  margin: 0 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 특성 프로그레스 */
+.trait-progress {
+  position: absolute;
+  height: 100%;
+  border-radius: 10px;
+}
+
+.trait-progress.e-i {
+  background: linear-gradient(90deg, #ff9500, #5856d6);
+}
+
+.trait-progress.s-n {
+  background: linear-gradient(90deg, #34c759, #5ac8fa);
+}
+
+.trait-progress.t-f {
+  background: linear-gradient(90deg, #007aff, #ff2d55);
+}
+
+.trait-progress.j-p {
+  background: linear-gradient(90deg, #af52de, #ff9500);
+}
+
+/* 특성 값 */
+.trait-value {
+  width: 40px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+/* 호환 유형 섹션 */
+.compatible-types {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius);
+}
+
+.compatible-types h3 {
+  color: var(--primary);
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  position: relative;
+  display: inline-block;
+}
+
+.compatible-types h3::after {
+  content: '💕';
+  position: absolute;
+  right: -25px;
+  top: 0;
+}
+
+/* 유형 칩 컨테이너 */
+.type-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+/* 유형 칩 */
+.type-chip {
+  padding: 8px 16px;
+  background-color: white;
+  border-radius: 20px;
+  font-weight: 600;
+  color: var(--primary);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.type-chip:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(106, 90, 205, 0.2);
+}
+
+/* 버튼 */
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  box-shadow: 0 4px 10px rgba(106, 90, 205, 0.3);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(106, 90, 205, 0.4);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .traits-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .result-container {
+    margin: 20px;
+    padding: 20px;
+  }
+  
+  .mbti-title {
+    font-size: 2rem;
+  }
+}
