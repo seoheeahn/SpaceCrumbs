@@ -55,24 +55,28 @@ export default function Test() {
                 {question.text.ko}
               </h2>
 
-              <div className="grid grid-cols-5 gap-2">
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Button
-                    key={value}
-                    variant="secondary"
-                    onClick={() => handleAnswer(value)}
-                    className="flex flex-col items-center justify-center p-4 h-auto"
-                  >
-                    <span className="text-lg font-semibold mb-1">{value}</span>
-                    <span className="text-xs text-center">
-                      {value === 1 && "전혀\n그렇지 않다"}
-                      {value === 2 && "그렇지\n않다"}
-                      {value === 3 && "보통"}
-                      {value === 4 && "그렇다"}
-                      {value === 5 && "매우\n그렇다"}
-                    </span>
-                  </Button>
-                ))}
+              <div className="grid grid-cols-1 gap-6">
+                <div className="text-sm grid grid-cols-[1fr,auto,1fr] gap-4 items-center">
+                  <div className="text-left">{question.options.A}</div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <Button
+                        key={value}
+                        variant="secondary"
+                        onClick={() => handleAnswer(value)}
+                        className="w-10 h-10 p-0"
+                      >
+                        {value}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="text-right">{question.options.B}</div>
+                </div>
+                <div className="text-xs text-gray-500 grid grid-cols-[1fr,auto,1fr] gap-4">
+                  <div className="text-left">매우 그렇다</div>
+                  <div className="text-center">중립</div>
+                  <div className="text-right">매우 그렇다</div>
+                </div>
               </div>
             </CardContent>
           </Card>
