@@ -8,7 +8,7 @@ import { MdPerson, MdSettings, MdFlashOn, MdFavorite, MdFavoriteBorder, MdStarBo
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, DialogHeader } from "@/components/ui/dialog"; // Added DialogHeader import
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import html2canvas from 'html2canvas';
 import { useRef, useState } from 'react';
@@ -328,10 +328,12 @@ export default function Result() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                  <DialogTitle>MBTI 결과 공유</DialogTitle>
-                  <DialogDescription>
-                    원하시는 형식을 선택하여 저장하거나 공유하세요
-                  </DialogDescription>
+                  <DialogHeader>
+                    <DialogTitle>MBTI 결과 공유</DialogTitle>
+                    <DialogDescription>
+                      원하시는 형식을 선택하여 저장하거나 공유하세요
+                    </DialogDescription>
+                  </DialogHeader>
                   <Tabs defaultValue="sns" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="sns">SNS 공유용</TabsTrigger>
