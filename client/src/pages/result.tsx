@@ -344,7 +344,7 @@ export default function Result() {
               </Button>
             </div>
           )}
-      </CardContent>
+          </div> </CardContent>
     </Card>
   );
 
