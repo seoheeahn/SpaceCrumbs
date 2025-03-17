@@ -170,6 +170,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/reanalyze/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await storage.getMbtiResult(id);
+
+      if (!result) {
+        res.status(404).json({ error: "결과를 찾을 수 없습니다" });
+        return;
+      }
+
+      // Get new analysis from OpenAI
+      const { analysis, requestId } = await analyzeMbtiResult(result);
+
+      // Update the result in database
+      await storage.updateMbtiResult(id, { 
+        analysis,
+        openaiRequestId: requestId
+      });
+
+      // Return updated result
+      const updatedResult = await storage.getMbtiResult(id);
+      res.json(updatedResult);
+    } catch (error) {
+      console.error("Error reanalyzing MBTI result:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

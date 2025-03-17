@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ExternalLink } from "lucide-react";
+import { RefreshCw, ExternalLink, Sparkles } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -41,6 +41,27 @@ export default function Admin() {
       toast({
         title: "오류 발생",
         description: "재계산 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reanalyzeMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("POST", `/api/admin/reanalyze/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/mbti-results"] });
+      toast({
+        title: "재분석 완료",
+        description: "AI 분석이 성공적으로 업데이트되었습니다.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "오류 발생",
+        description: "AI 재분석 중 오류가 발생했습니다.",
         variant: "destructive",
       });
     },
@@ -101,6 +122,15 @@ export default function Admin() {
                             >
                               <RefreshCw className="w-4 h-4 mr-1" />
                               재계산
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => reanalyzeMutation.mutate(result.id)}
+                              disabled={reanalyzeMutation.isPending}
+                            >
+                              <Sparkles className="w-4 h-4 mr-1" />
+                              재분석
                             </Button>
                             <Button
                               variant="outline"
