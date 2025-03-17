@@ -38,32 +38,32 @@ export default function Result() {
     {
       dimension: "E/I",
       scores: [
-        { name: "E", value: dimensionScores.E },
-        { name: "I", value: dimensionScores.I }
+        { name: "E", value: dimensionScores.E, fill: result.result.includes("E") ? "#8884d8" : "#c4c1f5" },
+        { name: "I", value: dimensionScores.I, fill: result.result.includes("I") ? "#8884d8" : "#c4c1f5" }
       ],
       selected: result.result.includes("I") ? "I" : "E"
     },
     {
       dimension: "S/N",
       scores: [
-        { name: "S", value: dimensionScores.S },
-        { name: "N", value: dimensionScores.N }
+        { name: "S", value: dimensionScores.S, fill: result.result.includes("S") ? "#82ca9d" : "#b8e6c9" },
+        { name: "N", value: dimensionScores.N, fill: result.result.includes("N") ? "#82ca9d" : "#b8e6c9" }
       ],
       selected: result.result.includes("N") ? "N" : "S"
     },
     {
       dimension: "T/F",
       scores: [
-        { name: "T", value: dimensionScores.T },
-        { name: "F", value: dimensionScores.F }
+        { name: "T", value: dimensionScores.T, fill: result.result.includes("T") ? "#ffc658" : "#ffe5b0" },
+        { name: "F", value: dimensionScores.F, fill: result.result.includes("F") ? "#ffc658" : "#ffe5b0" }
       ],
       selected: result.result.includes("F") ? "F" : "T"
     },
     {
       dimension: "J/P",
       scores: [
-        { name: "J", value: dimensionScores.J },
-        { name: "P", value: dimensionScores.P }
+        { name: "J", value: dimensionScores.J, fill: result.result.includes("J") ? "#ff8042" : "#ffb8a0" },
+        { name: "P", value: dimensionScores.P, fill: result.result.includes("P") ? "#ff8042" : "#ffb8a0" }
       ],
       selected: result.result.includes("P") ? "P" : "J"
     }
@@ -108,28 +108,29 @@ export default function Result() {
                           data={dimension.scores}
                           layout="vertical"
                           margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
+                          stackOffset="expand"
                         >
-                          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                          <XAxis type="number" domain={[0, 100]} hide />
+                          <XAxis type="number" domain={[0, 1]} hide />
                           <YAxis type="category" hide />
                           <Bar
                             dataKey="value"
-                            fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
+                            stackId="a"
+                            fill={(entry) => entry.fill}
                             radius={[4, 4, 4, 4]}
-                            animationDuration={1000}
+                            label={({ x, y, width, height, value, name }) => (
+                              <text
+                                x={x + width + 5}
+                                y={y + height / 2}
+                                fill="#666"
+                                dominantBaseline="middle"
+                                fontSize={12}
+                              >
+                                {`${name} ${Math.round(value * 100)}%`}
+                              </text>
+                            )}
                           />
                         </BarChart>
                       </ResponsiveContainer>
-                      <div className="flex justify-between text-sm mt-2 px-2">
-                        {dimension.scores.map((score, i) => (
-                          <div
-                            key={i}
-                            className={score.name === dimension.selected ? "font-bold" : "text-gray-600"}
-                          >
-                            {score.name} {Math.round(score.value)}%
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 ))}
