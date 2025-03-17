@@ -107,7 +107,7 @@ export default function Result() {
                         <BarChart
                           data={dimension.scores}
                           layout="vertical"
-                          margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                          margin={{ top: 10, right: 60, bottom: 10, left: 10 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                           <XAxis type="number" domain={[0, 100]} hide />
@@ -117,23 +117,19 @@ export default function Result() {
                             fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
                             radius={[4, 4, 4, 4]}
                             animationDuration={1000}
-                            label={({ value, name }) => {
-                              const isSelected = name === dimension.selected;
-                              return (
-                                <text
-                                  x={value > 50 ? -5 : 105}
-                                  y={12}
-                                  textAnchor={value > 50 ? "end" : "start"}
-                                  fill={isSelected ? "#000" : "#666"}
-                                  fontWeight={isSelected ? "bold" : "normal"}
-                                >
-                                  {`${name} ${Math.round(value)}%`}
-                                </text>
-                              );
-                            }}
                           />
                         </BarChart>
                       </ResponsiveContainer>
+                      <div className="flex justify-between text-sm mt-2 px-2">
+                        {dimension.scores.map((score, i) => (
+                          <div 
+                            key={i}
+                            className={score.name === dimension.selected ? "font-bold" : "text-gray-600"}
+                          >
+                            {score.name} {Math.round(score.value)}%
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -148,15 +144,16 @@ export default function Result() {
 
                     const isOptionA = answer.value <= 2;
                     const isOptionB = answer.value >= 4;
+                    const isNeutral = answer.value === 3;
 
                     return (
                       <div key={answer.questionId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                         <p className="font-medium mb-2">{question.text.ko}</p>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className={`p-2 rounded ${isOptionA ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
+                          <div className={`p-2 rounded ${isOptionA || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
                             {question.options.A}
                           </div>
-                          <div className={`p-2 rounded text-right ${isOptionB ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
+                          <div className={`p-2 rounded text-right ${isOptionB || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
                             {question.options.B}
                           </div>
                         </div>
