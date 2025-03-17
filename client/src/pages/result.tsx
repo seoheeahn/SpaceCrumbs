@@ -153,10 +153,13 @@ export default function Result() {
     <Card className="shadow-xl hover:shadow-2xl transition-shadow duration-300">
       <CardContent className="pt-6">
         <div className="mb-8">
+          <h1 className="text-3xl font-bold text-center mb-6">
+            당신의 우주좌표는
+          </h1>
           <div className="text-center mb-8">
-            <p className="text-gray-600 text-3xl font-bold mt-2 text-primary">
-              X: {result.coordinateX !== null ? Number(result.coordinateX).toFixed(2) : '0.00'} |
-              Y: {result.coordinateY !== null ? Number(result.coordinateY).toFixed(2) : '0.00'} |
+            <p className="text-purple-600 text-5xl font-bold mt-2"> {/* Changed color and size */}
+              X: {result.coordinateX !== null ? Number(result.coordinateX).toFixed(2) : '0.00'} |{' '}
+              Y: {result.coordinateY !== null ? Number(result.coordinateY).toFixed(2) : '0.00'} |{' '}
               Z: {result.coordinateZ !== null ? Number(result.coordinateZ).toFixed(2) : '0.00'}
             </p>
           </div>
