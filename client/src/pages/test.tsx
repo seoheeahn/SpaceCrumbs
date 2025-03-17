@@ -42,7 +42,7 @@ export default function Test() {
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
       <div className="max-w-2xl mx-auto pt-8">
         <Progress value={progress} className="mb-8" />
-        
+
         <motion.div
           key={currentQuestion}
           initial={{ opacity: 0, x: 20 }}
@@ -54,20 +54,23 @@ export default function Test() {
               <h2 className="text-xl font-semibold mb-6">
                 {question.text.ko}
               </h2>
-              
-              <div className="flex flex-col gap-3">
+
+              <div className="grid grid-cols-5 gap-2">
                 {[1, 2, 3, 4, 5].map((value) => (
                   <Button
                     key={value}
-                    variant={value === 3 ? "outline" : "secondary"}
+                    variant="secondary"
                     onClick={() => handleAnswer(value)}
-                    className="w-full text-left justify-start h-auto py-4"
+                    className="flex flex-col items-center justify-center p-4 h-auto"
                   >
-                    {value === 1 && "전혀 그렇지 않다"}
-                    {value === 2 && "그렇지 않다"}
-                    {value === 3 && "보통이다"}
-                    {value === 4 && "그렇다"}
-                    {value === 5 && "매우 그렇다"}
+                    <span className="text-lg font-semibold mb-1">{value}</span>
+                    <span className="text-xs text-center">
+                      {value === 1 && "전혀\n그렇지 않다"}
+                      {value === 2 && "그렇지\n않다"}
+                      {value === 3 && "보통"}
+                      {value === 4 && "그렇다"}
+                      {value === 5 && "매우\n그렇다"}
+                    </span>
                   </Button>
                 ))}
               </div>

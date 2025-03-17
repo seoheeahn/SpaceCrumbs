@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,17 +9,26 @@ import { mbtiDescriptions } from "@/lib/mbti";
 
 export default function Result() {
   const { id } = useParams();
-  
+  const [, setLocation] = useLocation();
+
   const { data: result, isLoading } = useQuery<MbtiResult>({
-    queryKey: ["/api/mbti-results", id],
+    queryKey: [`/api/mbti-results/${id}`],
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>결과를 불러오는 중...</p>
+      </div>
+    );
   }
 
   if (!result) {
-    return <div>Result not found</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>결과를 찾을 수 없습니다.</p>
+      </div>
+    );
   }
 
   const handleShare = async () => {
@@ -46,9 +55,9 @@ export default function Result() {
               <h1 className="text-3xl font-bold text-center mb-6">
                 당신의 MBTI는 {result.result}입니다
               </h1>
-              
+
               <p className="text-lg text-gray-600 mb-8">
-                {mbtiDescriptions[result.result].ko}
+                {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
               </p>
 
               <Button
@@ -61,7 +70,7 @@ export default function Result() {
               </Button>
 
               <Button
-                onClick={() => window.location.href = '/'}
+                onClick={() => setLocation('/')}
                 className="w-full"
               >
                 테스트 다시하기
