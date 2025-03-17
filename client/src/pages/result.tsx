@@ -3,7 +3,8 @@ import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Share2, Users, Brain, Heart, Calendar } from "lucide-react";
+import { Share2 } from "lucide-react";
+import { BsPerson, BsGear, BsLightning, BsHeart, BsHeartFill, BsCloud } from "react-icons/bs";
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
@@ -54,17 +55,17 @@ export default function Result() {
 
   const dimensionScores = calculateDimensionScores(result.answers);
   const dimensionColors = {
-    "외향성/내향성": "hsl(200, 75%, 65%)",
-    "감각/직관": "hsl(150, 65%, 70%)",
-    "사고/감정": "hsl(260, 60%, 75%)",
-    "판단/인식": "hsl(30, 65%, 70%)"
+    "외향성/내향성": "hsl(36, 70%, 80%)",  // 크림색
+    "감각/직관": "hsl(12, 70%, 75%)",      // 연어색
+    "사고/감정": "hsl(160, 70%, 75%)",     // 민트색
+    "판단/인식": "hsl(48, 70%, 85%)"       // 연한 베이지색
   };
 
   const facetColors = {
-    "외향성/내향성": ["hsl(200, 75%, 60%)", "hsl(200, 65%, 85%)"],
-    "감각/직관": ["hsl(150, 65%, 60%)", "hsl(150, 55%, 85%)"],
-    "사고/감정": ["hsl(260, 60%, 65%)", "hsl(260, 50%, 85%)"],
-    "판단/인식": ["hsl(30, 65%, 60%)", "hsl(30, 55%, 85%)"]
+    "외향성/내향성": ["hsl(36, 70%, 60%)", "hsl(36, 60%, 90%)"],
+    "감각/직관": ["hsl(12, 70%, 60%)", "hsl(12, 60%, 90%)"],
+    "사고/감정": ["hsl(160, 70%, 60%)", "hsl(160, 60%, 90%)"],
+    "판단/인식": ["hsl(48, 70%, 60%)", "hsl(48, 60%, 90%)"]
   };
 
   // 질문들을 MBTI 차원별로 그룹화
@@ -109,14 +110,14 @@ export default function Result() {
   };
 
   const mbtiIcons = {
-    E: <Users className="w-8 h-8" />,
-    I: <Users className="w-8 h-8" />,
-    S: <Brain className="w-8 h-8" />,
-    N: <Brain className="w-8 h-8" />,
-    T: <Heart className="w-8 h-8" />,
-    F: <Heart className="w-8 h-8" />,
-    J: <Calendar className="w-8 h-8" />,
-    P: <Calendar className="w-8 h-8" />
+    E: <BsPerson className="w-10 h-10" />,
+    I: <BsPerson className="w-10 h-10" />,
+    S: <BsGear className="w-10 h-10" />,
+    N: <BsLightning className="w-10 h-10" />,
+    T: <BsHeart className="w-10 h-10" />,
+    F: <BsHeartFill className="w-10 h-10" />,
+    J: <BsCloud className="w-10 h-10" />,
+    P: <BsCloud className="w-10 h-10 rotate-180" />
   };
 
   return (
@@ -146,8 +147,11 @@ export default function Result() {
                     return (
                       <div
                         key={index}
-                        className="w-28 h-28 rounded-2xl bg-primary/10 flex items-center justify-center flex-col"
-                        style={{ color: dimensionColors[Object.keys(dimensionColors)[index]] }}
+                        className="w-28 h-28 rounded-2xl flex items-center justify-center flex-col"
+                        style={{ 
+                          backgroundColor: `${dimensionColors[Object.keys(dimensionColors)[index]]}40`,
+                          color: dimensionColors[Object.keys(dimensionColors)[index]]
+                        }}
                       >
                         {mbtiIcons[letter as keyof typeof mbtiIcons]}
                         <span className="text-3xl font-bold mt-2">{letter}</span>
