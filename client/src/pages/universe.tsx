@@ -4,7 +4,7 @@ import { OrbitControls, Text, Html } from "@react-three/drei";
 import { useState } from "react";
 import { useParams } from "wouter";
 import type { MbtiResult } from "@shared/schema";
-import { dimensionColors, dimensionToLetters } from "@/lib/mbti";
+import { dimensionColors, calculateDimensionScores } from "@/lib/mbti";
 import * as THREE from "three";
 
 // 축 레이블 컴포넌트
@@ -72,7 +72,7 @@ function Planet({
       {hovered && (
         <Html>
           <div className="bg-black/80 text-white p-2 rounded-lg text-sm whitespace-nowrap">
-            {label}: {score}%
+            {label}: {score.toFixed(1)}%
           </div>
         </Html>
       )}
@@ -107,44 +107,83 @@ export default function Universe() {
   if (error || !result) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
-        <p className="text-white">결과를 불러올 수 없습니다.</p>
+        <p className="text-white">데이터를 불러올 수 없습니다.</p>
       </div>
     );
   }
 
-  const scale = 5;
+  const scores = calculateDimensionScores(result.answers);
+  const scale = 0.2;
 
   return (
-    <div className="w-full h-screen">
-      <Canvas camera={{ position: [10, 10, 10] }}>
+    <div className="w-full h-screen bg-black">
+      <Canvas camera={{ position: [20, 20, 20], fov: 60 }}>
         <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        {Object.entries(dimensionColors).map(([dim, color], i) => {
-          const scores = result.result[i]; //This line was modified to reflect the new schema
-          return Object.entries(scores).map(([trait, score], j) => {
-            const position: [number, number, number] = [
-              i === 0 ? score * scale : 0,
-              i === 1 ? score * scale : 0,
-              i === 2 ? score * scale : 0
-            ];
+        <pointLight position={[10, 10, 10]} intensity={1} />
 
-            return (
-              <Planet
-                key={`${dim}-${trait}`}
-                position={position}
-                size={0.5}
-                color={color}
-                label={`${trait}`}
-                score={Math.round(score * 100)}
-              />
-            );
-          });
-        })}
+        {/* 축 레이블 */}
+        <AxisLabel position={[15, 0, 0]} text="E-I" />
+        <AxisLabel position={[0, 15, 0]} text="S-N" />
+        <AxisLabel position={[0, 0, 15]} text="T-F" />
+
+        {/* 그리드 */}
         <GridLines />
+
+        {/* MBTI 점수 행성들 */}
+        {/* E-I 축 */}
+        <Planet
+          position={[scores.E * scale, 0, 0]}
+          size={0.5}
+          color={dimensionColors["E-I"]}
+          label="E"
+          score={scores.E}
+        />
+        <Planet
+          position={[-scores.I * scale, 0, 0]}
+          size={0.5}
+          color={dimensionColors["E-I"]}
+          label="I"
+          score={scores.I}
+        />
+
+        {/* S-N 축 */}
+        <Planet
+          position={[0, scores.N * scale, 0]}
+          size={0.5}
+          color={dimensionColors["S-N"]}
+          label="N"
+          score={scores.N}
+        />
+        <Planet
+          position={[0, -scores.S * scale, 0]}
+          size={0.5}
+          color={dimensionColors["S-N"]}
+          label="S"
+          score={scores.S}
+        />
+
+        {/* T-F 축 */}
+        <Planet
+          position={[0, 0, scores.F * scale]}
+          size={0.5}
+          color={dimensionColors["T-F"]}
+          label="F"
+          score={scores.F}
+        />
+        <Planet
+          position={[0, 0, -scores.T * scale]}
+          size={0.5}
+          color={dimensionColors["T-F"]}
+          label="T"
+          score={scores.T}
+        />
+
         <OrbitControls
           enableZoom={true}
           enablePan={true}
           enableRotate={true}
+          minDistance={5}
+          maxDistance={50}
         />
       </Canvas>
     </div>
