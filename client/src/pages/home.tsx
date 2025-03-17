@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -12,11 +12,14 @@ import { useState } from "react";
 import { loginSchema, type LoginInput } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 
 export default function Home() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -34,18 +37,10 @@ export default function Home() {
       if (result.id) {
         setLocation(`/result/${result.id}`);
       } else {
-        toast({
-          title: "로그인 실패",
-          description: "아이디 또는 비밀번호를 확인해주세요.",
-          variant: "destructive",
-        });
+        setShowErrorDialog(true);
       }
     } catch (error) {
-      toast({
-        title: "오류 발생",
-        description: "잠시 후 다시 시도해주세요.",
-        variant: "destructive",
-      });
+      setShowErrorDialog(true);
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +68,7 @@ export default function Home() {
                 </Button>
               </Link>
 
-              <Dialog>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="lg" className="w-full">
                     이전 결과 다시 보기
@@ -122,6 +117,23 @@ export default function Home() {
           </CardContent>
         </Card>
       </motion.div>
+
+      <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>로그인 실패</AlertDialogTitle>
+            <AlertDialogDescription>
+              아이디 또는 비밀번호가 일치하지 않습니다.
+              다시 한 번 확인해 주세요.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={() => setShowErrorDialog(false)}>
+              확인
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

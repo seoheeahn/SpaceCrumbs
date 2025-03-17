@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput, type Answer } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 
 export default function Test() {
   const [, setLocation] = useLocation();
@@ -25,6 +26,7 @@ export default function Test() {
   const [isCheckingId, setIsCheckingId] = useState(false);
   const [isDuplicateId, setIsDuplicateId] = useState(false);
   const [isIdChecked, setIsIdChecked] = useState(false);
+  const [showDuplicateCheckAlert, setShowDuplicateCheckAlert] = useState(false);
   const progress = Math.max(0, (currentQuestion / questions.length) * 100);
 
   const form = useForm<LoginInput>({
@@ -69,11 +71,7 @@ export default function Test() {
 
   const handleLoginSubmit = async (data: LoginInput) => {
     if (!isIdChecked) {
-      toast({
-        title: "중복 확인 필요",
-        description: "아이디 중복 확인을 먼저 해주세요.",
-        variant: "destructive",
-      });
+      setShowDuplicateCheckAlert(true);
       return;
     }
 
@@ -213,6 +211,22 @@ export default function Test() {
             </Card>
           </motion.div>
         </div>
+
+        <AlertDialog open={showDuplicateCheckAlert} onOpenChange={setShowDuplicateCheckAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>중복확인 필요</AlertDialogTitle>
+              <AlertDialogDescription>
+                아이디 중복확인을 먼저 진행해주세요.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex justify-end">
+              <Button onClick={() => setShowDuplicateCheckAlert(false)}>
+                확인
+              </Button>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
