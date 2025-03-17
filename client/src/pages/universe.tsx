@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars, Html } from "@react-three/drei";
-import { useRef } from "react";
+import { Suspense } from "react";
 
 interface Coordinate {
   id: number;
@@ -36,6 +36,42 @@ function Planet({ position, userId }: { position: [number, number, number]; user
   );
 }
 
+function Scene({ coordinates }: { coordinates: Coordinate[] }) {
+  return (
+    <>
+      <ambientLight intensity={0.1} />
+      <pointLight position={[10, 10, 10]} intensity={1.5} />
+      <Stars 
+        radius={100} 
+        depth={50} 
+        count={5000} 
+        factor={4} 
+        saturation={0.5} 
+        fade 
+        speed={1}
+      />
+      <OrbitControls 
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        autoRotate={true}
+        autoRotateSpeed={0.5}
+      />
+      {coordinates?.map((coord) => (
+        <Planet
+          key={coord.id}
+          position={[
+            Number(coord.coordinateX) / 5, 
+            Number(coord.coordinateY) / 5,
+            Number(coord.coordinateZ) / 5
+          ]}
+          userId={coord.userId}
+        />
+      ))}
+    </>
+  );
+}
+
 function Universe() {
   const { data: coordinates, isLoading } = useQuery<Coordinate[]>({
     queryKey: ["/api/universe-coordinates"],
@@ -49,38 +85,27 @@ function Universe() {
     );
   }
 
+  if (!coordinates) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center text-white">
+        좌표를 불러오는데 실패했습니다.
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-screen bg-black">
-      <Canvas camera={{ position: [0, 0, 50], fov: 60 }}>
-        <ambientLight intensity={0.1} />
-        <pointLight position={[10, 10, 10]} intensity={1.5} />
-        <Stars 
-          radius={100} 
-          depth={50} 
-          count={5000} 
-          factor={4} 
-          saturation={0.5} 
-          fade 
-          speed={1}
-        />
-        <OrbitControls 
-          enablePan={true}
-          enableZoom={true}
-          enableRotate={true}
-          autoRotate={true}
-          autoRotateSpeed={0.5}
-        />
-        {coordinates?.map((coord) => (
-          <Planet
-            key={coord.id}
-            position={[
-              Number(coord.coordinateX) / 5, 
-              Number(coord.coordinateY) / 5,
-              Number(coord.coordinateZ) / 5
-            ]}
-            userId={coord.userId}
-          />
-        ))}
+      <Canvas 
+        camera={{ position: [0, 0, 50], fov: 60 }}
+        gl={{ 
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance"
+        }}
+      >
+        <Suspense fallback={null}>
+          <Scene coordinates={coordinates} />
+        </Suspense>
       </Canvas>
     </div>
   );
