@@ -1,10 +1,14 @@
 import { questions, type Answer } from "./questions";
 import type { MbtiType } from "@shared/schema";
 
-function convertValueToResponse(value: number): "A" | "B" | null {
-  if (value <= 2) return "A";
-  if (value >= 4) return "B";
-  return null; // 중립인 경우
+function getWeightByValue(value: number): { [key: string]: number } {
+  // 1,2는 A쪽으로 가중치, 4,5는 B쪽으로 가중치
+  if (value === 1) return { A: 1.0, B: 0.0 };
+  if (value === 2) return { A: 0.75, B: 0.25 };
+  if (value === 3) return { A: 0.5, B: 0.5 };
+  if (value === 4) return { A: 0.25, B: 0.75 };
+  if (value === 5) return { A: 0.0, B: 1.0 };
+  return { A: 0, B: 0 };
 }
 
 export function calculateDimensionScores(answers: Answer[]) {
@@ -15,40 +19,37 @@ export function calculateDimensionScores(answers: Answer[]) {
     J: 0, P: 0
   };
 
-  const totalResponses = {
-    "E-I": 0,
-    "S-N": 0,
-    "T-F": 0,
-    "J-P": 0
+  const totalWeights = {
+    "E/I": 0,
+    "S/N": 0,
+    "T/F": 0,
+    "J/P": 0
   };
 
   answers.forEach(answer => {
     const question = questions.find(q => q.id === answer.questionId);
     if (!question) return;
 
-    const dimension = question.category.replace("/", "-");
-    const response = convertValueToResponse(answer.value);
+    const dimension = question.category;
+    const weights = getWeightByValue(answer.value);
+    const [trait1, trait2] = dimension.split("/") as [keyof typeof scores, keyof typeof scores];
 
-    if (response) {
-      totalResponses[dimension as keyof typeof totalResponses]++;
-      const [trait1, trait2] = question.category.split("/");
-      if (response === "A") {
-        scores[trait1 as keyof typeof scores]++;
-      } else {
-        scores[trait2 as keyof typeof scores]++;
-      }
-    }
+    // 가중치 적용
+    scores[trait1] += weights.A * question.weight;
+    scores[trait2] += weights.B * question.weight;
+    totalWeights[dimension] += question.weight;
   });
 
+  // 백분율 계산
   return {
-    E: (scores.E / totalResponses["E-I"]) * 100 || 0,
-    I: (scores.I / totalResponses["E-I"]) * 100 || 0,
-    S: (scores.S / totalResponses["S-N"]) * 100 || 0,
-    N: (scores.N / totalResponses["S-N"]) * 100 || 0,
-    T: (scores.T / totalResponses["T-F"]) * 100 || 0,
-    F: (scores.F / totalResponses["T-F"]) * 100 || 0,
-    J: (scores.J / totalResponses["J-P"]) * 100 || 0,
-    P: (scores.P / totalResponses["J-P"]) * 100 || 0
+    E: (scores.E / totalWeights["E/I"]) * 100 || 0,
+    I: (scores.I / totalWeights["E/I"]) * 100 || 0,
+    S: (scores.S / totalWeights["S/N"]) * 100 || 0,
+    N: (scores.N / totalWeights["S/N"]) * 100 || 0,
+    T: (scores.T / totalWeights["T/F"]) * 100 || 0,
+    F: (scores.F / totalWeights["T/F"]) * 100 || 0,
+    J: (scores.J / totalWeights["J/P"]) * 100 || 0,
+    P: (scores.P / totalWeights["J/P"]) * 100 || 0
   };
 }
 
@@ -64,15 +65,11 @@ export function calculateMbti(answers: Answer[]): MbtiType {
     const question = questions.find(q => q.id === answer.questionId);
     if (!question) return;
 
-    const response = convertValueToResponse(answer.value);
-    if (response) {
-      const [trait1, trait2] = question.category.split("/");
-      if (response === "A") {
-        scores[trait1 as keyof typeof scores]++;
-      } else {
-        scores[trait2 as keyof typeof scores]++;
-      }
-    }
+    const weights = getWeightByValue(answer.value);
+    const [trait1, trait2] = question.category.split("/") as [keyof typeof scores, keyof typeof scores];
+
+    scores[trait1] += weights.A * question.weight;
+    scores[trait2] += weights.B * question.weight;
   });
 
   const type = [
