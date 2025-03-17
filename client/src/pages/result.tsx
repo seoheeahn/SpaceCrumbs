@@ -445,10 +445,20 @@ export default function Result() {
             </div>
             {analysisData && (
               <div className="mt-8 p-6 bg-primary/5 rounded-2xl">
-                <h2 className="text-2xl font-semibold mb-4 text-primary">AI 분석 결과</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-primary">{analysisData.Description}</h2>
                 <p className="text-lg text-gray-700">
-                  {result.analysis}
+                  {analysisData.Analysis}
                 </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {analysisData.Careers.map((career: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-primary/10 rounded-full text-primary"
+                    >
+                      {career}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
