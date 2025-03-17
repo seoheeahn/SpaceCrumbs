@@ -1,6 +1,12 @@
 import { questions, type Answer } from "./questions";
 import type { MbtiType } from "@shared/schema";
 
+function convertValueToResponse(value: number): "A" | "B" | null {
+  if (value <= 2) return "A";
+  if (value >= 4) return "B";
+  return null; // 중립인 경우
+}
+
 export function calculateDimensionScores(answers: Answer[]) {
   const scores = {
     E: 0, I: 0,
@@ -9,43 +15,40 @@ export function calculateDimensionScores(answers: Answer[]) {
     J: 0, P: 0
   };
 
-  // 각 차원별로 5개 문항씩 있음
-  const questionsPerTrait = 5;
+  const totalResponses = {
+    "E-I": 0,
+    "S-N": 0,
+    "T-F": 0,
+    "J-P": 0
+  };
 
   answers.forEach(answer => {
     const question = questions.find(q => q.id === answer.questionId);
     if (!question) return;
 
-    const [trait1, trait2] = question.category.split("/") as [keyof typeof scores, keyof typeof scores];
+    const dimension = question.category.replace("/", "-");
+    const response = convertValueToResponse(answer.value);
 
-    // answer.value는 1~5 사이의 값
-    // 1,2는 trait1에 해당, 4,5는 trait2에 해당, 3은 중립
-    if (answer.value <= 2) {
-      scores[trait1] += question.weight;
-    } else if (answer.value >= 4) {
-      scores[trait2] += question.weight;
+    if (response) {
+      totalResponses[dimension as keyof typeof totalResponses]++;
+      const [trait1, trait2] = question.category.split("/");
+      if (response === "A") {
+        scores[trait1 as keyof typeof scores]++;
+      } else {
+        scores[trait2 as keyof typeof scores]++;
+      }
     }
-    // 3(중립)인 경우 양쪽 다 점수를 주지 않음
   });
 
-  // 각 차원별 최대 점수 계산 (weight의 합)
-  const maxScores = {
-    EI: questions.filter(q => q.category === "E/I").reduce((sum, q) => sum + q.weight, 0),
-    SN: questions.filter(q => q.category === "S/N").reduce((sum, q) => sum + q.weight, 0),
-    TF: questions.filter(q => q.category === "T/F").reduce((sum, q) => sum + q.weight, 0),
-    JP: questions.filter(q => q.category === "J/P").reduce((sum, q) => sum + q.weight, 0)
-  };
-
-  // 백분율 계산
   return {
-    E: (scores.E / maxScores.EI) * 100,
-    I: (scores.I / maxScores.EI) * 100,
-    S: (scores.S / maxScores.SN) * 100,
-    N: (scores.N / maxScores.SN) * 100,
-    T: (scores.T / maxScores.TF) * 100,
-    F: (scores.F / maxScores.TF) * 100,
-    J: (scores.J / maxScores.JP) * 100,
-    P: (scores.P / maxScores.JP) * 100
+    E: (scores.E / totalResponses["E-I"]) * 100 || 0,
+    I: (scores.I / totalResponses["E-I"]) * 100 || 0,
+    S: (scores.S / totalResponses["S-N"]) * 100 || 0,
+    N: (scores.N / totalResponses["S-N"]) * 100 || 0,
+    T: (scores.T / totalResponses["T-F"]) * 100 || 0,
+    F: (scores.F / totalResponses["T-F"]) * 100 || 0,
+    J: (scores.J / totalResponses["J-P"]) * 100 || 0,
+    P: (scores.P / totalResponses["J-P"]) * 100 || 0
   };
 }
 
@@ -61,12 +64,14 @@ export function calculateMbti(answers: Answer[]): MbtiType {
     const question = questions.find(q => q.id === answer.questionId);
     if (!question) return;
 
-    const [trait1, trait2] = question.category.split("/") as [keyof typeof scores, keyof typeof scores];
-
-    if (answer.value <= 2) {
-      scores[trait1] += question.weight;
-    } else if (answer.value >= 4) {
-      scores[trait2] += question.weight;
+    const response = convertValueToResponse(answer.value);
+    if (response) {
+      const [trait1, trait2] = question.category.split("/");
+      if (response === "A") {
+        scores[trait1 as keyof typeof scores]++;
+      } else {
+        scores[trait2 as keyof typeof scores]++;
+      }
     }
   });
 
