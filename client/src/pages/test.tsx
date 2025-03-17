@@ -25,7 +25,7 @@ export default function Test() {
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      nickname: "",
+      userId: "",
       password: "",
     },
   });
@@ -99,12 +99,15 @@ export default function Test() {
                   <form onSubmit={form.handleSubmit(handleLoginSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="nickname"
+                      name="userId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>닉네임</FormLabel>
+                          <FormLabel>아이디</FormLabel>
                           <FormControl>
-                            <Input placeholder="사용하실 닉네임을 입력해주세요" {...field} />
+                            <Input 
+                              placeholder="영문, 숫자 조합 4-20자" 
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

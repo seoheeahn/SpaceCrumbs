@@ -14,7 +14,7 @@ export const answerSchema = z.object({
 
 export const mbtiResults = pgTable("mbti_results", {
   id: serial("id").primaryKey(),
-  nickname: text("nickname").notNull(),
+  userId: text("user_id").notNull(),
   password: text("password").notNull(),
   answers: jsonb("answers").$type<Answer[]>().notNull(),
   result: text("result").notNull(),
@@ -24,7 +24,10 @@ export const mbtiResults = pgTable("mbti_results", {
 
 // Create a strict schema for input validation
 export const insertMbtiResultSchema = z.object({
-  nickname: z.string().min(1, "닉네임을 입력해주세요"),
+  userId: z.string()
+    .min(4, "아이디는 최소 4자 이상이어야 합니다")
+    .max(20, "아이디는 최대 20자까지 가능합니다")
+    .regex(/^[a-zA-Z0-9]+$/, "아이디는 영문자와 숫자만 사용할 수 있습니다"),
   password: z.string().min(4, "비밀번호는 최소 4자 이상이어야 합니다"),
   answers: z.array(answerSchema),
   result: z.string(),
@@ -32,7 +35,9 @@ export const insertMbtiResultSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  nickname: z.string().min(1, "닉네임을 입력해주세요"),
+  userId: z.string()
+    .min(4, "아이디는 최소 4자 이상이어야 합니다")
+    .regex(/^[a-zA-Z0-9]+$/, "아이디는 영문자와 숫자만 사용할 수 있습니다"),
   password: z.string().min(4, "비밀번호는 최소 4자 이상이어야 합니다"),
 });
 

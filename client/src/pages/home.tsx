@@ -21,7 +21,7 @@ export default function Home() {
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      nickname: "",
+      userId: "",
       password: "",
     },
   });
@@ -36,7 +36,7 @@ export default function Home() {
       } else {
         toast({
           title: "로그인 실패",
-          description: "닉네임 또는 비밀번호를 확인해주세요.",
+          description: "아이디 또는 비밀번호를 확인해주세요.",
           variant: "destructive",
         });
       }
@@ -87,12 +87,12 @@ export default function Home() {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                       <FormField
                         control={form.control}
-                        name="nickname"
+                        name="userId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>닉네임</FormLabel>
+                            <FormLabel>아이디</FormLabel>
                             <FormControl>
-                              <Input placeholder="테스트 시 입력한 닉네임" {...field} />
+                              <Input placeholder="테스트 시 입력한 아이디" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
