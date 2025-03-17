@@ -19,6 +19,8 @@ export const mbtiResults = pgTable("mbti_results", {
   answers: jsonb("answers").$type<Answer[]>().notNull(),
   result: text("result").notNull(),
   language: text("language").notNull(),
+  openaiRequestId: text("openai_request_id"),
+  analysis: text("analysis"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -32,6 +34,8 @@ export const insertMbtiResultSchema = z.object({
   answers: z.array(answerSchema),
   result: z.string(),
   language: z.string(),
+  openaiRequestId: z.string().optional(),
+  analysis: z.string().optional(),
 });
 
 export const loginSchema = z.object({
@@ -47,7 +51,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const mbtiTypes = [
   "ISTJ", "ISFJ", "INFJ", "INTJ",
-  "ISTP", "ISFP", "INFP", "INTP",
+  "ISTP", "ISFP", "INFP", "INTP", 
   "ESTP", "ESFP", "ENFP", "ENTP",
   "ESTJ", "ESFJ", "ENFJ", "ENTJ"
 ] as const;

@@ -344,7 +344,8 @@ export default function Result() {
               </Button>
             </div>
           )}
-          </div> </CardContent>
+        </div>
+      </CardContent>
     </Card>
   );
 
@@ -373,9 +374,14 @@ export default function Result() {
                 );
               })}
             </div>
-            <p className="text-2xl text-gray-700 max-w-2xl text-center mx-auto">
-              {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
-            </p>
+            {result.analysis && (
+              <div className="mt-8 p-6 bg-primary/5 rounded-2xl">
+                <h2 className="text-2xl font-semibold mb-4 text-primary">AI 분석 결과</h2>
+                <p className="text-lg text-gray-700">
+                  {result.analysis}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
