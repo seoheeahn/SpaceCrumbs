@@ -55,53 +55,45 @@ export default function Result() {
 
   const dimensionScores = calculateDimensionScores(result.answers);
   const dimensionChartData = [
-    {
-      dimension: "E/I",
-      scores: [
-        { name: "E", value: dimensionScores.E },
-        { name: "I", value: dimensionScores.I }
-      ],
+    { 
+      dimension: "외향성/내향성",
+      scoreA: dimensionScores.E,
+      scoreB: dimensionScores.I,
       selected: result.result.includes("I") ? "I" : "E"
     },
     {
-      dimension: "S/N",
-      scores: [
-        { name: "S", value: dimensionScores.S },
-        { name: "N", value: dimensionScores.N }
-      ],
+      dimension: "감각/직관",
+      scoreA: dimensionScores.S,
+      scoreB: dimensionScores.N,
       selected: result.result.includes("N") ? "N" : "S"
     },
     {
-      dimension: "T/F",
-      scores: [
-        { name: "T", value: dimensionScores.T },
-        { name: "F", value: dimensionScores.F }
-      ],
+      dimension: "사고/감정",
+      scoreA: dimensionScores.T,
+      scoreB: dimensionScores.F,
       selected: result.result.includes("F") ? "F" : "T"
     },
     {
-      dimension: "J/P",
-      scores: [
-        { name: "J", value: dimensionScores.J },
-        { name: "P", value: dimensionScores.P }
-      ],
+      dimension: "판단/인식",
+      scoreA: dimensionScores.J,
+      scoreB: dimensionScores.P,
       selected: result.result.includes("P") ? "P" : "J"
     }
   ];
 
   // 질문들을 MBTI 차원별로 그룹화
   const facetGroups: FacetGroup[] = dimensionChartData.map(dimension => {
-    const categoryQuestions = questions.filter(q => q.category === dimension.dimension);
+    const categoryQuestions = questions.filter(q => 
+      q.category === dimension.dimension.replace("외향성/내향성", "E/I")
+        .replace("감각/직관", "S/N")
+        .replace("사고/감정", "T/F")
+        .replace("판단/인식", "J/P")
+    );
     const answers = result.answers;
 
     return {
       category: dimension.dimension,
-      title: {
-        "E/I": "외향성/내향성",
-        "S/N": "감각/직관",
-        "T/F": "사고/감정",
-        "J/P": "판단/인식"
-      }[dimension.dimension],
+      title: dimension.dimension,
       facets: categoryQuestions.map(q => {
         const answer = answers.find(a => a.questionId === q.id);
         const selected = answer
@@ -147,47 +139,35 @@ export default function Result() {
                 {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
               </p>
 
-              <div className="grid grid-cols-2 gap-6 mb-8 p-4 bg-white/50 rounded-2xl">
-                {dimensionChartData.map((dimension, index) => (
-                  <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-                    <h3 className="text-sm font-medium mb-2 text-center">{dimension.dimension}</h3>
-                    <div className="h-16">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={dimension.scores}
-                          layout="vertical"
-                          margin={{ top: 5, right: 0, bottom: 5, left: 0 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                          <XAxis type="number" domain={[0, 100]} hide />
-                          <YAxis type="category" hide />
-                          <Bar
-                            dataKey="value"
-                            fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
-                            radius={[4, 4, 4, 4]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="flex justify-between text-sm mt-2">
-                      {dimension.scores.map((score, i) => (
-                        <div
-                          key={i}
-                          className={`px-2 py-1 rounded ${
-                            score.name === dimension.selected 
-                              ? "bg-primary/10 font-bold text-primary" 
-                              : "text-gray-600"
-                          }`}
-                        >
-                          {score.name} {Math.round(score.value)}%
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-white p-4 rounded-xl shadow-lg mb-8">
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={dimensionChartData}
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, bottom: 5, left: 100 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                      <XAxis type="number" domain={[0, 100]} />
+                      <YAxis dataKey="dimension" type="category" width={100} />
+                      <Bar
+                        dataKey="scoreA"
+                        fill="hsl(200, 70%, 65%)"
+                        stackId="stack"
+                        radius={[4, 0, 0, 4]}
+                      />
+                      <Bar
+                        dataKey="scoreB"
+                        fill="hsl(260, 70%, 65%)"
+                        stackId="stack"
+                        radius={[0, 4, 4, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-6">
                 {facetGroups.map((group, index) => (
                   <div key={index} className="bg-white p-4 rounded-xl shadow-lg">
                     <h2 className="text-lg font-semibold mb-3 text-center text-primary">
