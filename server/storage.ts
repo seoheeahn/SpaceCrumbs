@@ -1,6 +1,6 @@
 import { mbtiResults, type MbtiResult, type InsertMbtiResult } from "@shared/schema";
 import { db } from "./db";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   createMbtiResult(result: InsertMbtiResult): Promise<MbtiResult>;
@@ -8,6 +8,13 @@ export interface IStorage {
   getMbtiResultByCredentials(userId: string, password: string): Promise<MbtiResult | undefined>;
   checkDuplicateUserId(userId: string): Promise<boolean>;
   updateMbtiResult(id: number, update: { analysis?: string; openaiRequestId?: string }): Promise<void>;
+  getAllUserCoordinates(): Promise<Array<{
+    id: number;
+    userId: string;
+    coordinateX: number | null;
+    coordinateY: number | null;
+    coordinateZ: number | null;
+  }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -45,6 +52,25 @@ export class DatabaseStorage implements IStorage {
       .update(mbtiResults)
       .set(update)
       .where(eq(mbtiResults.id, id));
+  }
+
+  async getAllUserCoordinates() {
+    return await db
+      .select({
+        id: mbtiResults.id,
+        userId: mbtiResults.userId,
+        coordinateX: mbtiResults.coordinateX,
+        coordinateY: mbtiResults.coordinateY,
+        coordinateZ: mbtiResults.coordinateZ,
+      })
+      .from(mbtiResults)
+      .where(
+        and(
+          isNotNull(mbtiResults.coordinateX),
+          isNotNull(mbtiResults.coordinateY),
+          isNotNull(mbtiResults.coordinateZ),
+        )
+      );
   }
 }
 

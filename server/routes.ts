@@ -128,6 +128,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/universe-coordinates", async (req, res) => {
+    try {
+      const coordinates = await storage.getAllUserCoordinates();
+      res.json(coordinates);
+    } catch (error) {
+      console.error("Error fetching universe coordinates:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
