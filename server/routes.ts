@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { insertMbtiResultSchema, loginSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { analyzeMbtiResult } from "./openai";
-import { calculateDimensionScores } from "../client/src/lib/mbti";
+import { calculateDimensionScores, calculateMbti } from "../client/src/lib/mbti";
 
 // Normalize each axis independently
 function normalizeByAxis(x: number, y: number, z: number): [number, number, number] {
@@ -131,6 +131,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ isDuplicate });
     } catch (error) {
       console.error("Error checking user ID:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
+  app.get("/api/admin/mbti-results", async (req, res) => {
+    try {
+      const results = await storage.getAllMbtiResults();
+      res.json(results);
+    } catch (error) {
+      console.error("Error fetching all MBTI results:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
+  app.post("/api/admin/recalculate/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await storage.getMbtiResult(id);
+
+      if (!result) {
+        res.status(404).json({ error: "결과를 찾을 수 없습니다" });
+        return;
+      }
+
+      // Recalculate MBTI type using the updated calculation logic
+      const newMbtiType = calculateMbti(result.answers);
+
+      // Update the result in database
+      await storage.updateMbtiResult(id, { result: newMbtiType });
+
+      // Return updated result
+      const updatedResult = await storage.getMbtiResult(id);
+      res.json(updatedResult);
+    } catch (error) {
+      console.error("Error recalculating MBTI result:", error);
       res.status(500).json({ error: "서버 오류가 발생했습니다" });
     }
   });

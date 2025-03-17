@@ -7,7 +7,7 @@ export interface IStorage {
   getMbtiResult(id: number): Promise<MbtiResult | undefined>;
   getMbtiResultByCredentials(userId: string, password: string): Promise<MbtiResult | undefined>;
   checkDuplicateUserId(userId: string): Promise<boolean>;
-  updateMbtiResult(id: number, update: { analysis?: string; openaiRequestId?: string }): Promise<void>;
+  updateMbtiResult(id: number, update: { analysis?: string; openaiRequestId?: string; result?: string }): Promise<void>;
   getAllUserCoordinates(): Promise<Array<{
     id: number;
     userId: string;
@@ -15,6 +15,7 @@ export interface IStorage {
     coordinateY: number | null;
     coordinateZ: number | null;
   }>>;
+  getAllMbtiResults(): Promise<MbtiResult[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -47,7 +48,7 @@ export class DatabaseStorage implements IStorage {
     return !!result;
   }
 
-  async updateMbtiResult(id: number, update: { analysis?: string; openaiRequestId?: string }): Promise<void> {
+  async updateMbtiResult(id: number, update: { analysis?: string; openaiRequestId?: string; result?: string }): Promise<void> {
     await db
       .update(mbtiResults)
       .set(update)
@@ -71,6 +72,13 @@ export class DatabaseStorage implements IStorage {
           isNotNull(mbtiResults.coordinateZ),
         )
       );
+  }
+
+  async getAllMbtiResults(): Promise<MbtiResult[]> {
+    return await db
+      .select()
+      .from(mbtiResults)
+      .orderBy(mbtiResults.createdAt);
   }
 }
 
