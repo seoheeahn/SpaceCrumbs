@@ -106,12 +106,12 @@ export default function Result() {
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={dimension.scores}
-                          layout="horizontal"
+                          layout="vertical"
                           margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                          <XAxis type="number" domain={[0, 100]} />
-                          <YAxis type="category" />
+                          <XAxis type="number" domain={[0, 100]} hide />
+                          <YAxis type="category" hide />
                           <Bar
                             dataKey="value"
                             fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
@@ -122,7 +122,7 @@ export default function Result() {
                       </ResponsiveContainer>
                       <div className="flex justify-between text-sm mt-2 px-2">
                         {dimension.scores.map((score, i) => (
-                          <div 
+                          <div
                             key={i}
                             className={score.name === dimension.selected ? "font-bold" : "text-gray-600"}
                           >
