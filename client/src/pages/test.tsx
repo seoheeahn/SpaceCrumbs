@@ -89,11 +89,27 @@ export default function Test() {
   };
 
   const handleAnswer = async (value: number) => {
-    const newAnswers = [
-      ...answers,
-      { questionId: questions[currentQuestion].id, value }
-    ];
-    setAnswers(newAnswers);
+    const newAnswer = { questionId: questions[currentQuestion].id, value };
+
+    // Update answers array, replacing any existing answer for this question
+    setAnswers(prevAnswers => {
+      const answersCopy = [...prevAnswers];
+      const existingIndex = answersCopy.findIndex(a => a.questionId === newAnswer.questionId);
+
+      if (existingIndex !== -1) {
+        // Replace existing answer
+        answersCopy[existingIndex] = newAnswer;
+      } else {
+        // Add new answer
+        answersCopy.push(newAnswer);
+      }
+
+      // Sort answers by questionId to maintain order
+      answersCopy.sort((a, b) => a.questionId - b.questionId);
+
+      console.log("Updated answers:", answersCopy); // Debug log
+      return answersCopy;
+    });
 
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
@@ -104,6 +120,16 @@ export default function Test() {
     try {
       if (!userCredentials) {
         throw new Error("User credentials not found");
+      }
+
+      // Verify we have exactly one answer per question
+      if (answers.length !== questions.length) {
+        toast({
+          title: "응답 확인",
+          description: "모든 문항에 응답해주세요.",
+          variant: "destructive",
+        });
+        return;
       }
 
       const mbtiType = calculateMbti(answers);
