@@ -97,44 +97,27 @@ export default function Result() {
 
               <div className="grid grid-cols-2 gap-6 mb-8 p-4 bg-white/50 rounded-2xl">
                 {dimensionChartData.map((dimension, index) => (
-                  <div key={index} className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-                    <h3 className="text-lg font-semibold mb-4 text-center text-primary">{dimension.dimension}</h3>
-                    <div className="h-40">
+                  <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                    <h3 className="text-sm font-medium mb-2 text-center text-gray-600">{dimension.dimension}</h3>
+                    <div className="h-32">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={dimension.scores}
                           layout="vertical"
-                          margin={{ top: 10, right: 10, bottom: 10, left: 80 }}
+                          margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                          <XAxis
-                            type="number"
-                            domain={[0, 100]}
-                            tickFormatter={(value) => `${value}%`}
-                          />
-                          <YAxis
-                            dataKey="name"
-                            type="category"
-                            tickLine={false}
-                            axisLine={false}
-                            style={{
-                              fontSize: '0.875rem',
-                              fontWeight: 500
-                            }}
-                          />
-                          <Tooltip
-                            formatter={(value) => [`${value}%`]}
-                            contentStyle={{
-                              borderRadius: '0.5rem',
-                              border: 'none',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                            }}
-                          />
+                          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                          <XAxis type="number" domain={[0, 100]} hide />
+                          <YAxis dataKey="name" type="category" hide />
                           <Bar
                             dataKey="value"
                             fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
                             radius={[4, 4, 4, 4]}
                             animationDuration={1000}
+                            label={({ value, name }) => {
+                              const shortName = name.split('(')[1].replace(')', '');
+                              return `${shortName} ${Math.round(value)}%`;
+                            }}
                           />
                         </BarChart>
                       </ResponsiveContainer>
