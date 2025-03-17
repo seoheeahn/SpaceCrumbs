@@ -7,13 +7,6 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid } from "@react-three/drei";
 import { Suspense } from "react";
 
-function normalize(x: number, y: number, z: number): [number, number, number] {
-  const coordinates = [x, y, z];
-  const min = Math.min(...coordinates);
-  const max = Math.max(...coordinates);
-  return coordinates.map(val => ((val - min) / (max - min)) * 100) as [number, number, number];
-}
-
 function Sphere({ position }: { position: [number, number, number] }) {
   return (
     <mesh position={position}>
@@ -62,7 +55,6 @@ function Scene({ coordinates }: { coordinates: [number, number, number] }) {
   );
 }
 
-// Error Boundary Component
 function ErrorFallback() {
   return (
     <div className="w-full h-screen flex items-center justify-center">
@@ -99,7 +91,7 @@ export default function Universe() {
     );
   }
 
-  if (error || !result) {
+  if (error || !result || !result.coordinateX || !result.coordinateY || !result.coordinateZ) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
         <p className="text-gray-800">데이터를 불러올 수 없습니다. (ID: {id})</p>
@@ -107,13 +99,11 @@ export default function Universe() {
     );
   }
 
-  // Ensure coordinates are numbers and handle null/undefined values
-  const rawX = result.coordinateX ?? 0;
-  const rawY = result.coordinateY ?? 0;
-  const rawZ = result.coordinateZ ?? 0;
-
-  // Normalize coordinates
-  const normalizedCoords = normalize(rawX, rawY, rawZ);
+  const coordinates: [number, number, number] = [
+    Number(result.coordinateX),
+    Number(result.coordinateY),
+    Number(result.coordinateZ)
+  ];
 
   return (
     <motion.div 
@@ -128,9 +118,9 @@ export default function Universe() {
           <p className="text-center mb-8 text-gray-600">
             당신의 MBTI 유형({result.result})의 우주 좌표:
             <br />
-            원본 좌표 - X: {rawX.toFixed(2)}, Y: {rawY.toFixed(2)}, Z: {rawZ.toFixed(2)}
-            <br />
-            정규화 좌표 - X: {normalizedCoords[0].toFixed(2)}, Y: {normalizedCoords[1].toFixed(2)}, Z: {normalizedCoords[2].toFixed(2)}
+            X: {coordinates[0].toFixed(2)}, 
+            Y: {coordinates[1].toFixed(2)}, 
+            Z: {coordinates[2].toFixed(2)}
           </p>
           <div className="w-full h-[600px] bg-gray-900 rounded-lg overflow-hidden">
             <Canvas
@@ -139,7 +129,7 @@ export default function Universe() {
               style={{ background: '#1e1e1e' }}
             >
               <Suspense fallback={<ErrorFallback />}>
-                <Scene coordinates={normalizedCoords} />
+                <Scene coordinates={coordinates} />
               </Suspense>
             </Canvas>
           </div>
