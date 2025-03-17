@@ -1,5 +1,6 @@
 import { questions, type Answer } from "./questions";
 import type { MbtiType } from "@shared/schema";
+import type { DimensionKey, MbtiLetter } from "./types";
 
 function getWeightByValue(value: number): { [key: string]: number } {
   // 1,2는 A쪽으로 가중치, 4,5는 B쪽으로 가중치
@@ -147,4 +148,29 @@ export const mbtiDescriptions: Record<MbtiType, {ko: string; en: string}> = {
     ko: "선도적이고 결단력이 있으며 계획적입니다.",
     en: "Leader, decisive and planned."
   }
+};
+
+export const dimensionColors: Record<DimensionKey, string> = {
+  "E-I": "#ff9500",
+  "S-N": "#34c759",
+  "T-F": "#007aff",
+  "J-P": "#af52de"
+};
+
+export const dimensionScores: Record<MbtiLetter, number> = {
+  E: 0.8,
+  I: 0.2,
+  S: 0.7,
+  N: 0.3,
+  T: 0.6,
+  F: 0.4,
+  J: 0.9,
+  P: 0.1
+};
+
+export const dimensionToLetters: Record<DimensionKey, [MbtiLetter, MbtiLetter]> = {
+  "E-I": ["E", "I"],
+  "S-N": ["S", "N"],
+  "T-F": ["T", "F"],
+  "J-P": ["J", "P"]
 };
