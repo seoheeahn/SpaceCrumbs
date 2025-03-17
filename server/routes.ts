@@ -6,23 +6,37 @@ import { ZodError } from "zod";
 import { analyzeMbtiResult } from "./openai";
 import { calculateDimensionScores } from "../client/src/lib/mbti";
 
-function normalize(x: number, y: number, z: number): [number, number, number] {
+// Normalize each axis independently
+function normalizeByAxis(x: number, y: number, z: number): [number, number, number] {
   const coordinates = [x, y, z];
-  const min = Math.min(...coordinates);
-  const max = Math.max(...coordinates);
-  return coordinates.map(val => ((val - min) / (max - min)) * 100) as [number, number, number];
+  const xValues = [x];
+  const yValues = [y];
+  const zValues = [z];
+
+  // Function to normalize a single value within its axis range
+  const normalizeValue = (value: number, values: number[]) => {
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    return ((value - min) / (max - min)) * 100;
+  };
+
+  return [
+    normalizeValue(x, xValues),
+    normalizeValue(y, yValues),
+    normalizeValue(z, zValues)
+  ];
 }
 
 function calculateCoordinates(answers: { questionId: number; value: number }[]) {
   const scores = calculateDimensionScores(answers);
 
   // Calculate raw coordinates (-100 to 100 range)
-  const x = ((scores.E - scores.I) / 100) * 100;
-  const y = ((scores.N - scores.S) / 100) * 100;
-  const z = ((scores.F - scores.T) / 100) * 100;
+  const rawX = ((scores.E - scores.I) / 100) * 100; // E/I axis
+  const rawY = ((scores.N - scores.S) / 100) * 100; // N/S axis
+  const rawZ = ((scores.F - scores.T) / 100) * 100; // F/T axis
 
-  // Normalize to 0-100 range
-  return normalize(x, y, z);
+  // Normalize coordinates to 0-100 range
+  return normalizeByAxis(rawX, rawY, rawZ);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -116,16 +130,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ isDuplicate });
     } catch (error) {
       console.error("Error checking user ID:", error);
-      res.status(500).json({ error: "서버 오류가 발생했습니다" });
-    }
-  });
-
-  app.get("/api/universe-coordinates", async (req, res) => {
-    try {
-      const coordinates = await storage.getAllUserCoordinates();
-      res.json(coordinates);
-    } catch (error) {
-      console.error("Error fetching universe coordinates:", error);
       res.status(500).json({ error: "서버 오류가 발생했습니다" });
     }
   });

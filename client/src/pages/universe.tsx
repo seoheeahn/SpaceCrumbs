@@ -8,8 +8,6 @@ import { OrbitControls } from "@react-three/drei";
 import { Suspense } from "react";
 
 function Scene({ coordinates }: { coordinates: [number, number, number] }) {
-  const [x, y, z] = coordinates;
-
   return (
     <>
       <color attach="background" args={["#1e1e1e"]} />
@@ -17,7 +15,7 @@ function Scene({ coordinates }: { coordinates: [number, number, number] }) {
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
 
-      <mesh position={[x, y, z]}>
+      <mesh position={coordinates}>
         <sphereGeometry args={[2, 32, 32]} />
         <meshStandardMaterial color="#00ffcc" />
       </mesh>
