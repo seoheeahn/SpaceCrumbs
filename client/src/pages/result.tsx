@@ -145,11 +145,11 @@ export default function Result() {
                     <BarChart
                       data={dimensionChartData}
                       layout="vertical"
-                      margin={{ top: 5, right: 30, bottom: 5, left: 100 }}
+                      margin={{ top: 5, right: 5, bottom: 5, left: 120 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                       <XAxis type="number" domain={[0, 100]} />
-                      <YAxis dataKey="dimension" type="category" width={100} />
+                      <YAxis dataKey="dimension" type="category" width={120} />
                       <Bar
                         dataKey="scoreA"
                         fill="hsl(200, 70%, 65%)"
@@ -167,55 +167,35 @@ export default function Result() {
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {facetGroups.map((group, index) => (
                   <div key={index} className="bg-white p-4 rounded-xl shadow-lg">
-                    <h2 className="text-lg font-semibold mb-3 text-center text-primary">
+                    <h2 className="text-lg font-semibold mb-2 text-center text-primary">
                       {group.title}
                     </h2>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {group.facets.map((facet) => {
                         const [typeA, typeB] = facet.facet.split("-");
                         const facetData = [
-                          { type: typeA, value: facet.weights.A },
-                          { type: typeB, value: facet.weights.B }
+                          { value: facet.weights.A, color: "hsl(200, 70%, 65%)" },
+                          { value: facet.weights.B, color: "hsl(260, 70%, 65%)" }
                         ];
+
                         return (
-                          <div key={facet.id} className="bg-gray-50 p-2 rounded-lg">
-                            <div className="h-8">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                  data={facetData}
-                                  layout="horizontal"
-                                  barGap={0}
-                                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                                >
-                                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                                  <XAxis type="number" domain={[0, 100]} />
-                                  <YAxis type="category" dataKey="type" />
-                                  <Bar
-                                    dataKey="value"
-                                    stackId="stack"
-                                    fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
-                                    radius={[4, 4, 4, 4]}
-                                  />
-                                </BarChart>
-                              </ResponsiveContainer>
-                            </div>
-                            <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center mt-1">
-                              <div className={`text-center ${
-                                facet.selected === "A" ? "font-bold text-primary" : 
-                                facet.selected === "neutral" ? "text-primary" : "text-gray-500"
-                              }`}>
-                                {typeA} {facet.weights.A}%
+                          <div key={facet.id} className="bg-gray-50 px-2 py-1 rounded">
+                            <div className="flex items-center gap-2">
+                              <div className="text-sm text-right w-20 shrink-0">{typeA}</div>
+                              <div className="grow h-6 relative bg-gray-100 rounded overflow-hidden">
+                                <div 
+                                  className="absolute inset-y-0 left-0 bg-[hsl(200,70%,65%)]" 
+                                  style={{ width: `${facet.weights.A}%` }}
+                                />
+                                <div 
+                                  className="absolute inset-y-0 right-0 bg-[hsl(260,70%,65%)]" 
+                                  style={{ width: `${facet.weights.B}%` }}
+                                />
                               </div>
-                              <div className="text-xs text-gray-400">vs</div>
-                              <div className={`text-center ${
-                                facet.selected === "B" ? "font-bold text-primary" : 
-                                facet.selected === "neutral" ? "text-primary" : "text-gray-500"
-                              }`}>
-                                {typeB} {facet.weights.B}%
-                              </div>
+                              <div className="text-sm w-20 shrink-0">{typeB}</div>
                             </div>
                           </div>
                         );
