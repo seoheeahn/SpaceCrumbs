@@ -58,14 +58,14 @@ export default function Result() {
     "외향성/내향성": "hsl(36, 70%, 80%)",  // 크림색
     "감각/직관": "hsl(12, 70%, 75%)",      // 연어색
     "사고/감정": "hsl(160, 70%, 75%)",     // 민트색
-    "판단/인식": "hsl(48, 70%, 85%)"       // 연한 베이지색
+    "판단/인식": "hsl(45, 70%, 65%)"       // 황금빛 갈색
   };
 
   const facetColors = {
     "외향성/내향성": ["hsl(36, 70%, 60%)", "hsl(36, 60%, 90%)"],
     "감각/직관": ["hsl(12, 70%, 60%)", "hsl(12, 60%, 90%)"],
     "사고/감정": ["hsl(160, 70%, 60%)", "hsl(160, 60%, 90%)"],
-    "판단/인식": ["hsl(48, 70%, 60%)", "hsl(48, 60%, 90%)"]
+    "판단/인식": ["hsl(45, 70%, 55%)", "hsl(45, 60%, 85%)"]
   };
 
   // 질문들을 MBTI 차원별로 그룹화
@@ -185,7 +185,7 @@ export default function Result() {
                             <div className="flex items-center gap-3">
                               <div className={`text-sm font-medium text-right w-24 shrink-0 transition-all ${
                                 isADominant 
-                                  ? `font-bold drop-shadow-md`
+                                  ? `font-bold`
                                   : "text-gray-600"
                               }`}
                               style={{ 
@@ -211,7 +211,7 @@ export default function Result() {
                               </div>
                               <div className={`text-sm font-medium w-24 shrink-0 transition-all ${
                                 isBDominant 
-                                  ? `font-bold drop-shadow-md`
+                                  ? `font-bold`
                                   : "text-gray-600"
                               }`}
                               style={{ 
