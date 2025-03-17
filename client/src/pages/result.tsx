@@ -102,16 +102,16 @@ export default function Result() {
                 {dimensionChartData.map((dimension, index) => (
                   <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
                     <h3 className="text-sm font-medium mb-2 text-center text-gray-600">{dimension.dimension}</h3>
-                    <div className="h-32">
+                    <div className="h-20">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={dimension.scores}
-                          layout="vertical"
-                          margin={{ top: 10, right: 60, bottom: 10, left: 10 }}
+                          layout="horizontal"
+                          margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                          <XAxis type="number" domain={[0, 100]} hide />
-                          <YAxis dataKey="name" type="category" hide />
+                          <XAxis type="number" domain={[0, 100]} />
+                          <YAxis type="category" />
                           <Bar
                             dataKey="value"
                             fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
@@ -148,12 +148,12 @@ export default function Result() {
 
                     return (
                       <div key={answer.questionId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <p className="font-medium mb-2">{question.text.ko}</p>
+                        <p className="text-lg font-semibold mb-3 text-center text-primary/90">{question.text.ko}</p>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className={`p-2 rounded ${isOptionA || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
+                          <div className={`p-2 rounded text-center ${isOptionA || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
                             {question.options.A}
                           </div>
-                          <div className={`p-2 rounded text-right ${isOptionB || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
+                          <div className={`p-2 rounded text-center ${isOptionB || isNeutral ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
                             {question.options.B}
                           </div>
                         </div>
