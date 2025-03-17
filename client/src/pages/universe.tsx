@@ -12,6 +12,11 @@ interface DataPoint {
   z: number;
 }
 
+// 좌표 정규화 함수 (0-100 범위로)
+function normalizeCoordinate(value: number, min: number, max: number): number {
+  return ((value - min) / (max - min)) * 100;
+}
+
 export default function Universe() {
   const { id } = useParams();
 
@@ -23,34 +28,30 @@ export default function Universe() {
     queryKey: [`/api/mbti-results/${id}`]
   });
 
-  if (!id) {
+  if (!id || isLoading || error || !result) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
-        <p className="text-white">잘못된 접근입니다.</p>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
-        <p className="text-white">우주를 생성하는 중...</p>
-      </div>
-    );
-  }
-
-  if (error || !result) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
-        <p className="text-white">데이터를 불러올 수 없습니다.</p>
+        <p className="text-gray-800">
+          {!id ? "잘못된 접근입니다." : error ? "데이터를 불러올 수 없습니다." : "우주를 생성하는 중..."}
+        </p>
       </div>
     );
   }
 
   // Ensure coordinates are numbers and handle null/undefined values
-  const x = result.coordinateX ? Number(result.coordinateX) : 0;
-  const y = result.coordinateY ? Number(result.coordinateY) : 0;
-  const z = result.coordinateZ ? Number(result.coordinateZ) : 0;
+  const rawX = result.coordinateX ? Number(result.coordinateX) : 0;
+  const rawY = result.coordinateY ? Number(result.coordinateY) : 0;
+  const rawZ = result.coordinateZ ? Number(result.coordinateZ) : 0;
+
+  // Find min and max values for normalization
+  const coordinates = [rawX, rawY, rawZ];
+  const minValue = Math.min(...coordinates);
+  const maxValue = Math.max(...coordinates);
+
+  // Normalize coordinates to 0-100 range
+  const x = normalizeCoordinate(rawX, minValue, maxValue);
+  const y = normalizeCoordinate(rawY, minValue, maxValue);
+  const z = normalizeCoordinate(rawZ, minValue, maxValue);
 
   // Create data point for the scatter plot
   const data: DataPoint[] = [{
@@ -59,10 +60,6 @@ export default function Universe() {
     y,
     z
   }];
-
-  // Calculate domain based on coordinates
-  const maxValue = Math.max(Math.abs(x), Math.abs(y), Math.abs(z));
-  const domain = [-maxValue, maxValue];
 
   return (
     <motion.div 
@@ -77,9 +74,9 @@ export default function Universe() {
           <p className="text-center mb-8 text-gray-600">
             당신의 MBTI 유형({result.result})의 우주 좌표:
             <br />
-            X: {x.toFixed(2)}, 
-            Y: {y.toFixed(2)}, 
-            Z: {z.toFixed(2)}
+            원본 좌표 - X: {rawX.toFixed(2)}, Y: {rawY.toFixed(2)}, Z: {rawZ.toFixed(2)}
+            <br />
+            정규화 좌표 - X: {x.toFixed(2)}, Y: {y.toFixed(2)}, Z: {z.toFixed(2)}
           </p>
           <div className="w-full h-[600px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -96,21 +93,21 @@ export default function Universe() {
                   type="number" 
                   dataKey="x" 
                   name="X" 
-                  domain={domain}
+                  domain={[0, 100]}
                   label={{ value: 'X축 (E-I)', position: 'bottom' }}
                 />
                 <YAxis 
                   type="number" 
                   dataKey="y" 
                   name="Y"
-                  domain={domain}
+                  domain={[0, 100]}
                   label={{ value: 'Y축 (N-S)', angle: -90, position: 'left' }}
                 />
                 <ZAxis 
                   type="number" 
                   dataKey="z" 
                   name="Z"
-                  domain={domain}
+                  domain={[0, 100]}
                   range={[50, 400]}
                   label={{ value: 'Z축 (F-T)', position: 'insideRight' }}
                 />
@@ -134,9 +131,9 @@ export default function Universe() {
                 <Scatter
                   name={result.result}
                   data={data}
-                  fill="#8884d8"
+                  fill={`hsl(${z}, 70%, 50%)`}
                   shape="star"
-                />
+                  />
               </ScatterChart>
             </ResponsiveContainer>
           </div>
