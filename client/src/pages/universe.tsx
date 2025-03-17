@@ -79,16 +79,30 @@ export default function Universe() {
     coordinateY: number | null; 
     coordinateZ: number | null; 
   }>({
-    queryKey: ['/api/mbti-results', id],
+    queryKey: [`/api/mbti-results/${id}`],
     enabled: !!id
   });
 
-  if (!id || isLoading || error || !result) {
+  if (!id) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
-        <p className="text-gray-800">
-          {!id ? "잘못된 접근입니다." : error ? "데이터를 불러올 수 없습니다." : "우주를 생성하는 중..."}
-        </p>
+        <p className="text-gray-800">잘못된 접근입니다.</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
+        <p className="text-gray-800">우주를 생성하는 중...</p>
+      </div>
+    );
+  }
+
+  if (error || !result) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
+        <p className="text-gray-800">데이터를 불러올 수 없습니다. (ID: {id})</p>
       </div>
     );
   }
