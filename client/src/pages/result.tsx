@@ -141,7 +141,7 @@ export default function Result() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
       {/* SNS 공유용 숨겨진 컴포넌트 */}
-      <div className="hidden">
+      <div className="absolute left-[-9999px] top-[-9999px]">
         <div ref={snsRef} className="w-[1080px] h-[1080px] bg-white p-12 flex flex-col items-center justify-center">
           <h1 className="text-4xl font-bold mb-8">MBTI 성격 유형 결과</h1>
           <div className="flex gap-8 mb-8">
@@ -286,7 +286,7 @@ export default function Result() {
                       결과 공유하기
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-3xl">
+                  <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                     <DialogTitle>MBTI 결과 공유</DialogTitle>
                     <DialogDescription>
                       원하시는 형식을 선택하여 저장하거나 공유하세요
@@ -296,7 +296,7 @@ export default function Result() {
                         <TabsTrigger value="sns">SNS 공유용</TabsTrigger>
                         <TabsTrigger value="full">상세 리포트</TabsTrigger>
                       </TabsList>
-                      <TabsContent value="sns">
+                      <TabsContent value="sns" className="overflow-y-auto">
                         {snsImage && (
                           <div className="rounded-lg overflow-hidden shadow-lg">
                             <img src={snsImage} alt="MBTI Result for SNS" className="w-full" />
@@ -330,7 +330,7 @@ export default function Result() {
                           </div>
                         )}
                       </TabsContent>
-                      <TabsContent value="full">
+                      <TabsContent value="full" className="overflow-y-auto max-h-[60vh]">
                         {previewImage && (
                           <div className="rounded-lg overflow-hidden shadow-lg">
                             <img src={previewImage} alt="MBTI Full Report" className="w-full" />
