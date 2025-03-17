@@ -73,8 +73,8 @@ function Scene({ coordinates }: { coordinates: Coordinate[] }) {
 }
 
 function Universe() {
-  const { data: coordinates, isLoading } = useQuery<Coordinate[]>({
-    queryKey: ["/api/universe-coordinates"],
+  const { data: coordinates, isLoading, error } = useQuery<Coordinate[]>({
+    queryKey: ["/api/universe-coordinates"]
   });
 
   if (isLoading) {
@@ -85,7 +85,7 @@ function Universe() {
     );
   }
 
-  if (!coordinates) {
+  if (error || !coordinates) {
     return (
       <div className="w-full h-screen flex items-center justify-center text-white">
         좌표를 불러오는데 실패했습니다.
@@ -100,7 +100,8 @@ function Universe() {
         gl={{ 
           antialias: true,
           alpha: false,
-          powerPreference: "high-performance"
+          powerPreference: "high-performance",
+          preserveDrawingBuffer: true
         }}
       >
         <Suspense fallback={null}>
