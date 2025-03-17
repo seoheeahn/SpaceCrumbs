@@ -12,9 +12,11 @@ import { apiRequest } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput, type Answer } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Test() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [currentQuestion, setCurrentQuestion] = useState(-1); // -1 means login form
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [userCredentials, setUserCredentials] = useState<LoginInput | null>(null);
@@ -46,24 +48,37 @@ export default function Test() {
         if (!userCredentials) {
           throw new Error("User credentials not found");
         }
+
         const response = await apiRequest("POST", "/api/mbti-results", {
           ...userCredentials,
           answers: newAnswers,
           result: mbtiType,
           language: "ko",
         });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "서버 오류가 발생했습니다");
+        }
+
         const result = await response.json();
         if (!result.id) {
           throw new Error("Invalid response from server");
         }
+
         setLocation(`/result/${result.id}`);
       } else {
         setCurrentQuestion(prev => prev + 1);
       }
     } catch (error) {
       console.error("Error submitting answer:", error);
-      setCurrentQuestion(0); // Reset to first question on error
-      setAnswers([]); // Clear answers
+      toast({
+        title: "오류 발생",
+        description: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다",
+        variant: "destructive",
+      });
+      setCurrentQuestion(0);
+      setAnswers([]);
     }
   };
 

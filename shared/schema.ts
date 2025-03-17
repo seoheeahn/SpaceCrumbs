@@ -1,5 +1,4 @@
 import { pgTable, text, serial, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Define Answer type and schema
@@ -23,9 +22,13 @@ export const mbtiResults = pgTable("mbti_results", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertMbtiResultSchema = createInsertSchema(mbtiResults).omit({
-  id: true,
-  createdAt: true,
+// Create a strict schema for input validation
+export const insertMbtiResultSchema = z.object({
+  nickname: z.string().min(1, "닉네임을 입력해주세요"),
+  password: z.string().min(4, "비밀번호는 최소 4자 이상이어야 합니다"),
+  answers: z.array(answerSchema),
+  result: z.string(),
+  language: z.string(),
 });
 
 export const loginSchema = z.object({
