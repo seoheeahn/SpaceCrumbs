@@ -7,7 +7,7 @@ import { Share2 } from "lucide-react";
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
 import { questions } from "@/lib/questions";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 export default function Result() {
   const { id } = useParams();
@@ -34,34 +34,33 @@ export default function Result() {
   }
 
   const dimensionScores = calculateDimensionScores(result.answers);
-
   const dimensionChartData = [
     {
       dimension: "외향성/내향성",
       scores: [
-        { name: "외향성(E)", value: dimensionScores.E },
-        { name: "내향성(I)", value: dimensionScores.I }
+        { name: "E", value: dimensionScores.E },
+        { name: "I", value: dimensionScores.I }
       ]
     },
     {
       dimension: "감각/직관",
       scores: [
-        { name: "감각(S)", value: dimensionScores.S },
-        { name: "직관(N)", value: dimensionScores.N }
+        { name: "S", value: dimensionScores.S },
+        { name: "N", value: dimensionScores.N }
       ]
     },
     {
       dimension: "사고/감정",
       scores: [
-        { name: "사고(T)", value: dimensionScores.T },
-        { name: "감정(F)", value: dimensionScores.F }
+        { name: "T", value: dimensionScores.T },
+        { name: "F", value: dimensionScores.F }
       ]
     },
     {
       dimension: "판단/인식",
       scores: [
-        { name: "판단(J)", value: dimensionScores.J },
-        { name: "인식(P)", value: dimensionScores.P }
+        { name: "J", value: dimensionScores.J },
+        { name: "P", value: dimensionScores.P }
       ]
     }
   ];
@@ -114,10 +113,7 @@ export default function Result() {
                             fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
                             radius={[4, 4, 4, 4]}
                             animationDuration={1000}
-                            label={({ value, name }) => {
-                              const shortName = name.split('(')[1].replace(')', '');
-                              return `${shortName} ${Math.round(value)}%`;
-                            }}
+                            label={({ value, name }) => `${name} ${Math.round(value)}%`}
                           />
                         </BarChart>
                       </ResponsiveContainer>
@@ -133,13 +129,19 @@ export default function Result() {
                     const question = questions.find(q => q.id === answer.questionId);
                     if (!question) return null;
 
+                    const isOptionA = answer.value <= 2;
+                    const isOptionB = answer.value >= 4;
+
                     return (
                       <div key={answer.questionId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                         <p className="font-medium mb-2">{question.text.ko}</p>
-                        <div className="grid grid-cols-[1fr,auto,1fr] gap-4 text-sm text-gray-600">
-                          <div>{question.options.A}</div>
-                          <div className="font-semibold">{answer.value}</div>
-                          <div className="text-right">{question.options.B}</div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className={isOptionA ? "font-bold text-primary" : "text-gray-500"}>
+                            {question.options.A}
+                          </div>
+                          <div className={`text-right ${isOptionB ? "font-bold text-primary" : "text-gray-500"}`}>
+                            {question.options.B}
+                          </div>
                         </div>
                       </div>
                     );
