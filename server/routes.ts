@@ -38,7 +38,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      // Get AI analysis with timeout
+      // If analysis already exists, return it immediately
+      if (result.analysis && result.openaiRequestId) {
+        console.log(`[${new Date().toISOString()}] Returning cached analysis for result ID: ${id}`);
+        res.json(result);
+        return;
+      }
+
+      // Get AI analysis with timeout only if no analysis exists
       console.log(`[${new Date().toISOString()}] Starting OpenAI analysis for MBTI result`);
       const analysisPromise = analyzeMbtiResult(result);
       const timeoutPromise = new Promise((_, reject) => 
