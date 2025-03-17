@@ -36,32 +36,36 @@ export default function Result() {
   const dimensionScores = calculateDimensionScores(result.answers);
   const dimensionChartData = [
     {
-      dimension: "외향성/내향성",
+      dimension: "E/I",
       scores: [
         { name: "E", value: dimensionScores.E },
         { name: "I", value: dimensionScores.I }
-      ]
+      ],
+      selected: result.result.includes("I") ? "I" : "E"
     },
     {
-      dimension: "감각/직관",
+      dimension: "S/N",
       scores: [
         { name: "S", value: dimensionScores.S },
         { name: "N", value: dimensionScores.N }
-      ]
+      ],
+      selected: result.result.includes("N") ? "N" : "S"
     },
     {
-      dimension: "사고/감정",
+      dimension: "T/F",
       scores: [
         { name: "T", value: dimensionScores.T },
         { name: "F", value: dimensionScores.F }
-      ]
+      ],
+      selected: result.result.includes("F") ? "F" : "T"
     },
     {
-      dimension: "판단/인식",
+      dimension: "J/P",
       scores: [
         { name: "J", value: dimensionScores.J },
         { name: "P", value: dimensionScores.P }
-      ]
+      ],
+      selected: result.result.includes("P") ? "P" : "J"
     }
   ];
 
@@ -113,7 +117,20 @@ export default function Result() {
                             fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
                             radius={[4, 4, 4, 4]}
                             animationDuration={1000}
-                            label={({ value, name }) => `${name} ${Math.round(value)}%`}
+                            label={({ value, name }) => {
+                              const isSelected = name === dimension.selected;
+                              return (
+                                <text
+                                  x={value > 50 ? -5 : 105}
+                                  y={12}
+                                  textAnchor={value > 50 ? "end" : "start"}
+                                  fill={isSelected ? "#000" : "#666"}
+                                  fontWeight={isSelected ? "bold" : "normal"}
+                                >
+                                  {`${name} ${Math.round(value)}%`}
+                                </text>
+                              );
+                            }}
                           />
                         </BarChart>
                       </ResponsiveContainer>
@@ -136,10 +153,10 @@ export default function Result() {
                       <div key={answer.questionId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                         <p className="font-medium mb-2">{question.text.ko}</p>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className={isOptionA ? "font-bold text-primary" : "text-gray-500"}>
+                          <div className={`p-2 rounded ${isOptionA ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
                             {question.options.A}
                           </div>
-                          <div className={`text-right ${isOptionB ? "font-bold text-primary" : "text-gray-500"}`}>
+                          <div className={`p-2 rounded text-right ${isOptionB ? "bg-primary/10 font-bold text-primary" : "text-gray-500"}`}>
                             {question.options.B}
                           </div>
                         </div>
