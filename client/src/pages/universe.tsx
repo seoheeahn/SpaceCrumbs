@@ -32,7 +32,6 @@ export default function Universe() {
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
-          <directionalLight position={[10, 10, 5]} intensity={1} />
           <Stars 
             radius={100} 
             depth={50} 
