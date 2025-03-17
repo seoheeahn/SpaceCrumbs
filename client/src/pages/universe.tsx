@@ -29,7 +29,7 @@ function Scene() {
   return (
     <>
       <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
+      <directionalLight position={[10, 10, 5]} intensity={1} />
       <Stars 
         radius={100} 
         depth={50} 
@@ -37,7 +37,7 @@ function Scene() {
         factor={4} 
         saturation={0}
       />
-      {coordinates.map((coord, index) => (
+      {coordinates?.map((coord, index) => (
         <Planet
           key={index}
           position={[
@@ -57,7 +57,7 @@ export default function Universe() {
     <div className="w-full h-screen bg-black">
       <Canvas
         camera={{ position: [0, 0, 50], fov: 60 }}
-        dpr={[1, 2]}
+        gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
           <Scene />
