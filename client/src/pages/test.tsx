@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { ArrowLeft, Send } from "lucide-react";
 import { questions } from "@/lib/questions";
 import { calculateMbti } from "@/lib/mbti";
 import { apiRequest } from "@/lib/queryClient";
@@ -13,7 +14,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput, type Answer } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Test() {
@@ -24,6 +24,7 @@ export default function Test() {
   const [userCredentials, setUserCredentials] = useState<LoginInput | null>(null);
   const [isCheckingId, setIsCheckingId] = useState(false);
   const [isDuplicateId, setIsDuplicateId] = useState(false);
+  const [isIdChecked, setIsIdChecked] = useState(false);
   const progress = Math.max(0, (currentQuestion / questions.length) * 100);
 
   const form = useForm<LoginInput>({
@@ -40,6 +41,7 @@ export default function Test() {
       const response = await fetch(`/api/check-user-id/${userId}`);
       const data = await response.json();
       setIsDuplicateId(data.isDuplicate);
+      setIsIdChecked(true);
 
       if (data.isDuplicate) {
         form.setError("userId", {
@@ -66,75 +68,72 @@ export default function Test() {
   };
 
   const handleLoginSubmit = async (data: LoginInput) => {
-    try {
-      // Check for duplicate ID before proceeding
-      const response = await fetch(`/api/check-user-id/${data.userId}`);
-      const checkResult = await response.json();
-
-      if (checkResult.isDuplicate) {
-        form.setError("userId", {
-          type: "manual",
-          message: "이미 사용 중인 아이디입니다"
-        });
-        return;
-      }
-
-      setUserCredentials(data);
-      setCurrentQuestion(0);
-    } catch (error) {
-      console.error("Error during login submission:", error);
+    if (!isIdChecked) {
       toast({
-        title: "오류 발생",
-        description: "로그인 처리 중 오류가 발생했습니다",
+        title: "중복 확인 필요",
+        description: "아이디 중복 확인을 먼저 해주세요.",
         variant: "destructive",
       });
+      return;
     }
+
+    if (isDuplicateId) {
+      toast({
+        title: "사용할 수 없는 아이디",
+        description: "다른 아이디를 사용해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUserCredentials(data);
+    setCurrentQuestion(0);
   };
 
   const handleAnswer = async (value: number) => {
+    const newAnswers = [
+      ...answers,
+      { questionId: questions[currentQuestion].id, value }
+    ];
+    setAnswers(newAnswers);
+
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+    }
+  };
+
+  const handleSubmit = async () => {
     try {
-      const newAnswers = [
-        ...answers,
-        { questionId: questions[currentQuestion].id, value }
-      ];
-      setAnswers(newAnswers);
-
-      if (currentQuestion === questions.length - 1) {
-        const mbtiType = calculateMbti(newAnswers);
-        if (!userCredentials) {
-          throw new Error("User credentials not found");
-        }
-
-        const response = await apiRequest("POST", "/api/mbti-results", {
-          ...userCredentials,
-          answers: newAnswers,
-          result: mbtiType,
-          language: "ko",
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "서버 오류가 발생했습니다");
-        }
-
-        const result = await response.json();
-        if (!result.id) {
-          throw new Error("Invalid response from server");
-        }
-
-        setLocation(`/result/${result.id}`);
-      } else {
-        setCurrentQuestion(prev => prev + 1);
+      if (!userCredentials) {
+        throw new Error("User credentials not found");
       }
+
+      const mbtiType = calculateMbti(answers);
+      const response = await apiRequest("POST", "/api/mbti-results", {
+        ...userCredentials,
+        answers,
+        result: mbtiType,
+        language: "ko",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "서버 오류가 발생했습니다");
+      }
+
+      const result = await response.json();
+      if (!result.id) {
+        throw new Error("Invalid response from server");
+      }
+
+      setLocation(`/result/${result.id}`);
     } catch (error) {
-      console.error("Error submitting answer:", error);
+      console.error("Error submitting answers:", error);
       toast({
         title: "오류 발생",
         description: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다",
         variant: "destructive",
       });
-      setCurrentQuestion(0);
-      setAnswers([]);
     }
   };
 
@@ -167,6 +166,7 @@ export default function Test() {
                                 onChange={(e) => {
                                   field.onChange(e);
                                   setIsDuplicateId(false);
+                                  setIsIdChecked(false);
                                 }}
                               />
                             </FormControl>
@@ -203,7 +203,7 @@ export default function Test() {
                     <Button 
                       type="submit" 
                       className="w-full"
-                      disabled={isDuplicateId || isCheckingId}
+                      disabled={!isIdChecked || isDuplicateId || isCheckingId}
                     >
                       테스트 시작하기
                     </Button>
@@ -232,6 +232,20 @@ export default function Test() {
         >
           <Card>
             <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-6">
+                <Button
+                  variant="ghost"
+                  onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
+                  disabled={currentQuestion === 0}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  이전으로
+                </Button>
+                <span className="text-sm text-gray-500">
+                  {currentQuestion + 1} / {questions.length}
+                </span>
+              </div>
+
               <h2 className="text-xl font-semibold mb-6">
                 {question.text.ko}
               </h2>
@@ -259,6 +273,16 @@ export default function Test() {
                   <div className="text-right">매우 그렇다</div>
                 </div>
               </div>
+
+              {currentQuestion === questions.length - 1 && answers.length === questions.length && (
+                <Button
+                  onClick={handleSubmit}
+                  className="w-full mt-6"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  결과 제출하기
+                </Button>
+              )}
             </CardContent>
           </Card>
         </motion.div>

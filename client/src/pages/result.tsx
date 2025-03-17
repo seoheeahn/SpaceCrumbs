@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Share2, Download } from "lucide-react";
+import { Share2, Download, Home } from "lucide-react";
 import { MdPerson, MdSettings, MdFlashOn, MdFavorite, MdFavoriteBorder, MdStarBorder, MdChecklist } from "react-icons/md";
 import type { MbtiResult } from "@shared/schema";
 import { mbtiDescriptions, calculateDimensionScores } from "@/lib/mbti";
@@ -183,16 +183,72 @@ export default function Result() {
             {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions]?.ko || '설명을 찾을 수 없습니다.'}
           </p>
 
-          {result.analysis && (
-            <Card className="mb-8 bg-primary/5 hover:bg-primary/10 transition-colors">
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4 text-primary">AI 분석 결과</h2>
-                <div className="text-gray-700 whitespace-pre-wrap">
-                  {result.analysis}
+          {result.analysis && (() => {
+            try {
+              const analysisData = JSON.parse(result.analysis);
+              return (
+                <Card className="mb-8 bg-primary/5 hover:bg-primary/10 transition-colors">
+                  <CardContent className="pt-6">
+                    <h2 className="text-xl font-semibold mb-4 text-primary">✨ AI 분석 결과</h2>
+                    <div className="space-y-4">
+                      <div className="mb-4">
+                        <h3 className="text-lg font-medium mb-2">🎭 {analysisData.Description}</h3>
+                        <p className="text-gray-700">{analysisData.Analysis}</p>
+                      </div>
+
+                      <div className="mb-4">
+                        <h3 className="text-lg font-medium mb-2">💪 강점</h3>
+                        <ul className="list-none space-y-1">
+                          {analysisData.Strengths.map((strength: string, index: number) => (
+                            <li key={index} className="flex items-center">
+                              <span className="mr-2">•</span>{strength}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mb-4">
+                        <h3 className="text-lg font-medium mb-2">🌱 성장 포인트</h3>
+                        <ul className="list-none space-y-1">
+                          {analysisData.Growth.map((point: string, index: number) => (
+                            <li key={index} className="flex items-center">
+                              <span className="mr-2">•</span>{point}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mb-4">
+                        <h3 className="text-lg font-medium mb-2">👥 대인관계 특징</h3>
+                        <p className="text-gray-700">{analysisData.Social}</p>
+                      </div>
+
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">💼 추천 직업</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {analysisData.Careers.map((career: string, index: number) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-primary/10 rounded-full text-primary text-sm"
+                            >
+                              {career}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            } catch (error) {
+              console.error("Error parsing analysis JSON:", error);
+              return (
+                <div className="text-red-500">
+                  분석 결과를 표시하는 중 오류가 발생했습니다.
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              );
+            }
+          })()}
 
           <div className="space-y-4">
             {facetGroups.map((group, index) => (
@@ -340,7 +396,8 @@ export default function Result() {
                 onClick={() => setLocation('/')}
                 className="w-full bg-white hover:bg-gray-50 text-primary hover:text-primary/80 transition-colors duration-300"
               >
-                테스트 다시하기
+                <Home className="w-4 h-4 mr-2" />
+                홈으로 돌아가기
               </Button>
             </div>
           )}
