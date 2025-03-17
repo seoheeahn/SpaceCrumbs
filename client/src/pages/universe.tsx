@@ -13,24 +13,30 @@ interface Coordinate {
 }
 
 function Planet({ position }: { position: [number, number, number] }) {
-  const geometry = new THREE.SphereGeometry(0.5, 32, 32);
-  const material = new THREE.MeshStandardMaterial({ 
-    color: "purple",
-    metalness: 0.5,
-    roughness: 0.5
-  });
-
   return (
-    <mesh position={position} geometry={geometry} material={material}>
-      {/*Removed redundant meshStandardMaterial*/}
+    <mesh position={position}>
+      <sphereGeometry args={[0.5, 32, 32]} />
+      <meshStandardMaterial 
+        color="purple"
+        roughness={0.5}
+        metalness={0.8}
+      />
     </mesh>
   );
 }
 
 export default function Universe() {
-  const { data: coordinates = [] } = useQuery<Coordinate[]>({
+  const { data: coordinates = [], isLoading } = useQuery<Coordinate[]>({
     queryKey: ["/api/universe-coordinates"],
   });
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <p>Loading coordinates...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-screen bg-black">
@@ -41,16 +47,21 @@ export default function Universe() {
         <Suspense fallback={null}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} />
-          {coordinates?.map((coord, index) => (
-            <Planet
-              key={index}
-              position={[
-                Number(coord.coordinateX) / 5, 
-                Number(coord.coordinateY) / 5,
-                Number(coord.coordinateZ) / 5
-              ]}
-            />
-          ))}
+          {coordinates?.map((coord, index) => {
+            if (coord.coordinateX === null || coord.coordinateY === null || coord.coordinateZ === null) {
+              return null;
+            }
+            return (
+              <Planet
+                key={index}
+                position={[
+                  Number(coord.coordinateX) / 5, 
+                  Number(coord.coordinateY) / 5,
+                  Number(coord.coordinateZ) / 5
+                ]}
+              />
+            );
+          })}
           <OrbitControls enableZoom={true} enablePan={true} enableRotate={true} />
         </Suspense>
       </Canvas>
