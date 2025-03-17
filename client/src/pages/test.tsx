@@ -138,14 +138,14 @@ export default function Test() {
   if (currentQuestion === -1) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-        <div className="max-w-md mx-auto pt-8">
+        <div className="max-w-md mx-auto pt-4 sm:pt-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <Card>
               <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-6">
+                <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
                   테스트를 시작하기 전에
                 </h2>
                 <Form {...form}>
@@ -166,6 +166,7 @@ export default function Test() {
                                   setIsDuplicateId(false);
                                   setIsIdChecked(false);
                                 }}
+                                className="flex-1"
                               />
                             </FormControl>
                             <Button 
@@ -173,6 +174,7 @@ export default function Test() {
                               variant="outline"
                               onClick={() => checkDuplicateId(field.value)}
                               disabled={isCheckingId || !field.value || field.value.length < 4}
+                              className="whitespace-nowrap"
                             >
                               중복확인
                             </Button>
@@ -235,8 +237,8 @@ export default function Test() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-      <div className="max-w-2xl mx-auto pt-8">
-        <Progress value={progress} className="mb-8" />
+      <div className="max-w-2xl mx-auto pt-4 sm:pt-8">
+        <Progress value={progress} className="mb-4 sm:mb-8" />
 
         <motion.div
           key={currentQuestion}
@@ -246,11 +248,12 @@ export default function Test() {
         >
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <Button
                   variant="ghost"
                   onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
                   disabled={currentQuestion === 0}
+                  className="text-sm sm:text-base"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   이전으로
@@ -260,28 +263,28 @@ export default function Test() {
                 </span>
               </div>
 
-              <h2 className="text-xl font-semibold mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
                 {question.text.ko}
               </h2>
 
-              <div className="grid grid-cols-1 gap-6">
-                <div className="text-sm grid grid-cols-[1fr,auto,1fr] gap-4 items-center">
-                  <div className="text-left">{question.options.A}</div>
-                  <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                <div className="text-sm grid grid-cols-[1fr,auto,1fr] gap-2 sm:gap-4 items-center">
+                  <div className="text-left text-xs sm:text-sm">{question.options.A}</div>
+                  <div className="grid grid-cols-5 gap-1 sm:gap-2">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <Button
                         key={value}
                         variant="secondary"
                         onClick={() => handleAnswer(value)}
-                        className="w-10 h-10 p-0"
+                        className="w-8 h-8 sm:w-10 sm:h-10 p-0 text-sm sm:text-base"
                       >
                         {value}
                       </Button>
                     ))}
                   </div>
-                  <div className="text-right">{question.options.B}</div>
+                  <div className="text-right text-xs sm:text-sm">{question.options.B}</div>
                 </div>
-                <div className="text-xs text-gray-500 grid grid-cols-[1fr,auto,1fr] gap-4">
+                <div className="text-xs text-gray-500 grid grid-cols-[1fr,auto,1fr] gap-2 sm:gap-4">
                   <div className="text-left">매우 그렇다</div>
                   <div className="text-center">중립</div>
                   <div className="text-right">매우 그렇다</div>

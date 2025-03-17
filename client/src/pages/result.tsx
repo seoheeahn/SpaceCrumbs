@@ -165,154 +165,154 @@ export default function Result() {
     <Card className="shadow-xl hover:shadow-2xl transition-shadow duration-300">
       <CardContent className="pt-6">
         <div className="mb-8">
-          <h1 className="text-2xl font-pretendard font-bold text-center mb-6">
-            당신의 우주좌표는
-          </h1>
-          <div className="text-center mb-8">
-            <p className="text-purple-600 text-3xl font-pretendard font-bold mt-2">
-              X: {result.coordinateX !== null ? Number(result.coordinateX).toFixed(2) : '0.00'} |{' '}
-              Y: {result.coordinateY !== null ? Number(result.coordinateY).toFixed(2) : '0.00'} |{' '}
-              Z: {result.coordinateZ !== null ? Number(result.coordinateZ).toFixed(2) : '0.00'}
-            </p>
-          </div>
+            <h1 className="text-2xl sm:text-3xl font-pretendard font-bold text-center mb-4 sm:mb-6">
+              당신의 MBTI 결과
+            </h1>
+            <div className="text-center mb-6 sm:mb-8">
+              <p className="text-xl sm:text-2xl font-pretendard font-bold mt-2 text-purple-600">
+                {result.result}
+              </p>
+            </div>
 
-          <div className="flex justify-center gap-6 mb-8">
-            {result.result.split("").map((letter, index) => {
-              const dimension = Object.keys(dimensionColors)[index] as DimensionKey;
-              const [letterA, letterB] = dimensionToLetters[dimension];
-              const score = dimensionScores[letter as MbtiLetter];
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-6 mb-8">
+              {result.result.split("").map((letter, index) => {
+                const dimension = Object.keys(dimensionColors)[index] as DimensionKey;
+                const [letterA, letterB] = dimensionToLetters[dimension];
+                const score = dimensionScores[letter as MbtiLetter];
 
-              return (
-                <div
-                  key={index}
-                  className="w-20 h-20 rounded-xl flex items-center justify-center flex-col"
-                  style={{
-                    backgroundColor: `${dimensionColors[dimension]}40`,
-                    color: dimensionColors[dimension]
-                  }}
-                >
-                  {mbtiIcons[letter as MbtiLetter]}
-                  <span className="text-xl font-bold mt-1">{letter}</span>
-                  <span className="text-xs mt-0.5">{Math.round(score)}%</span>
-                </div>
-              );
-            })}
-          </div>
-
-          {analysisData && (
-            <Card className="mb-8 bg-primary/5 hover:bg-primary/10 transition-colors">
-              <CardContent className="pt-4">
-                <h2 className="text-lg font-semibold mb-3 text-primary">✨ AI 분석 결과</h2>
-                <div className="space-y-3 text-sm">
-                  <div className="mb-3">
-                    <h3 className="font-medium mb-1">🎭 {analysisData.Description}</h3>
-                    <p className="text-gray-700">{analysisData.Analysis}</p>
+                return (
+                  <div
+                    key={index}
+                    className="p-2 sm:p-4 rounded-xl flex items-center justify-center flex-col"
+                    style={{
+                      backgroundColor: `${dimensionColors[dimension]}40`,
+                      color: dimensionColors[dimension]
+                    }}
+                  >
+                    <div className="w-8 h-8 sm:w-12 sm:h-12">
+                      {mbtiIcons[letter as MbtiLetter]}
+                    </div>
+                    <span className="text-lg sm:text-xl font-bold mt-1">{letter}</span>
+                    <span className="text-xs sm:text-sm mt-0.5">{Math.round(score)}%</span>
                   </div>
+                );
+              })}
+            </div>
 
-                  <div className="mb-3">
-                    <h3 className="font-medium mb-1">💪 강점</h3>
-                    <ul className="list-none space-y-0.5">
-                      {analysisData.Strengths.map((strength: string, index: number) => (
-                        <li key={index} className="flex items-center">
-                          <span className="mr-1">•</span>{strength}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+            {analysisData && (
+              <Card className="mb-8 bg-primary/5 hover:bg-primary/10 transition-colors">
+                <CardContent className="p-4 sm:p-6">
+                  <h2 className="text-base sm:text-lg font-semibold mb-3 text-primary">✨ AI 분석 결과</h2>
+                  <div className="space-y-3 text-sm sm:text-base">
+                    <div className="mb-3">
+                      <h3 className="font-medium mb-1">🎭 {analysisData.Description}</h3>
+                      <p className="text-gray-700">{analysisData.Analysis}</p>
+                    </div>
 
-                  <div className="mb-3">
-                    <h3 className="font-medium mb-1">🌱 성장 포인트</h3>
-                    <ul className="list-none space-y-0.5">
-                      {analysisData.Growth.map((point: string, index: number) => (
-                        <li key={index} className="flex items-center">
-                          <span className="mr-1">•</span>{point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                    <div className="mb-3">
+                      <h3 className="font-medium mb-1">💪 강점</h3>
+                      <ul className="list-none space-y-0.5">
+                        {analysisData.Strengths.map((strength: string, index: number) => (
+                          <li key={index} className="flex items-center">
+                            <span className="mr-1">•</span>{strength}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-                  <div className="mb-3">
-                    <h3 className="font-medium mb-1">👥 대인관계 특징</h3>
-                    <p className="text-gray-700">{analysisData.Social}</p>
-                  </div>
+                    <div className="mb-3">
+                      <h3 className="font-medium mb-1">🌱 성장 포인트</h3>
+                      <ul className="list-none space-y-0.5">
+                        {analysisData.Growth.map((point: string, index: number) => (
+                          <li key={index} className="flex items-center">
+                            <span className="mr-1">•</span>{point}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-                  <div>
-                    <h3 className="font-medium mb-1">💼 추천 직업</h3>
-                    <div className="flex flex-wrap gap-1">
-                      {analysisData.Careers.map((career: string, index: number) => (
-                        <span
-                          key={index}
-                          className="px-2 py-0.5 bg-primary/10 rounded-full text-primary text-xs"
-                        >
-                          {career}
-                        </span>
-                      ))}
+                    <div className="mb-3">
+                      <h3 className="font-medium mb-1">👥 대인관계 특징</h3>
+                      <p className="text-gray-700">{analysisData.Social}</p>
+                    </div>
+
+                    <div>
+                      <h3 className="font-medium mb-1">💼 추천 직업</h3>
+                      <div className="flex flex-wrap gap-1">
+                        {analysisData.Careers.map((career: string, index: number) => (
+                          <span
+                            key={index}
+                            className="px-2 py-0.5 bg-primary/10 rounded-full text-primary text-xs sm:text-sm"
+                          >
+                            {career}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          <div className="space-y-4">
-            {facetGroups.map((group, index) => (
-              <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                <h2 className="text-lg font-semibold mb-3 text-center"
-                  style={{ color: dimensionColors[group.title] }}>
-                  {group.title}
-                </h2>
-                <div className="space-y-1">
-                  {group.facets.map((facet) => {
-                    const [typeA, typeB] = facet.facet.split("-");
-                    const [colorA, colorB] = facetColors[group.title];
-                    const isADominant = facet.weights.A > facet.weights.B;
-                    const isBDominant = facet.weights.B > facet.weights.A;
+                </CardContent>
+              </Card>
+            )}
 
-                    return (
-                      <div key={facet.id} className="bg-gray-50 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className={`text-sm font-medium text-right w-24 shrink-0 transition-all ${
-                            isADominant ? `font-bold` : "text-gray-600"
-                          }`}
-                            style={{
-                              color: isADominant ? dimensionColors[group.title] : undefined
-                            }}>
-                            {typeA}
-                          </div>
-                          <div className="grow h-5 relative bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className="absolute inset-y-0 left-0 transition-all duration-500"
+            <div className="space-y-4">
+              {facetGroups.map((group, index) => (
+                <div key={index} className="bg-white p-3 sm:p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                  <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-center"
+                    style={{ color: dimensionColors[group.title] }}>
+                    {group.title}
+                  </h2>
+                  <div className="space-y-1">
+                    {group.facets.map((facet) => {
+                      const [typeA, typeB] = facet.facet.split("-");
+                      const [colorA, colorB] = facetColors[group.title];
+                      const isADominant = facet.weights.A > facet.weights.B;
+                      const isBDominant = facet.weights.B > facet.weights.A;
+
+                      return (
+                        <div key={facet.id} className="bg-gray-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className={`text-xs sm:text-sm font-medium text-right w-16 sm:w-24 shrink-0 transition-all ${
+                              isADominant ? `font-bold` : "text-gray-600"
+                            }`}
                               style={{
-                                width: `${facet.weights.A}%`,
-                                backgroundColor: dimensionColors[group.title]
-                              }}
-                            />
-                            <div
-                              className="absolute inset-y-0 right-0 transition-all duration-500"
+                                color: isADominant ? dimensionColors[group.title] : undefined
+                              }}>
+                              {typeA}
+                            </div>
+                            <div className="grow h-4 sm:h-5 relative bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="absolute inset-y-0 left-0 transition-all duration-500"
+                                style={{
+                                  width: `${facet.weights.A}%`,
+                                  backgroundColor: dimensionColors[group.title]
+                                }}
+                              />
+                              <div
+                                className="absolute inset-y-0 right-0 transition-all duration-500"
+                                style={{
+                                  width: `${facet.weights.B}%`,
+                                  backgroundColor: `${dimensionColors[group.title]}40`
+                                }}
+                              />
+                            </div>
+                            <div className={`text-xs sm:text-sm font-medium w-16 sm:w-24 shrink-0 transition-all ${
+                              isBDominant ? `font-bold` : "text-gray-600"
+                            }`}
                               style={{
-                                width: `${facet.weights.B}%`,
-                                backgroundColor: `${dimensionColors[group.title]}40`
-                              }}
-                            />
-                          </div>
-                          <div className={`text-sm font-medium w-24 shrink-0 transition-all ${
-                            isBDominant ? `font-bold` : "text-gray-600"
-                          }`}
-                            style={{
-                              color: isBDominant ? dimensionColors[group.title] : undefined
-                            }}>
-                            {typeB}
+                                color: isBDominant ? dimensionColors[group.title] : undefined
+                              }}>
+                              {typeB}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {showControls && (
-            <div className="mt-8 space-y-4">
+            <div className="mt-8 space-y-3 sm:space-y-4">
               <Dialog>
                 <DialogTrigger asChild>
                   <Button
@@ -327,7 +327,7 @@ export default function Result() {
                     결과 공유하기
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="w-[90vw] max-w-3xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>MBTI 결과 공유</DialogTitle>
                     <DialogDescription>
@@ -343,7 +343,7 @@ export default function Result() {
                       {snsImage && (
                         <div className="rounded-lg overflow-hidden shadow-lg">
                           <img src={snsImage} alt="MBTI Result for SNS" className="w-full" />
-                          <div className="flex gap-4 mt-4">
+                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4">
                             <Button
                               onClick={() => {
                                 const link = document.createElement('a');
@@ -412,8 +412,7 @@ export default function Result() {
                 홈으로 돌아가기
               </Button>
             </div>
-          )}
-        </div>
+          </div>
       </CardContent>
     </Card>
   );
