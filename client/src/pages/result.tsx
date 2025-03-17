@@ -95,25 +95,46 @@ export default function Result() {
                 {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
               </p>
 
-              <div className="grid grid-cols-1 gap-6 mb-8">
+              <div className="grid grid-cols-2 gap-6 mb-8 p-4 bg-white/50 rounded-2xl">
                 {dimensionChartData.map((dimension, index) => (
-                  <div key={index} className="bg-white p-4 rounded-lg shadow">
-                    <h3 className="text-lg font-semibold mb-4">{dimension.dimension}</h3>
-                    <div className="h-20">
+                  <div key={index} className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                    <h3 className="text-lg font-semibold mb-4 text-center text-primary">{dimension.dimension}</h3>
+                    <div className="h-40">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={dimension.scores}
                           layout="vertical"
-                          margin={{ top: 5, right: 30, bottom: 5, left: 100 }}
+                          margin={{ top: 10, right: 10, bottom: 10, left: 80 }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis type="number" domain={[0, 100]} />
-                          <YAxis dataKey="name" type="category" />
-                          <Tooltip />
+                          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                          <XAxis
+                            type="number"
+                            domain={[0, 100]}
+                            tickFormatter={(value) => `${value}%`}
+                          />
+                          <YAxis
+                            dataKey="name"
+                            type="category"
+                            tickLine={false}
+                            axisLine={false}
+                            style={{
+                              fontSize: '0.875rem',
+                              fontWeight: 500
+                            }}
+                          />
+                          <Tooltip
+                            formatter={(value) => [`${value}%`]}
+                            contentStyle={{
+                              borderRadius: '0.5rem',
+                              border: 'none',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                            }}
+                          />
                           <Bar
                             dataKey="value"
-                            fill={index % 2 === 0 ? "#8884d8" : "#82ca9d"}
-                            radius={[0, 4, 4, 0]}
+                            fill={`hsl(${index * 60 + 200}, 70%, 65%)`}
+                            radius={[4, 4, 4, 4]}
+                            animationDuration={1000}
                           />
                         </BarChart>
                       </ResponsiveContainer>
@@ -122,15 +143,15 @@ export default function Result() {
                 ))}
               </div>
 
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">응답 내역</h2>
+              <div className="mb-8 bg-white p-6 rounded-xl shadow-lg">
+                <h2 className="text-xl font-semibold mb-4 text-center text-primary">응답 내역</h2>
                 <div className="space-y-4">
                   {result.answers.map((answer) => {
                     const question = questions.find(q => q.id === answer.questionId);
                     if (!question) return null;
 
                     return (
-                      <div key={answer.questionId} className="border rounded-lg p-4">
+                      <div key={answer.questionId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                         <p className="font-medium mb-2">{question.text.ko}</p>
                         <div className="grid grid-cols-[1fr,auto,1fr] gap-4 text-sm text-gray-600">
                           <div>{question.options.A}</div>
