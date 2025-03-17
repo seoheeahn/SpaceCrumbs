@@ -69,7 +69,7 @@ export default function Result() {
 
   // 질문들을 MBTI 차원별로 그룹화
   const facetGroups: FacetGroup[] = Object.keys(dimensionColors).map(dimension => {
-    const categoryQuestions = questions.filter(q => 
+    const categoryQuestions = questions.filter(q =>
       q.category === dimension.replace("외향성/내향성", "E/I")
         .replace("감각/직관", "S/N")
         .replace("사고/감정", "T/F")
@@ -133,28 +133,39 @@ export default function Result() {
                   당신의 MBTI는
                 </h1>
                 <div className="flex justify-center gap-6 mb-6">
-                  {result.result.split("").map((letter, index) => (
-                    <div
-                      key={index}
-                      className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center flex-col"
-                      style={{ color: dimensionColors[Object.keys(dimensionColors)[index]] }}
-                    >
-                      {mbtiIcons[letter as keyof typeof mbtiIcons]}
-                      <span className="text-2xl font-bold mt-2">{letter}</span>
-                    </div>
-                  ))}
+                  {result.result.split("").map((letter, index) => {
+                    const dimensionKey = ["E/I", "S/N", "T/F", "J/P"][index];
+                    const scores = {
+                      "E/I": { E: dimensionScores.E, I: dimensionScores.I },
+                      "S/N": { S: dimensionScores.S, N: dimensionScores.N },
+                      "T/F": { T: dimensionScores.T, F: dimensionScores.F },
+                      "J/P": { J: dimensionScores.J, P: dimensionScores.P }
+                    }[dimensionKey];
+                    const score = scores[letter as keyof typeof scores];
+
+                    return (
+                      <div
+                        key={index}
+                        className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center flex-col"
+                        style={{ color: dimensionColors[Object.keys(dimensionColors)[index]] }}
+                      >
+                        {mbtiIcons[letter as keyof typeof mbtiIcons]}
+                        <span className="text-2xl font-bold mt-1">{letter}</span>
+                        <span className="text-sm mt-1">{Math.round(score)}%</span>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <p className="text-lg text-gray-600 mb-8 text-center">
+                <p className="text-lg text-gray-600 text-center">
                   {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
                 </p>
-
               </div>
 
               <div className="space-y-4">
                 {facetGroups.map((group, index) => (
                   <div key={index} className="bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                    <h2 className="text-lg font-semibold mb-3 text-center" 
+                    <h2 className="text-lg font-semibold mb-3 text-center"
                       style={{ color: dimensionColors[group.title] }}>
                       {group.title}
                     </h2>
@@ -174,16 +185,16 @@ export default function Result() {
                                 {typeA}
                               </div>
                               <div className="grow h-5 relative bg-gray-200 rounded-full overflow-hidden">
-                                <div 
-                                  className="absolute inset-y-0 left-0 transition-all duration-500" 
-                                  style={{ 
+                                <div
+                                  className="absolute inset-y-0 left-0 transition-all duration-500"
+                                  style={{
                                     width: `${facet.weights.A}%`,
                                     backgroundColor: colorA
                                   }}
                                 />
-                                <div 
-                                  className="absolute inset-y-0 right-0 transition-all duration-500" 
-                                  style={{ 
+                                <div
+                                  className="absolute inset-y-0 right-0 transition-all duration-500"
+                                  style={{
                                     width: `${facet.weights.B}%`,
                                     backgroundColor: colorB
                                   }}
