@@ -34,11 +34,36 @@ export default function Result() {
   }
 
   const dimensionScores = calculateDimensionScores(result.answers);
-  const chartData = [
-    { name: 'E/I', E: dimensionScores.E, I: dimensionScores.I },
-    { name: 'S/N', S: dimensionScores.S, N: dimensionScores.N },
-    { name: 'T/F', T: dimensionScores.T, F: dimensionScores.F },
-    { name: 'J/P', J: dimensionScores.J, P: dimensionScores.P },
+
+  const dimensionChartData = [
+    {
+      dimension: "외향성/내향성",
+      scores: [
+        { name: "외향성(E)", value: dimensionScores.E },
+        { name: "내향성(I)", value: dimensionScores.I }
+      ]
+    },
+    {
+      dimension: "감각/직관",
+      scores: [
+        { name: "감각(S)", value: dimensionScores.S },
+        { name: "직관(N)", value: dimensionScores.N }
+      ]
+    },
+    {
+      dimension: "사고/감정",
+      scores: [
+        { name: "사고(T)", value: dimensionScores.T },
+        { name: "감정(F)", value: dimensionScores.F }
+      ]
+    },
+    {
+      dimension: "판단/인식",
+      scores: [
+        { name: "판단(J)", value: dimensionScores.J },
+        { name: "인식(P)", value: dimensionScores.P }
+      ]
+    }
   ];
 
   const handleShare = async () => {
@@ -70,23 +95,31 @@ export default function Result() {
                 {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions].ko}
               </p>
 
-              <div className="h-60 mb-8">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip />
-                    <Bar dataKey="E" fill="#8884d8" name="외향성" />
-                    <Bar dataKey="I" fill="#82ca9d" name="내향성" />
-                    <Bar dataKey="S" fill="#8884d8" name="감각" />
-                    <Bar dataKey="N" fill="#82ca9d" name="직관" />
-                    <Bar dataKey="T" fill="#8884d8" name="사고" />
-                    <Bar dataKey="F" fill="#82ca9d" name="감정" />
-                    <Bar dataKey="J" fill="#8884d8" name="판단" />
-                    <Bar dataKey="P" fill="#82ca9d" name="인식" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="grid grid-cols-1 gap-6 mb-8">
+                {dimensionChartData.map((dimension, index) => (
+                  <div key={index} className="bg-white p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-4">{dimension.dimension}</h3>
+                    <div className="h-20">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={dimension.scores}
+                          layout="vertical"
+                          margin={{ top: 5, right: 30, bottom: 5, left: 100 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" domain={[0, 100]} />
+                          <YAxis dataKey="name" type="category" />
+                          <Tooltip />
+                          <Bar
+                            dataKey="value"
+                            fill={index % 2 === 0 ? "#8884d8" : "#82ca9d"}
+                            radius={[0, 4, 4, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="mb-8">
