@@ -170,9 +170,9 @@ export default function Result() {
             </h1>
             <div className="text-center mb-6 sm:mb-8">
               <p className="text-purple-600 text-xl sm:text-2xl font-pretendard font-bold mt-2">
-                X: {result.coordinateX !== null ? result.coordinateX.toFixed(2) : '0.00'} |{' '}
-                Y: {result.coordinateY !== null ? result.coordinateY.toFixed(2) : '0.00'} |{' '}
-                Z: {result.coordinateZ !== null ? result.coordinateZ.toFixed(2) : '0.00'}
+                X: {result.coordinateX !== null ? Number(result.coordinateX).toFixed(2) : '0.00'} |{' '}
+                Y: {result.coordinateY !== null ? Number(result.coordinateY).toFixed(2) : '0.00'} |{' '}
+                Z: {result.coordinateZ !== null ? Number(result.coordinateZ).toFixed(2) : '0.00'}
               </p>
               <p className="text-lg sm:text-xl text-gray-600 mt-4">
                 MBTI 유형: {result.result}
