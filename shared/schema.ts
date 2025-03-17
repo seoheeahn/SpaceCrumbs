@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, numeric } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 // Define Answer type and schema
@@ -21,6 +21,10 @@ export const mbtiResults = pgTable("mbti_results", {
   language: text("language").notNull(),
   openaiRequestId: text("openai_request_id"),
   analysis: text("analysis"),
+  // Add 3D coordinates
+  coordinateX: numeric("coordinate_x"),
+  coordinateY: numeric("coordinate_y"),
+  coordinateZ: numeric("coordinate_z"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -36,6 +40,9 @@ export const insertMbtiResultSchema = z.object({
   language: z.string(),
   openaiRequestId: z.string().optional(),
   analysis: z.string().optional(),
+  coordinateX: z.number().optional(),
+  coordinateY: z.number().optional(),
+  coordinateZ: z.number().optional(),
 });
 
 export const loginSchema = z.object({

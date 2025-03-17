@@ -61,10 +61,10 @@ export default function Home() {
         <Card className="w-full max-w-lg">
           <CardContent className="pt-6 text-center">
             <h1 className="text-4xl font-bold text-primary mb-4">
-              MBTI 심층 분석
+              우주먼지 좌표 찾기
             </h1>
             <p className="text-lg text-gray-600 mb-8">
-              20개의 심층 질문을 통해 당신의 성격 유형을 정확하게 분석해보세요
+              20개의 심층 질문을 통해 당신의 우주좌표를 찾아보세요
             </p>
             <div className="space-y-4">
               <Link href="/test">

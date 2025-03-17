@@ -4,6 +4,18 @@ import { storage } from "./storage";
 import { insertMbtiResultSchema, loginSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { analyzeMbtiResult } from "./openai";
+import { calculateDimensionScores } from "../client/src/lib/mbti";
+
+function calculateCoordinates(answers: { questionId: number; value: number }[]) {
+  const scores = calculateDimensionScores(answers);
+
+  // Normalize scores to -100 to 100 range
+  const x = ((scores.E - scores.I) / 100) * 100; // E/I axis
+  const y = ((scores.N - scores.S) / 100) * 100; // N/S axis
+  const z = ((scores.F - scores.T) / 100) * 100; // F/T axis
+
+  return { x, y, z };
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Add request logging middleware
@@ -15,7 +27,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/mbti-results", async (req, res) => {
     try {
       const data = insertMbtiResultSchema.parse(req.body);
-      const result = await storage.createMbtiResult(data);
+
+      // Calculate 3D coordinates
+      const coordinates = calculateCoordinates(data.answers);
+      const resultWithCoordinates = {
+        ...data,
+        coordinateX: coordinates.x,
+        coordinateY: coordinates.y,
+        coordinateZ: coordinates.z,
+      };
+
+      const result = await storage.createMbtiResult(resultWithCoordinates);
       res.json(result);
     } catch (error) {
       console.error("Error creating MBTI result:", error);
@@ -48,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get AI analysis with timeout only if no analysis exists
       console.log(`[${new Date().toISOString()}] Starting OpenAI analysis for MBTI result`);
       const analysisPromise = analyzeMbtiResult(result);
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("OpenAI API timeout")), 30000)
       );
 
@@ -63,9 +85,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error or timeout in OpenAI analysis:", error);
         // Return result without analysis if OpenAI call fails
-        res.json({ 
-          ...result, 
-          analysis: "AI 분석을 일시적으로 사용할 수 없습니다. 나중에 다시 시도해주세요." 
+        res.json({
+          ...result,
+          analysis: "AI 분석을 일시적으로 사용할 수 없습니다. 나중에 다시 시도해주세요."
         });
       }
     } catch (error) {

@@ -74,7 +74,7 @@ export default function Result() {
   const [previewImage, setPreviewImage] = useState<string>('');
   const [snsImage, setSnsImage] = useState<string>('');
 
-  const { data: result, isLoading } = useQuery<MbtiResult & { analysis?: string }>({
+  const { data: result, isLoading } = useQuery<MbtiResult & { analysis?: string; coordinateX?: number; coordinateY?: number; coordinateZ?: number }>({
     queryKey: [`/api/mbti-results/${id}`]
   });
 
@@ -154,7 +154,7 @@ export default function Result() {
       <CardContent className="pt-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-center mb-6">
-            당신의 MBTI는
+            당신의 우주좌표는
           </h1>
           <div className="flex justify-center gap-8 mb-8">
             {result.result.split("").map((letter, index) => {
@@ -179,9 +179,14 @@ export default function Result() {
             })}
           </div>
 
-          <p className="text-lg text-gray-600 text-center mb-6">
-            {mbtiDescriptions[result.result as keyof typeof mbtiDescriptions]?.ko || '설명을 찾을 수 없습니다.'}
-          </p>
+          <div className="text-center mb-6">
+            <p className="text-lg text-primary font-semibold">우주좌표값:</p>
+            <p className="text-gray-600">
+              X: {result.coordinateX?.toFixed(2)} | 
+              Y: {result.coordinateY?.toFixed(2)} | 
+              Z: {result.coordinateZ?.toFixed(2)}
+            </p>
+          </div>
 
           {result.analysis && (() => {
             try {

@@ -1,0 +1,81 @@
+import plotly.graph_objects as go
+import json
+import numpy as np
+
+# ✅ JSON 데이터 로드 (위 JSON 데이터 삽입)
+mbti_json = '''(위 JSON 데이터 삽입)'''
+data = json.loads(mbti_json)
+
+# ✅ 3D 좌표를 위한 데이터 준비
+x_pos, y_pos, z_pos = [], [], []  # 3D 좌표 저장
+labels, scores = [], []  # 라벨 & 점수 저장
+
+# ✅ MBTI 성향 점수를 3D 공간에 추가
+dimensions = list(data["scores"].keys())  # ["E-I", "S-N", "T-F", "J-P"]
+dimension_positions = [-15, -5, 5, 15]  # x축에서 구분하여 배치
+
+for i, dimension in enumerate(dimensions):
+    x = dimension_positions[i]
+    y = 0  # MBTI 성향은 중앙에 위치
+    score_A = list(data["scores"][dimension].values())[0]  # 첫 번째 성향 점수
+    score_B = list(data["scores"][dimension].values())[1]  # 두 번째 성향 점수
+
+    # 양쪽 성향을 각각 배치
+    x_pos.append(x)
+    y_pos.append(y)
+    z_pos.append(score_A)
+    labels.append(f"{dimension} ({list(data['scores'][dimension].keys())[0]})")
+    scores.append(score_A)
+
+    x_pos.append(x)
+    y_pos.append(y)
+    z_pos.append(score_B)
+    labels.append(f"{dimension} ({list(data['scores'][dimension].keys())[1]})")
+    scores.append(score_B)
+
+# ✅ Facet 점수를 3D 공간에 추가
+for i, (dimension, facets) in enumerate(data["facets"].items()):
+    x = dimension_positions[i]  # MBTI 성향과 같은 x축 위치
+
+    for facet, values in facets.items():
+        score_A = list(values.values())[0]  # 첫 번째 성향 점수
+        score_B = list(values.values())[1]  # 두 번째 성향 점수
+
+        y_A = np.random.uniform(-10, 10)  # Facet을 랜덤하게 배치
+        y_B = np.random.uniform(-10, 10)
+
+        x_pos.append(x)
+        y_pos.append(y_A)
+        z_pos.append(score_A)
+        labels.append(f"{facet} ({list(values.keys())[0]})")
+        scores.append(score_A)
+
+        x_pos.append(x)
+        y_pos.append(y_B)
+        z_pos.append(score_B)
+        labels.append(f"{facet} ({list(values.keys())[1]})")
+        scores.append(score_B)
+
+# ✅ 3D 시각화 실행
+fig = go.Figure()
+
+fig.add_trace(go.Scatter3d(
+    x=x_pos, y=y_pos, z=z_pos,
+    mode='markers+text',
+    marker=dict(size=8, color=scores, colorscale='Viridis', opacity=0.8),
+    text=labels,
+    textposition="top center"
+))
+
+# ✅ 그래프 설정
+fig.update_layout(
+    title=f"MBTI 3D 성향 + Facet 시각화 ({data['MBTI']})",
+    scene=dict(
+        xaxis_title="MBTI 지표 (E-I, S-N, T-F, J-P)",
+        yaxis_title="Facet 분포",
+        zaxis_title="성향 점수 (0~100%)"
+    ),
+    margin=dict(l=0, r=0, b=0, t=40)
+)
+
+fig.show()
