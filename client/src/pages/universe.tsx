@@ -4,7 +4,9 @@ import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Grid } from "@react-three/drei";
+import { Suspense } from "react";
+import * as THREE from "three";
 
 // 좌표 정규화 함수 (0~100 범위로)
 function normalize(x: number, y: number, z: number): [number, number, number] {
@@ -14,32 +16,60 @@ function normalize(x: number, y: number, z: number): [number, number, number] {
   return coordinates.map(val => ((val - min) / (max - min)) * 100) as [number, number, number];
 }
 
+function Sphere({ position }: { position: [number, number, number] }) {
+  return (
+    <mesh position={position}>
+      <sphereGeometry args={[2, 32, 32]} />
+      <meshStandardMaterial
+        color="#00ffcc"
+        roughness={0.3}
+        metalness={0.7}
+      />
+    </mesh>
+  );
+}
+
 function Scene({ coordinates }: { coordinates: [number, number, number] }) {
   // Move coordinates to center (0,0,0)
   const [x, y, z] = coordinates.map(coord => coord - 50);
 
   return (
     <>
-      <OrbitControls />
+      <OrbitControls makeDefault />
       <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
+      <pointLight position={[10, 10, 10]} intensity={1.5} />
 
-      {/* Coordinate axes */}
-      <group>
-        <mesh position={[x, y, z]}>
-          <sphereGeometry args={[2, 32, 32]} />
-          <meshStandardMaterial 
-            color="#00ffcc"
-            roughness={0.3}
-            metalness={0.7}
-          />
-        </mesh>
-      </group>
+      {/* Main sphere */}
+      <Sphere position={[x, y, z]} />
 
-      {/* Grid helpers */}
-      <gridHelper args={[100, 10]} position={[0, -50, 0]} />
-      <gridHelper args={[100, 10]} position={[0, 0, -50]} rotation={[Math.PI / 2, 0, 0]} />
+      {/* Grid */}
+      <Grid
+        position={[0, -50, 0]}
+        args={[100, 100]}
+        cellSize={10}
+        cellThickness={1}
+        cellColor="#444444"
+        sectionSize={20}
+      />
+      <Grid
+        position={[0, 0, -50]}
+        args={[100, 100]}
+        cellSize={10}
+        cellThickness={1}
+        cellColor="#444444"
+        sectionSize={20}
+        rotation={[Math.PI / 2, 0, 0]}
+      />
     </>
+  );
+}
+
+// Error Boundary Component
+function ErrorFallback() {
+  return (
+    <div className="w-full h-full flex items-center justify-center text-white">
+      <p>3D 우주를 불러오는데 문제가 발생했습니다.</p>
+    </div>
   );
 }
 
@@ -94,7 +124,9 @@ export default function Universe() {
               camera={{ position: [50, 50, 150], fov: 50 }}
               style={{ background: '#1e1e1e' }}
             >
-              <Scene coordinates={normalizedCoords} />
+              <Suspense fallback={<ErrorFallback />}>
+                <Scene coordinates={normalizedCoords} />
+              </Suspense>
             </Canvas>
           </div>
         </CardContent>
