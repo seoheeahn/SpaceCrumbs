@@ -147,34 +147,23 @@ export const mbtiDescriptions: { [key in MbtiType]: { ko: string; en: string } }
 };
 
 export function calculateMbti(answers: Answer[]): MbtiType {
-  const dimensions = {
-    EI: 0,
-    SN: 0,
-    TF: 0,
-    JP: 0
-  };
+  const scores = calculateDimensionScores(answers);
 
-  answers.forEach((answer, index) => {
-    const question = questions[index];
-    const weight = getWeightByValue(answer.value);
-
-    if (question.dimension === "E-I") {
-      dimensions.EI += weight.A - weight.B;
-    } else if (question.dimension === "S-N") {
-      dimensions.SN += weight.A - weight.B;
-    } else if (question.dimension === "T-F") {
-      dimensions.TF += weight.A - weight.B;
-    } else if (question.dimension === "J-P") {
-      dimensions.JP += weight.A - weight.B;
-    }
-  });
-
+  // Determine each dimension based on the higher percentage
   const result = [
-    dimensions.EI > 0 ? "E" : "I",
-    dimensions.SN > 0 ? "S" : "N",
-    dimensions.TF > 0 ? "T" : "F",
-    dimensions.JP > 0 ? "J" : "P"
+    scores.E > scores.I ? "E" : "I",
+    scores.S > scores.N ? "S" : "N",
+    scores.T > scores.F ? "T" : "F",
+    scores.J > scores.P ? "J" : "P"
   ].join("") as MbtiType;
+
+  console.log("MBTI Calculation:", {
+    "E/I": { E: scores.E, I: scores.I },
+    "S/N": { S: scores.S, N: scores.N },
+    "T/F": { T: scores.T, F: scores.F },
+    "J/P": { J: scores.J, P: scores.P },
+    result
+  });
 
   return result;
 }
