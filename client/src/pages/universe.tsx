@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Html } from "@react-three/drei";
+import { OrbitControls, Text, Html } from "@react-three/drei";
 import { useState } from "react";
 import { useParams } from "wouter";
-import type { MbtiResult } from "@/lib/types";
-import { dimensionColors, dimensionScores, dimensionToLetters } from "@/lib/mbti";
+import type { MbtiResult } from "@shared/schema";
+import { dimensionColors, dimensionToLetters } from "@/lib/mbti";
+import * as THREE from "three";
 
 // 축 레이블 컴포넌트
 function AxisLabel({ position, text }: { position: [number, number, number]; text: string }) {
@@ -119,7 +120,7 @@ export default function Universe() {
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
         {Object.entries(dimensionColors).map(([dim, color], i) => {
-          const scores = dimensionScores[result.result[i] as keyof typeof dimensionScores];
+          const scores = result.result[i]; //This line was modified to reflect the new schema
           return Object.entries(scores).map(([trait, score], j) => {
             const position: [number, number, number] = [
               i === 0 ? score * scale : 0,
@@ -139,6 +140,7 @@ export default function Universe() {
             );
           });
         })}
+        <GridLines />
         <OrbitControls
           enableZoom={true}
           enablePan={true}
