@@ -1,29 +1,32 @@
 import { mbtiResults, type MbtiResult, type InsertMbtiResult } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   createMbtiResult(result: InsertMbtiResult): Promise<MbtiResult>;
   getMbtiResult(id: number): Promise<MbtiResult | undefined>;
+  getMbtiResultByCredentials(nickname: string, password: string): Promise<MbtiResult | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private results: Map<number, MbtiResult>;
-  private currentId: number;
-
-  constructor() {
-    this.results = new Map();
-    this.currentId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async createMbtiResult(result: InsertMbtiResult): Promise<MbtiResult> {
-    const id = this.currentId++;
-    const mbtiResult: MbtiResult = { ...result, id };
-    this.results.set(id, mbtiResult);
-    return mbtiResult;
+    const [newResult] = await db.insert(mbtiResults).values(result).returning();
+    return newResult;
   }
 
   async getMbtiResult(id: number): Promise<MbtiResult | undefined> {
-    return this.results.get(id);
+    const [result] = await db.select().from(mbtiResults).where(eq(mbtiResults.id, id));
+    return result;
+  }
+
+  async getMbtiResultByCredentials(nickname: string, password: string): Promise<MbtiResult | undefined> {
+    const [result] = await db
+      .select()
+      .from(mbtiResults)
+      .where(eq(mbtiResults.nickname, nickname))
+      .where(eq(mbtiResults.password, password));
+    return result;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

@@ -4,15 +4,34 @@ import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { questions, type Answer } from "@/lib/questions";
 import { calculateMbti } from "@/lib/mbti";
 import { apiRequest } from "@/lib/queryClient";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginInput } from "@shared/schema";
 
 export default function Test() {
   const [, setLocation] = useLocation();
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(-1); // -1 means login form
   const [answers, setAnswers] = useState<Answer[]>([]);
-  const progress = (currentQuestion / questions.length) * 100;
+  const [userCredentials, setUserCredentials] = useState<LoginInput | null>(null);
+  const progress = Math.max(0, (currentQuestion / questions.length) * 100);
+
+  const form = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      nickname: "",
+      password: "",
+    },
+  });
+
+  const handleLoginSubmit = (data: LoginInput) => {
+    setUserCredentials(data);
+    setCurrentQuestion(0);
+  };
 
   const handleAnswer = async (value: number) => {
     const newAnswers = [
@@ -24,10 +43,10 @@ export default function Test() {
     if (currentQuestion === questions.length - 1) {
       const mbtiType = calculateMbti(newAnswers);
       const response = await apiRequest("POST", "/api/mbti-results", {
+        ...userCredentials,
         answers: newAnswers,
         result: mbtiType,
         language: "ko",
-        createdAt: new Date().toISOString()
       });
       const result = await response.json();
       setLocation(`/result/${result.id}`);
@@ -35,6 +54,64 @@ export default function Test() {
       setCurrentQuestion(prev => prev + 1);
     }
   };
+
+  if (currentQuestion === -1) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
+        <div className="max-w-md mx-auto pt-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card>
+              <CardContent className="pt-6">
+                <h2 className="text-xl font-semibold mb-6">
+                  테스트를 시작하기 전에
+                </h2>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleLoginSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="nickname"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>닉네임</FormLabel>
+                          <FormControl>
+                            <Input placeholder="사용하실 닉네임을 입력해주세요" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>비밀번호</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="password" 
+                              placeholder="결과 조회시 사용할 비밀번호" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full">
+                      테스트 시작하기
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   const question = questions[currentQuestion];
 
