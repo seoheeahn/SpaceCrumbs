@@ -9,10 +9,10 @@ import { calculateDimensionScores } from "../client/src/lib/mbti";
 function calculateCoordinates(answers: { questionId: number; value: number }[]) {
   const scores = calculateDimensionScores(answers);
 
-  // Normalize scores to -100 to 100 range
-  const x = ((scores.E - scores.I) / 100) * 100; // E/I axis
-  const y = ((scores.N - scores.S) / 100) * 100; // N/S axis
-  const z = ((scores.F - scores.T) / 100) * 100; // F/T axis
+  // Normalize scores to -100 to 100 range and ensure numeric values
+  const x = Number(((scores.E - scores.I) / 100) * 100); // E/I axis
+  const y = Number(((scores.N - scores.S) / 100) * 100); // N/S axis
+  const z = Number(((scores.F - scores.T) / 100) * 100); // F/T axis
 
   return { x, y, z };
 }

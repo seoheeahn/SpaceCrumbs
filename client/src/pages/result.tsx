@@ -182,9 +182,9 @@ export default function Result() {
           <div className="text-center mb-6">
             <p className="text-lg text-primary font-semibold">우주좌표값:</p>
             <p className="text-gray-600">
-              X: {result.coordinateX?.toFixed(2)} | 
-              Y: {result.coordinateY?.toFixed(2)} | 
-              Z: {result.coordinateZ?.toFixed(2)}
+              X: {typeof result.coordinateX === 'number' ? result.coordinateX.toFixed(2) : '0.00'} | 
+              Y: {typeof result.coordinateY === 'number' ? result.coordinateY.toFixed(2) : '0.00'} | 
+              Z: {typeof result.coordinateZ === 'number' ? result.coordinateZ.toFixed(2) : '0.00'}
             </p>
           </div>
 
