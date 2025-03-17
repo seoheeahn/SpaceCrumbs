@@ -1,121 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Text, Sphere, Line } from "@react-three/drei";
-import { useState, Suspense } from "react";
 import { useParams } from "wouter";
+import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
 import { dimensionColors, calculateDimensionScores } from "@/lib/mbti";
-import * as THREE from "three";
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Card, CardContent } from "@/components/ui/card";
 
-// 축 레이블 컴포넌트
-function AxisLabel({ position, text }: { position: [number, number, number]; text: string }) {
-  return (
-    <Text
-      position={position}
-      fontSize={1}
-      color="#ffffff"
-      anchorX="center"
-      anchorY="middle"
-    >
-      {text}
-    </Text>
-  );
-}
-
-// Custom Grid Line Component
-function CustomGridLine({ start, end, color }: { start: [number, number, number], end: [number, number, number], color: string }) {
-  return (
-    <Line
-      points={[start, end]}
-      color={color}
-      lineWidth={1}
-      dashed={false}
-    />
-  );
-}
-
-// 그리드 라인 컴포넌트
-function GridLines() {
-  const size = 30;
-  const divisions = 30;
-  const color = "#444444";
-  const lines = [];
-
-  // Create grid lines
-  for (let i = -size/2; i <= size/2; i += size/divisions) {
-    // XZ plane
-    lines.push(
-      <CustomGridLine key={`xz-1-${i}`} start={[i, 0, -size/2]} end={[i, 0, size/2]} color={color} />,
-      <CustomGridLine key={`xz-2-${i}`} start={[-size/2, 0, i]} end={[size/2, 0, i]} color={color} />
-    );
-    // XY plane
-    lines.push(
-      <CustomGridLine key={`xy-1-${i}`} start={[i, -size/2, 0]} end={[i, size/2, 0]} color={color} />,
-      <CustomGridLine key={`xy-2-${i}`} start={[-size/2, i, 0]} end={[size/2, i, 0]} color={color} />
-    );
-    // YZ plane
-    lines.push(
-      <CustomGridLine key={`yz-1-${i}`} start={[0, i, -size/2]} end={[0, i, size/2]} color={color} />,
-      <CustomGridLine key={`yz-2-${i}`} start={[0, -size/2, i]} end={[0, size/2, i]} color={color} />
-    );
-  }
-
-  return <>{lines}</>;
-}
-
-// Planet component using proper Three.js primitives
-function Planet({
-  position,
-  size,
-  color,
-  label,
-  score
-}: {
-  position: [number, number, number];
-  size: number;
+interface DataPoint {
+  name: string;
+  x: number;
+  y: number;
+  z: number;
   color: string;
-  label: string;
-  score: number;
-}) {
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <group
-      position={position}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
-      <Sphere args={[size, 32, 32]}>
-        <meshStandardMaterial
-          color={color}
-          roughness={0.5}
-          metalness={0.8}
-          emissive={hovered ? color : "#000000"}
-          emissiveIntensity={hovered ? 0.5 : 0}
-        />
-      </Sphere>
-      {hovered && (
-        <Text
-          position={[0, size + 0.5, 0]}
-          fontSize={0.5}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {`${label}: ${score.toFixed(1)}%`}
-        </Text>
-      )}
-    </group>
-  );
-}
-
-// Error Boundary Component
-function ErrorFallback() {
-  return (
-    <div className="w-full h-screen flex items-center justify-center">
-      <p className="text-white">3D 우주를 불러오는데 문제가 발생했습니다.</p>
-    </div>
-  );
 }
 
 export default function Universe() {
@@ -129,7 +25,7 @@ export default function Universe() {
 
   if (!id) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
         <p className="text-white">잘못된 접근입니다.</p>
       </div>
     );
@@ -137,7 +33,7 @@ export default function Universe() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
         <p className="text-white">우주를 생성하는 중...</p>
       </div>
     );
@@ -145,7 +41,7 @@ export default function Universe() {
 
   if (error || !result) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
         <p className="text-white">데이터를 불러올 수 없습니다.</p>
       </div>
     );
@@ -153,83 +49,124 @@ export default function Universe() {
 
   const scores = calculateDimensionScores(result.answers);
 
+  // Create data points for the scatter plot
+  const data: DataPoint[] = [
+    {
+      name: 'E',
+      x: scores.E * scale,
+      y: 0,
+      z: 0,
+      color: dimensionColors["E-I"]
+    },
+    {
+      name: 'I',
+      x: -scores.I * scale,
+      y: 0,
+      z: 0,
+      color: dimensionColors["E-I"]
+    },
+    {
+      name: 'S',
+      x: 0,
+      y: -scores.S * scale,
+      z: 0,
+      color: dimensionColors["S-N"]
+    },
+    {
+      name: 'N',
+      x: 0,
+      y: scores.N * scale,
+      z: 0,
+      color: dimensionColors["S-N"]
+    },
+    {
+      name: 'T',
+      x: 0,
+      y: 0,
+      z: -scores.T * scale,
+      color: dimensionColors["T-F"]
+    },
+    {
+      name: 'F',
+      x: 0,
+      y: 0,
+      z: scores.F * scale,
+      color: dimensionColors["T-F"]
+    }
+  ];
+
   return (
-    <div className="w-full h-screen bg-black">
-      <Canvas
-        gl={{ antialias: true }}
-        camera={{ position: [20, 20, 20], fov: 60 }}
-        style={{ width: '100%', height: '100%' }}
-      >
-        <Suspense fallback={<ErrorFallback />}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} intensity={1} />
-
-          {/* 축 레이블 */}
-          <AxisLabel position={[15, 0, 0]} text="E-I" />
-          <AxisLabel position={[0, 15, 0]} text="S-N" />
-          <AxisLabel position={[0, 0, 15]} text="T-F" />
-
-          {/* 그리드 */}
-          <GridLines />
-
-          {/* MBTI 점수 행성들 */}
-          {/* E-I 축 */}
-          <Planet
-            position={[scores.E * scale, 0, 0]}
-            size={0.5}
-            color={dimensionColors["E-I"]}
-            label="E"
-            score={scores.E}
-          />
-          <Planet
-            position={[-scores.I * scale, 0, 0]}
-            size={0.5}
-            color={dimensionColors["E-I"]}
-            label="I"
-            score={scores.I}
-          />
-
-          {/* S-N 축 */}
-          <Planet
-            position={[0, scores.N * scale, 0]}
-            size={0.5}
-            color={dimensionColors["S-N"]}
-            label="N"
-            score={scores.N}
-          />
-          <Planet
-            position={[0, -scores.S * scale, 0]}
-            size={0.5}
-            color={dimensionColors["S-N"]}
-            label="S"
-            score={scores.S}
-          />
-
-          {/* T-F 축 */}
-          <Planet
-            position={[0, 0, scores.F * scale]}
-            size={0.5}
-            color={dimensionColors["T-F"]}
-            label="F"
-            score={scores.F}
-          />
-          <Planet
-            position={[0, 0, -scores.T * scale]}
-            size={0.5}
-            color={dimensionColors["T-F"]}
-            label="T"
-            score={scores.T}
-          />
-
-          <OrbitControls
-            enableZoom={true}
-            enablePan={true}
-            enableRotate={true}
-            minDistance={5}
-            maxDistance={50}
-          />
-        </Suspense>
-      </Canvas>
-    </div>
+    <motion.div 
+      className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="w-full max-w-4xl mx-auto mt-8">
+        <CardContent className="p-6">
+          <h1 className="text-2xl font-bold text-center mb-6">우주 좌표계에서 보기</h1>
+          <div className="w-full h-[600px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart
+                margin={{
+                  top: 20,
+                  right: 20,
+                  bottom: 20,
+                  left: 20,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  type="number" 
+                  dataKey="x" 
+                  name="E-I" 
+                  domain={[-1, 1]}
+                  label={{ value: 'E-I', position: 'bottom' }}
+                />
+                <YAxis 
+                  type="number" 
+                  dataKey="y" 
+                  name="S-N"
+                  domain={[-1, 1]}
+                  label={{ value: 'S-N', angle: -90, position: 'left' }}
+                />
+                <ZAxis 
+                  type="number" 
+                  dataKey="z" 
+                  name="T-F"
+                  domain={[-1, 1]}
+                  range={[50, 400]}
+                />
+                <Tooltip 
+                  cursor={{ strokeDasharray: '3 3' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload as DataPoint;
+                      return (
+                        <div className="bg-white p-2 rounded shadow">
+                          <p className="font-bold">{data.name}</p>
+                          <p>X: {data.x.toFixed(2)}</p>
+                          <p>Y: {data.y.toFixed(2)}</p>
+                          <p>Z: {data.z.toFixed(2)}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                {data.map((point, index) => (
+                  <Scatter
+                    key={index}
+                    name={point.name}
+                    data={[point]}
+                    fill={point.color}
+                  />
+                ))}
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
