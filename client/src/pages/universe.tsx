@@ -1,36 +1,50 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
 import { Suspense } from "react";
-import type { Coordinate } from "@/lib/types";
+
+interface Coordinate {
+  id: number;
+  userId: string;
+  coordinateX: number;
+  coordinateY: number;
+  coordinateZ: number;
+}
 
 function Planet({ position }: { position: [number, number, number] }) {
   return (
-    <group position={position}>
-      <mesh>
-        <sphereGeometry args={[0.5, 32, 32]} />
-        <meshStandardMaterial color="#ffffff" />
-      </mesh>
-    </group>
+    <mesh position={position}>
+      <sphereGeometry args={[0.5, 32, 32]} />
+      <meshStandardMaterial color="purple" />
+    </mesh>
   );
 }
 
-function Scene({ coordinates }: { coordinates: Coordinate[] }) {
+function Scene() {
+  const { data: coordinates = [] } = useQuery<Coordinate[]>({
+    queryKey: ["/api/universe-coordinates"],
+  });
+
   return (
     <>
-      <ambientLight intensity={0.1} />
+      <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
-      <Stars
-        radius={100}
-        depth={50}
-        count={5000}
-        factor={4}
+      <Stars 
+        radius={100} 
+        depth={50} 
+        count={5000} 
+        factor={4} 
         saturation={0}
       />
       {coordinates.map((coord, index) => (
         <Planet
           key={index}
-          position={[coord.coordinateX || 0, coord.coordinateY || 0, coord.coordinateZ || 0]}
+          position={[
+            coord.coordinateX / 5, 
+            coord.coordinateY / 5,
+            coord.coordinateZ / 5
+          ]}
         />
       ))}
       <OrbitControls />
@@ -39,38 +53,14 @@ function Scene({ coordinates }: { coordinates: Coordinate[] }) {
 }
 
 export default function Universe() {
-  const { data: coordinates, isLoading, error } = useQuery<Coordinate[]>({
-    queryKey: ["/api/universe-coordinates"]
-  });
-
-  if (isLoading) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center text-white">
-        우주 좌표를 불러오는 중...
-      </div>
-    );
-  }
-
-  if (error || !coordinates) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center text-white">
-        좌표를 불러오는데 실패했습니다.
-      </div>
-    );
-  }
-
   return (
     <div className="w-full h-screen bg-black">
       <Canvas
         camera={{ position: [0, 0, 50], fov: 60 }}
-        gl={{
-          antialias: true,
-          alpha: false,
-          powerPreference: "high-performance"
-        }}
+        dpr={[1, 2]}
       >
         <Suspense fallback={null}>
-          <Scene coordinates={coordinates} />
+          <Scene />
         </Suspense>
       </Canvas>
     </div>
