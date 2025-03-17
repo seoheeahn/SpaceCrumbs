@@ -2,19 +2,45 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent } from "@/components/ui/card";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 
-interface DataPoint {
-  name: string;
-  x: number;
-  y: number;
-  z: number;
+// 좌표 정규화 함수 (0~100 범위로)
+function normalize(x: number, y: number, z: number): [number, number, number] {
+  const coordinates = [x, y, z];
+  const min = Math.min(...coordinates);
+  const max = Math.max(...coordinates);
+  return coordinates.map(val => ((val - min) / (max - min)) * 100) as [number, number, number];
 }
 
-// 좌표 정규화 함수 (0-100 범위로)
-function normalizeCoordinate(value: number, min: number, max: number): number {
-  return ((value - min) / (max - min)) * 100;
+function Scene({ coordinates }: { coordinates: [number, number, number] }) {
+  // Move coordinates to center (0,0,0)
+  const [x, y, z] = coordinates.map(coord => coord - 50);
+
+  return (
+    <>
+      <OrbitControls />
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} />
+
+      {/* Coordinate axes */}
+      <group>
+        <mesh position={[x, y, z]}>
+          <sphereGeometry args={[2, 32, 32]} />
+          <meshStandardMaterial 
+            color="#00ffcc"
+            roughness={0.3}
+            metalness={0.7}
+          />
+        </mesh>
+      </group>
+
+      {/* Grid helpers */}
+      <gridHelper args={[100, 10]} position={[0, -50, 0]} />
+      <gridHelper args={[100, 10]} position={[0, 0, -50]} rotation={[Math.PI / 2, 0, 0]} />
+    </>
+  );
 }
 
 export default function Universe() {
@@ -43,23 +69,8 @@ export default function Universe() {
   const rawY = result.coordinateY ? Number(result.coordinateY) : 0;
   const rawZ = result.coordinateZ ? Number(result.coordinateZ) : 0;
 
-  // Find min and max values for normalization
-  const coordinates = [rawX, rawY, rawZ];
-  const minValue = Math.min(...coordinates);
-  const maxValue = Math.max(...coordinates);
-
-  // Normalize coordinates to 0-100 range
-  const x = normalizeCoordinate(rawX, minValue, maxValue);
-  const y = normalizeCoordinate(rawY, minValue, maxValue);
-  const z = normalizeCoordinate(rawZ, minValue, maxValue);
-
-  // Create data point for the scatter plot
-  const data: DataPoint[] = [{
-    name: result.result,
-    x,
-    y,
-    z
-  }];
+  // Normalize coordinates
+  const normalizedCoords = normalize(rawX, rawY, rawZ);
 
   return (
     <motion.div 
@@ -76,66 +87,15 @@ export default function Universe() {
             <br />
             원본 좌표 - X: {rawX.toFixed(2)}, Y: {rawY.toFixed(2)}, Z: {rawZ.toFixed(2)}
             <br />
-            정규화 좌표 - X: {x.toFixed(2)}, Y: {y.toFixed(2)}, Z: {z.toFixed(2)}
+            정규화 좌표 - X: {normalizedCoords[0].toFixed(2)}, Y: {normalizedCoords[1].toFixed(2)}, Z: {normalizedCoords[2].toFixed(2)}
           </p>
-          <div className="w-full h-[600px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart
-                margin={{
-                  top: 20,
-                  right: 20,
-                  bottom: 20,
-                  left: 20,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  type="number" 
-                  dataKey="x" 
-                  name="X" 
-                  domain={[0, 100]}
-                  label={{ value: 'X축 (E-I)', position: 'bottom' }}
-                />
-                <YAxis 
-                  type="number" 
-                  dataKey="y" 
-                  name="Y"
-                  domain={[0, 100]}
-                  label={{ value: 'Y축 (N-S)', angle: -90, position: 'left' }}
-                />
-                <ZAxis 
-                  type="number" 
-                  dataKey="z" 
-                  name="Z"
-                  domain={[0, 100]}
-                  range={[50, 400]}
-                  label={{ value: 'Z축 (F-T)', position: 'insideRight' }}
-                />
-                <Tooltip 
-                  cursor={{ strokeDasharray: '3 3' }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload as DataPoint;
-                      return (
-                        <div className="bg-white p-3 rounded-lg shadow-lg border">
-                          <p className="font-bold text-lg mb-2">{data.name}</p>
-                          <p className="text-sm">X (E-I): {data.x.toFixed(2)}</p>
-                          <p className="text-sm">Y (N-S): {data.y.toFixed(2)}</p>
-                          <p className="text-sm">Z (F-T): {data.z.toFixed(2)}</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Scatter
-                  name={result.result}
-                  data={data}
-                  fill={`hsl(${z}, 70%, 50%)`}
-                  shape="star"
-                  />
-              </ScatterChart>
-            </ResponsiveContainer>
+          <div className="w-full h-[600px] bg-gray-900 rounded-lg overflow-hidden">
+            <Canvas
+              camera={{ position: [50, 50, 150], fov: 50 }}
+              style={{ background: '#1e1e1e' }}
+            >
+              <Scene coordinates={normalizedCoords} />
+            </Canvas>
           </div>
         </CardContent>
       </Card>
