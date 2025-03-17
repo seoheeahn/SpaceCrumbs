@@ -166,11 +166,16 @@ export default function Result() {
       <CardContent className="pt-6">
         <div className="mb-8">
             <h1 className="text-2xl sm:text-3xl font-pretendard font-bold text-center mb-4 sm:mb-6">
-              당신의 MBTI 결과
+              당신의 우주좌표는
             </h1>
             <div className="text-center mb-6 sm:mb-8">
-              <p className="text-xl sm:text-2xl font-pretendard font-bold mt-2 text-purple-600">
-                {result.result}
+              <p className="text-purple-600 text-xl sm:text-2xl font-pretendard font-bold mt-2">
+                X: {result.coordinateX !== null ? result.coordinateX.toFixed(2) : '0.00'} |{' '}
+                Y: {result.coordinateY !== null ? result.coordinateY.toFixed(2) : '0.00'} |{' '}
+                Z: {result.coordinateZ !== null ? result.coordinateZ.toFixed(2) : '0.00'}
+              </p>
+              <p className="text-lg sm:text-xl text-gray-600 mt-4">
+                MBTI 유형: {result.result}
               </p>
             </div>
 
