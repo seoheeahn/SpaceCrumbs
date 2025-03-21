@@ -103,12 +103,13 @@ export default function Result() {
   // Check if accessing as admin
   const isAdmin = location.includes('isAdmin=true');
 
-  // Skip login dialog if accessing as admin
+  // Load login state from sessionStorage on mount
   useEffect(() => {
-    if (isAdmin) {
+    const savedLoginState = sessionStorage.getItem(`login-state-${id}`);
+    if (savedLoginState === 'true' || isAdmin) {
       setShowLoginDialog(false);
     }
-  }, [isAdmin]);
+  }, [id, isAdmin]);
 
   const loginForm = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -129,6 +130,8 @@ export default function Result() {
       if (data.id.toString() === id) {
         setShowLoginDialog(false);
         setLoginCredentials(loginForm.getValues());
+        // Save login state to sessionStorage
+        sessionStorage.setItem(`login-state-${id}`, 'true');
       } else {
         toast({
           title: "로그인 실패",
@@ -148,7 +151,7 @@ export default function Result() {
 
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
-    enabled: !!id && !showLoginDialog
+    enabled: !!id && (!showLoginDialog || isAdmin)
   });
 
   if (showLoginDialog) {
