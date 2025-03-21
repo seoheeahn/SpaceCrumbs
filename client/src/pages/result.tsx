@@ -102,14 +102,20 @@ export default function Result() {
 
   // Check if accessing as admin
   const isAdmin = location.includes('isAdmin=true');
+  const isAdminLoggedIn = sessionStorage.getItem('admin-login-state') === 'true';
 
   // Load login state from sessionStorage on mount
   useEffect(() => {
     const savedLoginState = sessionStorage.getItem(`login-state-${id}`);
-    if (savedLoginState === 'true' || isAdmin) {
+    if (savedLoginState === 'true' || (isAdmin && isAdminLoggedIn)) {
       setShowLoginDialog(false);
     }
-  }, [id, isAdmin]);
+  }, [id, isAdmin, isAdminLoggedIn]);
+
+  // Skip login form if accessing as admin and already logged in
+  if (showLoginDialog && isAdmin && isAdminLoggedIn) {
+    setShowLoginDialog(false);
+  }
 
   const loginForm = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -130,7 +136,6 @@ export default function Result() {
       if (data.id.toString() === id) {
         setShowLoginDialog(false);
         setLoginCredentials(loginForm.getValues());
-        // Save login state to sessionStorage
         sessionStorage.setItem(`login-state-${id}`, 'true');
       } else {
         toast({
@@ -151,7 +156,7 @@ export default function Result() {
 
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
-    enabled: !!id && (!showLoginDialog || isAdmin)
+    enabled: !!id && (!showLoginDialog || (isAdmin && isAdminLoggedIn))
   });
 
   if (showLoginDialog) {

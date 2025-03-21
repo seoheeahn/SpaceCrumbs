@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -32,6 +32,14 @@ export default function Admin() {
   const [currentView, setCurrentView] = useState<AdminView>("results");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Load admin login state from sessionStorage on mount
+  useEffect(() => {
+    const savedAdminLoginState = sessionStorage.getItem('admin-login-state');
+    if (savedAdminLoginState === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   // Always define hooks at the top level
   const { data: results, isLoading } = useQuery<MbtiResult[]>({
     queryKey: ["/api/admin/mbti-results"],
@@ -53,6 +61,8 @@ export default function Admin() {
     },
     onSuccess: () => {
       setIsAuthenticated(true);
+      // Save admin login state to sessionStorage with longer expiration
+      sessionStorage.setItem('admin-login-state', 'true');
       toast({
         title: "로그인 성공",
         description: "관리자 페이지에 접속했습니다.",
