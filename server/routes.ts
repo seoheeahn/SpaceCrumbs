@@ -244,6 +244,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add this new endpoint after the existing /api/mbti-results/:id endpoint
+  app.get("/api/admin/mbti-results/:id/credentials", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = await storage.getMbtiResult(id);
+
+      if (!result) {
+        res.status(404).json({ error: "결과를 찾을 수 없습니다" });
+        return;
+      }
+
+      // Only return the necessary credentials
+      res.json({
+        userId: result.userId,
+        password: result.password
+      });
+    } catch (error) {
+      console.error("Error getting MBTI result credentials:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -104,11 +104,19 @@ export default function Result() {
   const isAdmin = location.includes('isAdmin=true');
   const isAdminLoggedIn = sessionStorage.getItem('admin-login-state') === 'true';
 
-  // Load login state from sessionStorage on mount
+  // Update the useEffect hook to check for stored credentials
   useEffect(() => {
     const savedLoginState = sessionStorage.getItem(`login-state-${id}`);
+    const storedCredentials = sessionStorage.getItem(`user-credentials-${id}`);
+
     if (savedLoginState === 'true' || (isAdmin && isAdminLoggedIn)) {
       setShowLoginDialog(false);
+    } else if (isAdmin && storedCredentials) {
+      // If accessing as admin and credentials exist, perform auto-login
+      const credentials = JSON.parse(storedCredentials);
+      loginMutation.mutate(credentials);
+      // Clean up stored credentials after use
+      sessionStorage.removeItem(`user-credentials-${id}`);
     }
   }, [id, isAdmin, isAdminLoggedIn]);
 

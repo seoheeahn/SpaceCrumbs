@@ -270,7 +270,33 @@ export default function Admin() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setLocation(`/result/${result.id}?isAdmin=true`)}
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch(`/api/admin/mbti-results/${result.id}/credentials`);
+                                      const credentials = await response.json();
+
+                                      if (credentials.userId && credentials.password) {
+                                        // Store credentials in sessionStorage
+                                        sessionStorage.setItem(`user-credentials-${result.id}`, JSON.stringify({
+                                          userId: credentials.userId,
+                                          password: credentials.password
+                                        }));
+                                        setLocation(`/result/${result.id}?isAdmin=true`);
+                                      } else {
+                                        toast({
+                                          title: "오류 발생",
+                                          description: "사용자 정보를 가져올 수 없습니다.",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    } catch (error) {
+                                      toast({
+                                        title: "오류 발생",
+                                        description: "사용자 정보를 가져오는 중 오류가 발생했습니다.",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }}
                                 >
                                   <ExternalLink className="w-4 h-4 sm:mr-1" />
                                   <span className="hidden sm:inline">보기</span>
