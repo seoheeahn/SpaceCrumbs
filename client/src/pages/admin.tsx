@@ -260,7 +260,7 @@ export default function Admin() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setLocation(`/result/${result.id}`)}
+                                  onClick={() => setLocation(`/result/${result.id}?isAdmin=true`)}
                                 >
                                   <ExternalLink className="w-4 h-4 sm:mr-1" />
                                   <span className="hidden sm:inline">보기</span>

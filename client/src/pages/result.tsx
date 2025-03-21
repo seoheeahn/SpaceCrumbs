@@ -11,7 +11,7 @@ import { questions } from "@/lib/questions";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, DialogHeader } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import html2canvas from 'html2canvas';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -91,6 +91,7 @@ const dimensionToLetters: Record<DimensionKey, [MbtiLetter, MbtiLetter]> = {
 
 export default function Result() {
   const { id } = useParams();
+  const [location] = useLocation();
   const [, setLocation] = useLocation();
   const [showLoginDialog, setShowLoginDialog] = useState(true);
   const [loginCredentials, setLoginCredentials] = useState<LoginInput | null>(null);
@@ -98,6 +99,16 @@ export default function Result() {
   const snsRef = useRef<HTMLDivElement>(null);
   const [previewImage, setPreviewImage] = useState<string>('');
   const [snsImage, setSnsImage] = useState<string>('');
+
+  // Check if accessing as admin
+  const isAdmin = location.includes('isAdmin=true');
+
+  // Skip login dialog if accessing as admin
+  useEffect(() => {
+    if (isAdmin) {
+      setShowLoginDialog(false);
+    }
+  }, [isAdmin]);
 
   const loginForm = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
