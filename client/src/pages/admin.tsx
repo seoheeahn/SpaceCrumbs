@@ -281,6 +281,7 @@ export default function Admin() {
                                           userId: credentials.userId,
                                           password: credentials.password
                                         }));
+                                        // Add admin state to URL
                                         setLocation(`/result/${result.id}?isAdmin=true`);
                                       } else {
                                         toast({

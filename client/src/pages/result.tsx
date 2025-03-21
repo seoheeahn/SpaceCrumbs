@@ -111,7 +111,7 @@ export default function Result() {
 
     if (savedLoginState === 'true' || (isAdmin && isAdminLoggedIn)) {
       setShowLoginDialog(false);
-    } else if (isAdmin && storedCredentials) {
+    } else if (isAdmin && isAdminLoggedIn && storedCredentials) {
       // If accessing as admin and credentials exist, perform auto-login
       const credentials = JSON.parse(storedCredentials);
       loginMutation.mutate(credentials);
@@ -166,57 +166,6 @@ export default function Result() {
     queryKey: [`/api/mbti-results/${id}`],
     enabled: !!id && (!showLoginDialog || (isAdmin && isAdminLoggedIn))
   });
-
-  if (showLoginDialog) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-        <div className="max-w-md mx-auto pt-8">
-          <Card>
-            <CardContent className="pt-6">
-              <h2 className="text-xl font-semibold mb-6">결과 조회</h2>
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="userId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>아이디</FormLabel>
-                        <FormControl>
-                          <Input type="text" placeholder="아이디를 입력하세요" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>비밀번호</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loginMutation.isPending}
-                  >
-                    결과 조회하기
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
