@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +12,7 @@ import { questions } from "@/lib/questions";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, DialogHeader } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import html2canvas from 'html2canvas';
-import { useRef, useState, useEffect } from 'react';
+import { useRef,  } from 'react';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -94,79 +95,33 @@ export default function Result() {
   const [location] = useLocation();
   const [, setLocation] = useLocation();
   const [showLoginDialog, setShowLoginDialog] = useState(true);
-  const [loginCredentials, setLoginCredentials] = useState<LoginInput | null>(null);
-  const resultRef = useRef<HTMLDivElement>(null);
-  const snsRef = useRef<HTMLDivElement>(null);
-  const [previewImage, setPreviewImage] = useState<string>('');
-  const [snsImage, setSnsImage] = useState<string>('');
+  const { toast } = useToast();
 
   // Check if accessing as admin
   const isAdmin = location.includes('isAdmin=true');
   const isAdminLoggedIn = sessionStorage.getItem('admin-login-state') === 'true';
 
-  // Update the useEffect hook to check for stored credentials
   useEffect(() => {
-    const savedLoginState = sessionStorage.getItem(`login-state-${id}`);
-    const storedCredentials = sessionStorage.getItem(`user-credentials-${id}`);
-
-    if (savedLoginState === 'true' || (isAdmin && isAdminLoggedIn)) {
+    // Skip login for admin access
+    if (isAdmin && isAdminLoggedIn) {
       setShowLoginDialog(false);
-    } else if (isAdmin && isAdminLoggedIn && storedCredentials) {
-      // If accessing as admin and credentials exist, perform auto-login
-      const credentials = JSON.parse(storedCredentials);
-      loginMutation.mutate(credentials);
-      // Clean up stored credentials after use
-      sessionStorage.removeItem(`user-credentials-${id}`);
+      return;
+    }
+
+    // Check saved login state for normal users
+    const savedLoginState = sessionStorage.getItem(`login-state-${id}`);
+    if (savedLoginState === 'true') {
+      setShowLoginDialog(false);
     }
   }, [id, isAdmin, isAdminLoggedIn]);
 
-  // Skip login form if accessing as admin and already logged in
-  if (showLoginDialog && isAdmin && isAdminLoggedIn) {
-    setShowLoginDialog(false);
-  }
-
-  const loginForm = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      userId: "",
-      password: "",
-    },
-  });
-
-  const { toast } = useToast();
-
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginInput) => {
-      const response = await apiRequest("POST", "/api/mbti-results/login", data);
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.id.toString() === id) {
-        setShowLoginDialog(false);
-        setLoginCredentials(loginForm.getValues());
-        sessionStorage.setItem(`login-state-${id}`, 'true');
-      } else {
-        toast({
-          title: "로그인 실패",
-          description: "잘못된 접근입니다.",
-          variant: "destructive",
-        });
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: "로그인 실패",
-        description: "아이디 또는 비밀번호를 확인해주세요.",
-        variant: "destructive",
-      });
-    },
-  });
-
+  // API query
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
-    enabled: !!id && (isAdmin ? isAdminLoggedIn : !showLoginDialog)
+    enabled: !!id && (!showLoginDialog || (isAdmin && isAdminLoggedIn))
   });
 
+  // Loading state
   if (!id || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
@@ -177,6 +132,7 @@ export default function Result() {
     );
   }
 
+  // No result found
   if (!result) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
@@ -223,6 +179,11 @@ export default function Result() {
       })
     };
   });
+
+  const resultRef = useRef<HTMLDivElement>(null);
+  const snsRef = useRef<HTMLDivElement>(null);
+  const [previewImage, setPreviewImage] = useState<string>('');
+  const [snsImage, setSnsImage] = useState<string>('');
 
   const handleShare = async (type: 'sns' | 'full') => {
     const targetRef = type === 'sns' ? snsRef : resultRef;
