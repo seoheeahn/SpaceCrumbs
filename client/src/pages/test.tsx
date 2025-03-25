@@ -20,7 +20,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 export default function Test() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [currentQuestion, setCurrentQuestion] = useState(-1); // -1 means login form
+  const [currentQuestion, setCurrentQuestion] = useState(-1); 
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [userCredentials, setUserCredentials] = useState<LoginInput | null>(null);
   const [isCheckingId, setIsCheckingId] = useState(false);
@@ -91,23 +91,18 @@ export default function Test() {
   const handleAnswer = async (value: number) => {
     const newAnswer = { questionId: questions[currentQuestion].id, value };
 
-    // Update answers array, replacing any existing answer for this question
     setAnswers(prevAnswers => {
       const answersCopy = [...prevAnswers];
       const existingIndex = answersCopy.findIndex(a => a.questionId === newAnswer.questionId);
 
       if (existingIndex !== -1) {
-        // Replace existing answer
         answersCopy[existingIndex] = newAnswer;
       } else {
-        // Add new answer
         answersCopy.push(newAnswer);
       }
 
-      // Sort answers by questionId to maintain order
       answersCopy.sort((a, b) => a.questionId - b.questionId);
 
-      console.log("Updated answers:", answersCopy); // Debug log
       return answersCopy;
     });
 
@@ -122,7 +117,6 @@ export default function Test() {
         throw new Error("User credentials not found");
       }
 
-      // Verify we have exactly one answer per question
       if (answers.length !== questions.length) {
         toast({
           title: "응답 확인",
@@ -277,66 +271,62 @@ export default function Test() {
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <Button
                   variant="ghost"
-                  onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
-                  disabled={currentQuestion === 0}
+                  onClick={() => setCurrentQuestion(prev => Math.max(-1, prev - 1))}
+                  disabled={currentQuestion === -1}
                   className="text-sm sm:text-base"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   이전으로
                 </Button>
                 <span className="text-sm text-gray-500">
-                  {currentQuestion + 1} / {questions.length}
+                  {currentQuestion === -1 ? 0 : currentQuestion + 1} / {questions.length}
                 </span>
               </div>
 
-              <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
-                {question.text.ko}
+              <h2 className="text-lg sm:text-xl font-semibold mb-6 sm:mb-8">
+                {question?.text.ko}
               </h2>
 
-              <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                {/* Options and Buttons - Stacks vertically on very small screens */}
-                <div className="flex flex-col md:grid md:grid-cols-[minmax(120px,1fr),auto,minmax(120px,1fr)] gap-4 items-center">
-                  {/* Option A */}
-                  <div className="text-center md:text-left w-full md:w-auto text-sm">
-                    <p className="min-h-[2.5rem] flex items-center justify-center md:justify-start">
-                      {question.options.A}
-                    </p>
+              <div className="space-y-6">
+                <div className="flex flex-col items-center text-center">
+                  <div className="mb-2 text-sm font-medium text-primary">
+                    {question?.options.A}
                   </div>
-
-                  {/* Answer Buttons */}
-                  <div className="grid grid-cols-5 gap-2 w-full md:w-auto">
-                    {[1, 2, 3, 4, 5].map((value) => (
-                      <Button
-                        key={value}
-                        variant="secondary"
-                        onClick={() => handleAnswer(value)}
-                        className="w-12 h-12 sm:w-14 sm:h-14 md:w-10 md:h-10 p-0 text-sm sm:text-base"
-                      >
-                        {value}
-                      </Button>
-                    ))}
-                  </div>
-
-                  {/* Option B */}
-                  <div className="text-center md:text-right w-full md:w-auto text-sm">
-                    <p className="min-h-[2.5rem] flex items-center justify-center md:justify-end">
-                      {question.options.B}
-                    </p>
-                  </div>
+                  <div className="text-xs text-gray-500">매우 그렇다</div>
                 </div>
 
-                {/* Labels */}
-                <div className="text-xs text-gray-500 flex md:grid md:grid-cols-[1fr,auto,1fr] gap-4 justify-between items-center">
-                  <div className="text-center md:text-left">매우 그렇다</div>
-                  <div className="text-center">중립</div>
-                  <div className="text-center md:text-right">매우 그렇다</div>
+                <div className="grid grid-cols-5 gap-2 sm:gap-4">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <Button
+                      key={value}
+                      variant={value === 3 ? "secondary" : "outline"}
+                      onClick={() => handleAnswer(value)}
+                      className={`
+                        w-full h-12 sm:h-14 p-0 text-sm sm:text-base relative
+                        ${value === 3 ? 'bg-primary/10' : ''}
+                        hover:bg-primary/20 transition-colors
+                      `}
+                    >
+                      {value === 1 && <span className="absolute -top-6 text-xs text-gray-500">A 매우</span>}
+                      {value === 3 && <span className="absolute -top-6 text-xs text-gray-500">중립</span>}
+                      {value === 5 && <span className="absolute -top-6 text-xs text-gray-500">B 매우</span>}
+                      {value}
+                    </Button>
+                  ))}
+                </div>
+
+                <div className="flex flex-col items-center text-center">
+                  <div className="mb-2 text-sm font-medium text-primary">
+                    {question?.options.B}
+                  </div>
+                  <div className="text-xs text-gray-500">매우 그렇다</div>
                 </div>
               </div>
 
               {currentQuestion === questions.length - 1 && answers.length === questions.length && (
                 <Button
                   onClick={handleSubmit}
-                  className="w-full mt-6"
+                  className="w-full mt-8"
                 >
                   <Send className="w-4 h-4 mr-2" />
                   결과 제출하기
