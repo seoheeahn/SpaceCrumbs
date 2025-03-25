@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
@@ -20,14 +20,25 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 export default function Test() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [currentQuestion, setCurrentQuestion] = useState(-1); 
+  const [currentQuestion, setCurrentQuestion] = useState(-1);
   const [answers, setAnswers] = useState<Answer[]>([]);
-  const [userCredentials, setUserCredentials] = useState<LoginInput | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [isCheckingId, setIsCheckingId] = useState(false);
   const [isDuplicateId, setIsDuplicateId] = useState(false);
   const [isIdChecked, setIsIdChecked] = useState(false);
   const [showDuplicateCheckAlert, setShowDuplicateCheckAlert] = useState(false);
   const progress = Math.max(0, (currentQuestion / questions.length) * 100);
+
+  useEffect(() => {
+    const loginState = sessionStorage.getItem('user-login-state');
+    const storedUserId = sessionStorage.getItem('user-id');
+    if (loginState === 'true' && storedUserId) {
+      setIsLoggedIn(true);
+      setUserId(storedUserId);
+      setCurrentQuestion(0); // 로그인된 사용자는 바로 테스트 시작
+    }
+  }, []);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -92,7 +103,10 @@ export default function Test() {
         throw new Error("사용자 생성 중 오류가 발생했습니다");
       }
 
-      setUserCredentials(data);
+      // Store login state
+      sessionStorage.setItem('user-login-state', 'true');
+      sessionStorage.setItem('user-id', data.userId);
+      setUserId(data.userId);
       setCurrentQuestion(0);
     } catch (error) {
       console.error("Error creating user:", error);
@@ -129,8 +143,8 @@ export default function Test() {
 
   const handleSubmit = async () => {
     try {
-      if (!userCredentials) {
-        throw new Error("User credentials not found");
+      if (!userId) {
+        throw new Error("사용자 정보를 찾을 수 없습니다");
       }
 
       if (answers.length !== questions.length) {
@@ -144,7 +158,7 @@ export default function Test() {
 
       const mbtiType = calculateMbti(answers);
       const response = await apiRequest("POST", "/api/mbti-results", {
-        userId: userCredentials.userId,
+        userId,
         answers,
         result: mbtiType,
         language: "ko",
@@ -171,7 +185,8 @@ export default function Test() {
     }
   };
 
-  if (currentQuestion === -1) {
+  // 로그인하지 않은 경우 계정 생성 화면 표시
+  if (currentQuestion === -1 && !isLoggedIn) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
         <div className="max-w-md mx-auto pt-4 sm:pt-8">
@@ -287,15 +302,15 @@ export default function Test() {
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <Button
                   variant="ghost"
-                  onClick={() => setCurrentQuestion(prev => Math.max(-1, prev - 1))}
-                  disabled={currentQuestion === -1}
+                  onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
+                  disabled={currentQuestion === 0}
                   className="text-sm sm:text-base"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   이전으로
                 </Button>
                 <span className="text-sm text-gray-500">
-                  {currentQuestion === -1 ? 0 : currentQuestion + 1} / {questions.length}
+                  {currentQuestion + 1} / {questions.length}
                 </span>
               </div>
 
