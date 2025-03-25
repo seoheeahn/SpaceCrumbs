@@ -118,7 +118,7 @@ export default function Result() {
   // API query
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
-    enabled: !!id && (!showLoginDialog || (isAdmin && isAdminLoggedIn))
+    enabled: !!id && (!showLoginDialog || isAdmin)
   });
 
   // Add console logs for debugging
