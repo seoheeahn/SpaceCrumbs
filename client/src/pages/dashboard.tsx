@@ -189,9 +189,9 @@ export default function Dashboard() {
                         <TableRow>
                           <TableHead>날짜</TableHead>
                           <TableHead>MBTI 유형</TableHead>
-                          <TableHead className="hidden lg:table-cell">X</TableHead>
-                          <TableHead className="hidden lg:table-cell">Y</TableHead>
-                          <TableHead className="hidden lg:table-cell">Z</TableHead>
+                          <TableHead>X</TableHead>
+                          <TableHead>Y</TableHead>
+                          <TableHead>Z</TableHead>
                           <TableHead className="text-right">작업</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -204,13 +204,13 @@ export default function Dashboard() {
                             <TableCell className="font-semibold">
                               {result.result}
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell>
                               {Number(result.coordinateX).toFixed(2)}
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell>
                               {Number(result.coordinateY).toFixed(2)}
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell>
                               {Number(result.coordinateZ).toFixed(2)}
                             </TableCell>
                             <TableCell className="text-right">
