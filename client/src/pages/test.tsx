@@ -287,8 +287,8 @@ export default function Test() {
   const question = questions[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-2 sm:p-4">
-      <div className="w-full max-w-3xl sm:max-w-4xl lg:max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-2">
+      <div className="w-full max-w-4xl sm:max-w-5xl lg:max-w-7xl mx-auto">
         <Progress value={progress} className="mb-4" />
 
         <motion.div
@@ -314,7 +314,7 @@ export default function Test() {
                 </span>
               </div>
 
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-6">
                 {question?.text.ko}
               </h2>
 
@@ -323,7 +323,7 @@ export default function Test() {
                 <div className="flex flex-col sm:grid sm:grid-cols-[1fr,auto,1fr] gap-4 items-center">
                   {/* Option A */}
                   <div className="text-center sm:text-right mb-4 sm:mb-0">
-                    <div className="text-base sm:text-xl lg:text-2xl font-semibold text-primary">
+                    <div className="text-sm sm:text-base lg:text-lg font-semibold text-primary">
                       {question?.options.A}
                     </div>
                   </div>
@@ -362,7 +362,7 @@ export default function Test() {
 
                   {/* Option B */}
                   <div className="text-center sm:text-left mt-4 sm:mt-0">
-                    <div className="text-base sm:text-xl lg:text-2xl font-semibold text-primary">
+                    <div className="text-sm sm:text-base lg:text-lg font-semibold text-primary">
                       {question?.options.B}
                     </div>
                   </div>
