@@ -348,15 +348,13 @@ export default function Test() {
                           variant={value === 3 ? "secondary" : "outline"}
                           onClick={() => handleAnswer(value)}
                           className={`
-                            w-full h-14 sm:h-16 p-2 text-sm relative
+                            w-full h-14 sm:h-16 p-2 text-xs sm:text-sm relative
                             ${value === 3 ? 'bg-primary/10' : ''}
                             hover:bg-primary/20 transition-colors
+                            whitespace-normal
                           `}
                         >
-                          <div className="absolute -left-16 sm:left-auto sm:-top-6 text-xs text-gray-500 whitespace-nowrap">
-                            {getButtonLabel(value)}
-                          </div>
-                          {value}
+                          {getButtonLabel(value)}
                         </Button>
                       );
                     })}
