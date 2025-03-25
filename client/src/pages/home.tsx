@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -15,12 +15,19 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 
 export default function Home() {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [shouldRefresh, setShouldRefresh] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const loginState = sessionStorage.getItem('user-login-state');
+    if (loginState === 'true') {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -30,29 +37,23 @@ export default function Home() {
     },
   });
 
-  // Handle auto-refresh after error dialog closes
-  useEffect(() => {
-    if (!showErrorDialog && shouldRefresh) {
-      setShouldRefresh(false);
-      window.location.reload();
-    }
-  }, [showErrorDialog, shouldRefresh]);
-
   const onSubmit = async (data: LoginInput) => {
     try {
       setIsLoading(true);
-      const response = await apiRequest("POST", "/api/mbti-results/login", data);
+      const response = await apiRequest("POST", "/api/login", data);
       const result = await response.json();
-      if (result.id) {
+
+      if (response.ok) {
         form.reset();
         setIsDialogOpen(false);
-        setLocation(`/result/${result.id}`);
+        // Store login state
+        sessionStorage.setItem('user-login-state', 'true');
+        sessionStorage.setItem('user-id', data.userId);
+        setLocation('/dashboard');
       } else {
-        setShouldRefresh(true);
         setShowErrorDialog(true);
       }
     } catch (error) {
-      setShouldRefresh(true);
       setShowErrorDialog(true);
     } finally {
       setIsLoading(false);
@@ -81,51 +82,57 @@ export default function Home() {
                 </Button>
               </Link>
 
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
+              {isLoggedIn ? (
+                <Link href="/dashboard">
                   <Button variant="outline" size="lg" className="w-full">
-                    이전 결과 다시 보기
+                    내 결과 보기
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>이전 결과 조회</DialogTitle>
-                  </DialogHeader>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="userId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>아이디</FormLabel>
-                            <FormControl>
-                              <Input placeholder="테스트 시 입력한 아이디" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>비밀번호</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="테스트 시 입력한 비밀번호" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        결과 조회하기
-                      </Button>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+                </Link>
+              ) : (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <Button variant="outline" size="lg" className="w-full" onClick={() => setIsDialogOpen(true)}>
+                    로그인
+                  </Button>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>로그인</DialogTitle>
+                    </DialogHeader>
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="userId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>아이디</FormLabel>
+                              <FormControl>
+                                <Input placeholder="아이디를 입력하세요" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>비밀번호</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                          로그인
+                        </Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           </CardContent>
         </Card>

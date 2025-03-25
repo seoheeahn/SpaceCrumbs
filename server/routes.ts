@@ -1,10 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMbtiResultSchema, insertUserSchema, loginSchema, adminLoginSchema, adminCreationSchema } from "@shared/schema";
+import { insertMbtiResultSchema, insertUserSchema, loginSchema, adminLoginSchema, adminCreationSchema, mbtiResults } from "@shared/schema";
 import { ZodError } from "zod";
 import { analyzeMbtiResult } from "./openai";
 import { calculateDimensionScores, calculateMbti } from "../client/src/lib/mbti";
+import { eq, desc } from 'drizzle-orm';
+import { db } from './db';
 
 // Normalize each axis independently
 function normalizeByAxis(x: number, y: number, z: number): [number, number, number] {
@@ -41,6 +43,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
+  });
+
+  // User login
+  app.post("/api/login", async (req, res) => {
+    try {
+      const data = loginSchema.parse(req.body);
+      const user = await storage.getUserByCredentials(data.userId, data.password);
+
+      if (!user) {
+        res.status(401).json({ error: "아이디 또는 비밀번호가 일치하지 않습니다" });
+        return;
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error in login:", error);
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: "유효하지 않은 데이터입니다", details: error.errors });
+      } else {
+        res.status(500).json({ error: "서버 오류가 발생했습니다" });
+      }
+    }
+  });
+
+  // Get user's MBTI results
+  app.get("/api/user/:userId/mbti-results", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const results = await db
+        .select()
+        .from(mbtiResults)
+        .where(eq(mbtiResults.userId, userId))
+        .orderBy(desc(mbtiResults.createdAt));
+
+      res.json(results);
+    } catch (error) {
+      console.error("Error getting user MBTI results:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
+  // Change user password
+  app.post("/api/user/change-password", async (req, res) => {
+    try {
+      const { userId, newPassword } = req.body;
+
+      if (!userId || !newPassword) {
+        res.status(400).json({ error: "사용자 ID와 새 비밀번호를 입력해주세요" });
+        return;
+      }
+
+      await storage.updateUserPassword(userId, newPassword);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
   });
 
   // Create user and MBTI result
