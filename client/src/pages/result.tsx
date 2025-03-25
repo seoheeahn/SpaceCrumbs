@@ -97,28 +97,39 @@ export default function Result() {
   const [showLoginDialog, setShowLoginDialog] = useState(true);
   const { toast } = useToast();
 
-  // Check if accessing as admin
+  // Check access type and login states
   const isAdmin = location.includes('isAdmin=true');
   const isAdminLoggedIn = sessionStorage.getItem('admin-login-state') === 'true';
+  const userLoginState = sessionStorage.getItem('user-login-state');
+  const loggedInUserId = sessionStorage.getItem('user-id');
 
   useEffect(() => {
-    // Skip login for admin access
+    // Case 1: Admin accessing user's result
     if (isAdmin && isAdminLoggedIn) {
       setShowLoginDialog(false);
       return;
     }
 
-    // Check saved login state for normal users
-    const savedLoginState = sessionStorage.getItem(`login-state-${id}`);
-    if (savedLoginState === 'true') {
-      setShowLoginDialog(false);
+    // Case 2: User accessing own result
+    if (userLoginState === 'true' && loggedInUserId) {
+      const userMatch = sessionStorage.getItem('user-id') === id;
+      if (userMatch) {
+        setShowLoginDialog(false);
+        return;
+      }
     }
-  }, [id, isAdmin, isAdminLoggedIn]);
+
+    // Case 3: Non-logged in user or accessing other's result
+    setShowLoginDialog(true);
+  }, [id, isAdmin, isAdminLoggedIn, userLoginState, loggedInUserId]);
 
   // API query
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
-    enabled: !!id && (!showLoginDialog || (isAdmin && isAdminLoggedIn))
+    enabled: !!id && (
+      (!showLoginDialog && loggedInUserId === id) || // Logged in user viewing own result
+      (isAdmin && isAdminLoggedIn) // Admin viewing any result
+    )
   });
 
   // Add console logs for debugging
