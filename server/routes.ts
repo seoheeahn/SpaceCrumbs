@@ -5,7 +5,7 @@ import { insertMbtiResultSchema, insertUserSchema, loginSchema, adminLoginSchema
 import { ZodError } from "zod";
 import { analyzeMbtiResult } from "./openai";
 import { calculateDimensionScores, calculateMbti } from "../client/src/lib/mbti";
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { db } from './db';
 
 // Normalize each axis independently
@@ -74,7 +74,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const results = await db
         .select()
         .from(mbtiResults)
-        .where(eq(mbtiResults.userId, userId))
+        .where(
+          and(
+            eq(mbtiResults.userId, userId),
+            eq(mbtiResults.deleted, false)
+          )
+        )
         .orderBy(desc(mbtiResults.createdAt));
 
       res.json(results);
@@ -389,6 +394,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "서버 오류가 발생했습니다" });
     }
   });
+
+  // Add this route handler for soft deletion
+  app.delete("/api/mbti-results/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.softDeleteMbtiResult(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error soft deleting MBTI result:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;

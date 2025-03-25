@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, jsonb, timestamp, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, numeric, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { z } from "zod";
 
@@ -33,6 +33,7 @@ export const mbtiResults = pgTable("mbti_results", {
   coordinateX: numeric("coordinate_x"),
   coordinateY: numeric("coordinate_y"),
   coordinateZ: numeric("coordinate_z"),
+  deleted: boolean("deleted").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -91,7 +92,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const mbtiTypes = [
   "ISTJ", "ISFJ", "INFJ", "INTJ",
-  "ISTP", "ISFP", "INFP", "INTP", 
+  "ISTP", "ISFP", "INFP", "INTP",
   "ESTP", "ESFP", "ENFP", "ENTP",
   "ESTJ", "ESFJ", "ENFJ", "ENTJ"
 ] as const;

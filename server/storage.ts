@@ -1,6 +1,6 @@
 import { users, mbtiResults, adminUsers, type User, type MbtiResult, type InsertUser, type InsertMbtiResult, type CreateAdminInput } from "@shared/schema";
 import { db } from "./db";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
@@ -23,6 +23,7 @@ export interface IStorage {
   getAllMbtiResults(): Promise<MbtiResult[]>;
   createAdminUser(admin: CreateAdminInput): Promise<void>;
   getAdminUser(username: string): Promise<{ id: number; username: string; password: string } | undefined>;
+  softDeleteMbtiResult(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -80,7 +81,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMbtiResult(id: number): Promise<MbtiResult | undefined> {
-    // Join users and mbti_results tables to get complete result
     const [result] = await db
       .select({
         id: mbtiResults.id,
@@ -93,11 +93,12 @@ export class DatabaseStorage implements IStorage {
         coordinateX: mbtiResults.coordinateX,
         coordinateY: mbtiResults.coordinateY,
         coordinateZ: mbtiResults.coordinateZ,
-        createdAt: mbtiResults.createdAt
+        createdAt: mbtiResults.createdAt,
+        deleted: mbtiResults.deleted
       })
       .from(mbtiResults)
       .innerJoin(users, eq(users.userId, mbtiResults.userId))
-      .where(eq(mbtiResults.id, id));
+      .where(and(eq(mbtiResults.id, id), eq(mbtiResults.deleted, false)));
 
     return result;
   }
@@ -132,6 +133,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(mbtiResults)
+      .where(eq(mbtiResults.deleted, false))
       .orderBy(mbtiResults.createdAt);
   }
 
@@ -145,6 +147,12 @@ export class DatabaseStorage implements IStorage {
       .from(adminUsers)
       .where(eq(adminUsers.username, username));
     return user;
+  }
+  async softDeleteMbtiResult(id: number): Promise<void> {
+    await db
+      .update(mbtiResults)
+      .set({ deleted: true })
+      .where(eq(mbtiResults.id, id));
   }
 }
 
