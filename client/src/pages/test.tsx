@@ -323,7 +323,7 @@ export default function Test() {
                 <div className="flex flex-col sm:grid sm:grid-cols-[1fr,auto,1fr] gap-4 items-center">
                   {/* Option A */}
                   <div className="text-center sm:text-right mb-4 sm:mb-0">
-                    <div className="text-sm sm:text-base lg:text-lg font-semibold text-primary">
+                    <div className="text-base font-semibold text-primary">
                       {question?.options.A}
                     </div>
                   </div>
@@ -362,7 +362,7 @@ export default function Test() {
 
                   {/* Option B */}
                   <div className="text-center sm:text-left mt-4 sm:mt-0">
-                    <div className="text-sm sm:text-base lg:text-lg font-semibold text-primary">
+                    <div className="text-base font-semibold text-primary">
                       {question?.options.B}
                     </div>
                   </div>
