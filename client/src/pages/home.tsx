@@ -20,14 +20,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const loginState = sessionStorage.getItem('user-login-state');
     if (loginState === 'true') {
-      setIsLoggedIn(true);
+      setLocation('/dashboard');
     }
-  }, []);
+  }, [setLocation]);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -82,57 +81,49 @@ export default function Home() {
                 </Button>
               </Link>
 
-              {isLoggedIn ? (
-                <Link href="/dashboard">
-                  <Button variant="outline" size="lg" className="w-full">
-                    내 결과 보기
-                  </Button>
-                </Link>
-              ) : (
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <Button variant="outline" size="lg" className="w-full" onClick={() => setIsDialogOpen(true)}>
-                    로그인
-                  </Button>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>로그인</DialogTitle>
-                    </DialogHeader>
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="userId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>아이디</FormLabel>
-                              <FormControl>
-                                <Input placeholder="아이디를 입력하세요" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>비밀번호</FormLabel>
-                              <FormControl>
-                                <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                          로그인
-                        </Button>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
-              )}
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Button variant="outline" size="lg" className="w-full" onClick={() => setIsDialogOpen(true)}>
+                  로그인
+                </Button>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>로그인</DialogTitle>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="userId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>아이디</FormLabel>
+                            <FormControl>
+                              <Input placeholder="아이디를 입력하세요" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>비밀번호</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="비밀번호를 입력하세요" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        로그인
+                      </Button>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
