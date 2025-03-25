@@ -1,18 +1,28 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { ClipboardCheck, UserCircle, LogOut } from "lucide-react";
+import { ClipboardCheck, UserCircle, LogOut, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -42,7 +52,10 @@ type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
+  const [selectedResultId, setSelectedResultId] = useState<number | null>(null);
   const userId = sessionStorage.getItem('user-id');
 
   useEffect(() => {
@@ -62,6 +75,30 @@ export default function Dashboard() {
     defaultValues: {
       newPassword: "",
       confirmPassword: "",
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (resultId: number) => {
+      const response = await apiRequest("DELETE", `/api/mbti-results/${resultId}`);
+      if (!response.ok) {
+        throw new Error("Failed to delete result");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/mbti-results`] });
+      toast({
+        title: "삭제 완료",
+        description: "테스트 결과가 성공적으로 삭제되었습니다.",
+      });
+      setDeleteConfirmDialogOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: "삭제 실패",
+        description: "테스트 결과 삭제 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -161,13 +198,26 @@ export default function Dashboard() {
                               {result.result}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setLocation(`/result/${result.id}`)}
-                              >
-                                결과 보기
-                              </Button>
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setLocation(`/result/${result.id}`)}
+                                >
+                                  결과 보기
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => {
+                                    setSelectedResultId(result.id);
+                                    setDeleteConfirmDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -236,6 +286,31 @@ export default function Dashboard() {
               </Form>
             </DialogContent>
           </Dialog>
+
+          <AlertDialog open={deleteConfirmDialogOpen} onOpenChange={setDeleteConfirmDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>결과 삭제</AlertDialogTitle>
+                <AlertDialogDescription>
+                  정말로 이 테스트 결과를 삭제하시겠습니까?
+                  이 작업은 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-500 hover:bg-red-600"
+                  onClick={() => {
+                    if (selectedResultId) {
+                      deleteMutation.mutate(selectedResultId);
+                    }
+                  }}
+                >
+                  삭제
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </motion.div>
       </div>
     </div>
