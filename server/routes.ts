@@ -102,18 +102,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create user and MBTI result
-  app.post("/api/mbti-results", async (req, res) => {
+  // Create user
+  app.post("/api/users", async (req, res) => {
     try {
       const userData = insertUserSchema.parse({
         userId: req.body.userId,
         password: req.body.password
       });
 
+      // First check if user already exists
+      const isDuplicate = await storage.checkDuplicateUserId(userData.userId);
+      if (isDuplicate) {
+        res.status(400).json({ error: "이미 존재하는 아이디입니다" });
+        return;
+      }
+
+      // Create the user
+      const user = await storage.createUser(userData);
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: "유효하지 않은 데이터입니다", details: error.errors });
+      } else {
+        res.status(500).json({ error: "서버 오류가 발생했습니다" });
+      }
+    }
+  });
+
+  // Create MBTI result only
+  app.post("/api/mbti-results", async (req, res) => {
+    try {
       const [x, y, z] = calculateCoordinates(req.body.answers);
 
       const mbtiResultData = insertMbtiResultSchema.parse({
-        userId: userData.userId,
+        userId: req.body.userId,
         answers: req.body.answers,
         result: req.body.result,
         language: req.body.language,
@@ -122,10 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         coordinateZ: z
       });
 
-      // First create the user
-      await storage.createUser(userData);
-
-      // Then create the MBTI result
+      // Create the MBTI result
       const result = await storage.createMbtiResult(mbtiResultData);
       res.json(result);
     } catch (error) {

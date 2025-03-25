@@ -84,8 +84,24 @@ export default function Test() {
       return;
     }
 
-    setUserCredentials(data);
-    setCurrentQuestion(0);
+    try {
+      // Create user first
+      const response = await apiRequest("POST", "/api/users", data);
+
+      if (!response.ok) {
+        throw new Error("사용자 생성 중 오류가 발생했습니다");
+      }
+
+      setUserCredentials(data);
+      setCurrentQuestion(0);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      toast({
+        title: "오류 발생",
+        description: "사용자 생성 중 오류가 발생했습니다",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAnswer = async (value: number) => {
@@ -128,7 +144,7 @@ export default function Test() {
 
       const mbtiType = calculateMbti(answers);
       const response = await apiRequest("POST", "/api/mbti-results", {
-        ...userCredentials,
+        userId: userCredentials.userId,
         answers,
         result: mbtiType,
         language: "ko",
