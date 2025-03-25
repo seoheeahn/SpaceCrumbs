@@ -287,9 +287,9 @@ export default function Test() {
   const question = questions[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4 sm:p-6 md:p-8 lg:p-10">
-      <div className="w-full max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl mx-auto">
-        <Progress value={progress} className="mb-4 sm:mb-6 md:mb-8" />
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 p-4">
+      <div className="w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-5xl mx-auto">
+        <Progress value={progress} className="mb-4 sm:mb-6" />
 
         <motion.div
           key={currentQuestion}
@@ -298,8 +298,8 @@ export default function Test() {
           exit={{ opacity: 0, x: -20 }}
         >
           <Card>
-            <CardContent className="p-4 sm:p-6 md:p-8 lg:p-10">
-              <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-6">
                 <Button
                   variant="ghost"
                   onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
@@ -314,13 +314,13 @@ export default function Test() {
                 </span>
               </div>
 
-              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-8 sm:mb-10">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-8">
                 {question?.text.ko}
               </h2>
 
-              <div className="space-y-8 sm:space-y-10">
+              <div className="space-y-8">
                 {/* PC: 가로형, Mobile: 세로형 레이아웃 */}
-                <div className="flex flex-col sm:grid sm:grid-cols-[1fr,auto,1fr] gap-6 sm:gap-8 md:gap-10 items-center">
+                <div className="flex flex-col sm:grid sm:grid-cols-[1fr,auto,1fr] gap-6 items-center">
                   {/* Option A */}
                   <div className="text-center sm:text-right mb-4 sm:mb-0">
                     <div className="text-base sm:text-xl md:text-2xl font-semibold text-primary">
@@ -329,7 +329,7 @@ export default function Test() {
                   </div>
 
                   {/* Answer Buttons */}
-                  <div className="flex flex-col sm:grid sm:grid-cols-5 gap-3 sm:gap-4 w-full sm:w-auto">
+                  <div className="flex flex-col sm:grid sm:grid-cols-5 gap-3 w-full sm:w-auto">
                     {[1, 2, 3, 4, 5].map((value) => {
                       const getButtonLabel = (value: number) => {
                         switch(value) {
@@ -348,7 +348,7 @@ export default function Test() {
                           variant={value === 3 ? "secondary" : "outline"}
                           onClick={() => handleAnswer(value)}
                           className={`
-                            w-full h-16 sm:h-20 md:h-24 p-3 sm:p-4 text-xs sm:text-sm
+                            w-full h-16 sm:h-20 p-2 text-xs sm:text-sm
                             ${value === 3 ? 'bg-primary/10' : ''}
                             hover:bg-primary/20 transition-colors
                             whitespace-normal leading-tight
