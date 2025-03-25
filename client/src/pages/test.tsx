@@ -320,16 +320,16 @@ export default function Test() {
 
               <div className="space-y-6">
                 {/* PC: 가로형, Mobile: 세로형 레이아웃 */}
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto,1fr] gap-4 items-center">
+                <div className="flex flex-col sm:grid sm:grid-cols-[1fr,auto,1fr] gap-4 items-center">
                   {/* Option A */}
-                  <div className="text-center sm:text-right order-1">
+                  <div className="text-center sm:text-right mb-4 sm:mb-0">
                     <div className="text-sm font-medium text-primary">
                       {question?.options.A}
                     </div>
                   </div>
 
                   {/* Answer Buttons */}
-                  <div className="flex sm:grid sm:grid-cols-5 flex-col gap-2 order-3 sm:order-2">
+                  <div className="flex flex-col sm:grid sm:grid-cols-5 gap-2 w-full sm:w-auto">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <Button
                         key={value}
@@ -341,16 +341,18 @@ export default function Test() {
                           hover:bg-primary/20 transition-colors
                         `}
                       >
-                        {value === 1 && <span className="absolute sm:-top-6 -left-6 sm:left-auto text-xs text-gray-500">← A</span>}
-                        {value === 3 && <span className="absolute sm:-top-6 text-xs text-gray-500">중립</span>}
-                        {value === 5 && <span className="absolute sm:-top-6 -right-6 sm:right-auto text-xs text-gray-500">B →</span>}
+                        <div className="absolute -left-16 sm:left-auto sm:-top-6 text-xs text-gray-500">
+                          {value === 1 && '← A'}
+                          {value === 3 && '중립'}
+                          {value === 5 && 'B →'}
+                        </div>
                         {value}
                       </Button>
                     ))}
                   </div>
 
                   {/* Option B */}
-                  <div className="text-center sm:text-left order-2 sm:order-3">
+                  <div className="text-center sm:text-left mt-4 sm:mt-0">
                     <div className="text-sm font-medium text-primary">
                       {question?.options.B}
                     </div>
