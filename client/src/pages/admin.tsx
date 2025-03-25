@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import type { MbtiResult } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ExternalLink, Sparkles, Users, UserPlus, Menu } from "lucide-react";
+import { RefreshCw, ExternalLink, Sparkles, Users, UserPlus, Menu, UserCog } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
@@ -21,8 +21,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-type AdminView = "results" | "createAdmin";
+type AdminView = "results" | "createAdmin" | "userManagement";
+
+interface User {
+  id: number;
+  userId: string;
+  password: string;
+  createdAt: string;
+}
 
 export default function Admin() {
   const { toast } = useToast();
@@ -31,6 +39,8 @@ export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<AdminView>("results");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
 
   // Load admin login state from sessionStorage on mount
   useEffect(() => {
@@ -41,9 +51,45 @@ export default function Admin() {
   }, []);
 
   // Always define hooks at the top level
-  const { data: results, isLoading } = useQuery<MbtiResult[]>({
+  const { data: results, isLoading: isResultsLoading } = useQuery<MbtiResult[]>({
     queryKey: ["/api/admin/mbti-results"],
     enabled: isAuthenticated,
+  });
+
+  const { data: users, isLoading: isUsersLoading } = useQuery<User[]>({
+    queryKey: ["/api/admin/users"],
+    enabled: isAuthenticated && currentView === "userManagement",
+  });
+
+  const updatePasswordForm = useForm({
+    defaultValues: {
+      newPassword: "",
+    },
+  });
+
+  const updatePasswordMutation = useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: string; newPassword: string }) => {
+      const response = await apiRequest("POST", `/api/admin/users/${userId}/update-password`, {
+        newPassword,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "비밀번호 변경 성공",
+        description: "사용자의 비밀번호가 성공적으로 변경되었습니다.",
+      });
+      setIsPasswordDialogOpen(false);
+      updatePasswordForm.reset();
+    },
+    onError: () => {
+      toast({
+        title: "비밀번호 변경 실패",
+        description: "비밀번호 변경 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    },
   });
 
   const form = useForm<AdminLoginInput>({
@@ -61,7 +107,6 @@ export default function Admin() {
     },
     onSuccess: () => {
       setIsAuthenticated(true);
-      // Save admin login state to sessionStorage with longer expiration
       sessionStorage.setItem('admin-login-state', 'true');
       toast({
         title: "로그인 성공",
@@ -205,7 +250,7 @@ export default function Admin() {
   }
 
   const renderContent = () => {
-    if (isLoading) {
+    if (isResultsLoading || isUsersLoading) {
       return (
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <p>데이터를 불러오는 중...</p>
@@ -214,6 +259,55 @@ export default function Admin() {
     }
 
     switch (currentView) {
+      case "userManagement":
+        return (
+          <Card>
+            <CardContent className="pt-6">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-6">사용자 계정 관리</h1>
+              <div className="overflow-x-auto">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>사용자 ID</TableHead>
+                          <TableHead>가입일</TableHead>
+                          <TableHead className="text-right">작업</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {users?.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell>{user.id}</TableCell>
+                            <TableCell>{user.userId}</TableCell>
+                            <TableCell>
+                              {new Date(user.createdAt).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setIsPasswordDialogOpen(true);
+                                }}
+                              >
+                                <UserCog className="w-4 h-4 mr-2" />
+                                비밀번호 변경
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
       case "results":
         return (
           <Card>
@@ -276,12 +370,10 @@ export default function Admin() {
                                       const credentials = await response.json();
 
                                       if (credentials.userId && credentials.password) {
-                                        // Store credentials in sessionStorage
                                         sessionStorage.setItem(`user-credentials-${result.id}`, JSON.stringify({
                                           userId: credentials.userId,
                                           password: credentials.password
                                         }));
-                                        // Add admin state to URL
                                         setLocation(`/result/${result.id}?isAdmin=true`);
                                       } else {
                                         toast({
@@ -400,6 +492,17 @@ export default function Admin() {
                 MBTI 결과 관리
               </Button>
               <Button
+                variant={currentView === "userManagement" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => {
+                  setCurrentView("userManagement");
+                  setIsSidebarOpen(false);
+                }}
+              >
+                <UserCog className="w-4 h-4 mr-2" />
+                사용자 계정 관리
+              </Button>
+              <Button
                 variant={currentView === "createAdmin" ? "default" : "ghost"}
                 className="w-full justify-start"
                 onClick={() => {
@@ -431,6 +534,57 @@ export default function Admin() {
             {renderContent()}
           </motion.div>
         </div>
+
+        {/* Password Change Dialog */}
+        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>비밀번호 변경</DialogTitle>
+            </DialogHeader>
+            <Form {...updatePasswordForm}>
+              <form
+                onSubmit={updatePasswordForm.handleSubmit((data) => {
+                  if (selectedUser) {
+                    updatePasswordMutation.mutate({
+                      userId: selectedUser.userId,
+                      newPassword: data.newPassword,
+                    });
+                  }
+                })}
+                className="space-y-4 mt-4"
+              >
+                <FormField
+                  control={updatePasswordForm.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>새 비밀번호</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="새 비밀번호 입력" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsPasswordDialogOpen(false)}
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={updatePasswordMutation.isPending}
+                  >
+                    변경
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

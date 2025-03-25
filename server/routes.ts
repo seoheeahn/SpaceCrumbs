@@ -281,6 +281,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all users
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
+  // Update user password
+  app.post("/api/admin/users/:userId/update-password", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { newPassword } = req.body;
+
+      if (!newPassword || typeof newPassword !== "string") {
+        res.status(400).json({ error: "새 비밀번호를 입력해주세요" });
+        return;
+      }
+
+      await storage.updateUserPassword(userId, newPassword);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating user password:", error);
+      res.status(500).json({ error: "서버 오류가 발생했습니다" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

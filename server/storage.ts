@@ -1,11 +1,13 @@
 import { users, mbtiResults, adminUsers, type User, type MbtiResult, type InsertUser, type InsertMbtiResult, type CreateAdminInput } from "@shared/schema";
 import { db } from "./db";
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getUser(id: number): Promise<User | undefined>;
   getUserByCredentials(userId: string, password: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
+  updateUserPassword(userId: string, newPassword: string): Promise<void>;
   checkDuplicateUserId(userId: string): Promise<boolean>;
   createMbtiResult(result: InsertMbtiResult): Promise<MbtiResult>;
   getMbtiResult(id: number): Promise<MbtiResult | undefined>;
@@ -42,6 +44,17 @@ export class DatabaseStorage implements IStorage {
         eq(users.password, password)
       ));
     return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.createdAt);
+  }
+
+  async updateUserPassword(userId: string, newPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ password: newPassword })
+      .where(eq(users.userId, userId));
   }
 
   async checkDuplicateUserId(userId: string): Promise<boolean> {
@@ -81,9 +94,9 @@ export class DatabaseStorage implements IStorage {
       .from(mbtiResults)
       .where(
         and(
-          isNotNull(mbtiResults.coordinateX),
-          isNotNull(mbtiResults.coordinateY),
-          isNotNull(mbtiResults.coordinateZ),
+          db.sql`mbtiResults.coordinateX IS NOT NULL`,
+          db.sql`mbtiResults.coordinateY IS NOT NULL`,
+          db.sql`mbtiResults.coordinateZ IS NOT NULL`,
         )
       );
   }
@@ -110,7 +123,6 @@ export class DatabaseStorage implements IStorage {
 
 export const storage = new DatabaseStorage();
 
-// Create initial admin user if it doesn't exist
 async function initializeAdminUser() {
   const storage = new DatabaseStorage();
   const existingAdmin = await storage.getAdminUser("host");
