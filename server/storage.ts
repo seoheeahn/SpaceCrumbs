@@ -1,12 +1,14 @@
-import { mbtiResults, adminUsers, type MbtiResult, type InsertMbtiResult, type CreateAdminInput } from "@shared/schema";
+import { users, mbtiResults, adminUsers, type User, type MbtiResult, type InsertUser, type InsertMbtiResult, type CreateAdminInput } from "@shared/schema";
 import { db } from "./db";
 import { and, eq, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
+  createUser(user: InsertUser): Promise<User>;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByCredentials(userId: string, password: string): Promise<User | undefined>;
+  checkDuplicateUserId(userId: string): Promise<boolean>;
   createMbtiResult(result: InsertMbtiResult): Promise<MbtiResult>;
   getMbtiResult(id: number): Promise<MbtiResult | undefined>;
-  getMbtiResultByCredentials(userId: string, password: string): Promise<MbtiResult | undefined>;
-  checkDuplicateUserId(userId: string): Promise<boolean>;
   updateMbtiResult(id: number, update: { analysis?: string; openaiRequestId?: string; result?: string }): Promise<void>;
   getAllUserCoordinates(): Promise<Array<{
     id: number;
@@ -21,6 +23,35 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByCredentials(userId: string, password: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(and(
+        eq(users.userId, userId),
+        eq(users.password, password)
+      ));
+    return user;
+  }
+
+  async checkDuplicateUserId(userId: string): Promise<boolean> {
+    const [user] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.userId, userId));
+    return !!user;
+  }
+
   async createMbtiResult(result: InsertMbtiResult): Promise<MbtiResult> {
     const [newResult] = await db.insert(mbtiResults).values(result).returning();
     return newResult;
@@ -29,25 +60,6 @@ export class DatabaseStorage implements IStorage {
   async getMbtiResult(id: number): Promise<MbtiResult | undefined> {
     const [result] = await db.select().from(mbtiResults).where(eq(mbtiResults.id, id));
     return result;
-  }
-
-  async getMbtiResultByCredentials(userId: string, password: string): Promise<MbtiResult | undefined> {
-    const [result] = await db
-      .select()
-      .from(mbtiResults)
-      .where(and(
-        eq(mbtiResults.userId, userId),
-        eq(mbtiResults.password, password)
-      ));
-    return result;
-  }
-
-  async checkDuplicateUserId(userId: string): Promise<boolean> {
-    const [result] = await db
-      .select({ id: mbtiResults.id })
-      .from(mbtiResults)
-      .where(eq(mbtiResults.userId, userId));
-    return !!result;
   }
 
   async updateMbtiResult(id: number, update: { analysis?: string; openaiRequestId?: string; result?: string }): Promise<void> {

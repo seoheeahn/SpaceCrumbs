@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, jsonb, timestamp, numeric } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 // Define Answer type and schema
@@ -12,10 +13,18 @@ export const answerSchema = z.object({
   value: z.number().min(1).max(5),
 });
 
+// Users table
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().unique(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// MBTI Results table
 export const mbtiResults = pgTable("mbti_results", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  password: text("password").notNull(),
+  userId: text("user_id").notNull().references(() => users.userId),
   answers: jsonb("answers").$type<Answer[]>().notNull(),
   result: text("result").notNull(),
   language: text("language").notNull(),
@@ -34,13 +43,29 @@ export const adminUsers = pgTable("admin_users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  mbtiResults: many(mbtiResults),
+}));
+
+export const mbtiResultsRelations = relations(mbtiResults, ({ one }) => ({
+  user: one(users, {
+    fields: [mbtiResults.userId],
+    references: [users.userId],
+  }),
+}));
+
 // Create a strict schema for input validation
-export const insertMbtiResultSchema = z.object({
+export const insertUserSchema = z.object({
   userId: z.string()
     .min(4, "아이디는 최소 4자 이상이어야 합니다")
     .max(20, "아이디는 최대 20자까지 가능합니다")
     .regex(/^[a-zA-Z0-9]+$/, "아이디는 영문자와 숫자만 사용할 수 있습니다"),
   password: z.string().min(4, "비밀번호는 최소 4자 이상이어야 합니다"),
+});
+
+export const insertMbtiResultSchema = z.object({
+  userId: z.string(),
   answers: z.array(answerSchema),
   result: z.string(),
   language: z.string(),
@@ -58,7 +83,9 @@ export const loginSchema = z.object({
   password: z.string().min(4, "비밀번호는 최소 4자 이상이어야 합니다"),
 });
 
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertMbtiResult = z.infer<typeof insertMbtiResultSchema>;
+export type User = typeof users.$inferSelect;
 export type MbtiResult = typeof mbtiResults.$inferSelect;
 export type LoginInput = z.infer<typeof loginSchema>;
 

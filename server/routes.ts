@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertMbtiResultSchema, loginSchema, adminLoginSchema, adminCreationSchema } from "@shared/schema";
+import { insertMbtiResultSchema, insertUserSchema, loginSchema, adminLoginSchema, adminCreationSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { analyzeMbtiResult } from "./openai";
 import { calculateDimensionScores, calculateMbti } from "../client/src/lib/mbti";
@@ -37,32 +37,37 @@ function calculateCoordinates(answers: { questionId: number; value: number }[]) 
   return normalizeByAxis(x, y, z);
 }
 
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "mbti2024!";
-
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
   });
 
+  // Create user and MBTI result
   app.post("/api/mbti-results", async (req, res) => {
     try {
-      const data = insertMbtiResultSchema.parse(req.body);
-      console.log("Processing MBTI results for answers:", data.answers);
+      const userData = insertUserSchema.parse({
+        userId: req.body.userId,
+        password: req.body.password
+      });
 
-      // Calculate normalized 3D coordinates
-      const [x, y, z] = calculateCoordinates(data.answers);
-      console.log("Calculated coordinates:", { x, y, z });
+      const [x, y, z] = calculateCoordinates(req.body.answers);
 
-      const resultWithCoordinates = {
-        ...data,
+      const mbtiResultData = insertMbtiResultSchema.parse({
+        userId: userData.userId,
+        answers: req.body.answers,
+        result: req.body.result,
+        language: req.body.language,
         coordinateX: x,
         coordinateY: y,
-        coordinateZ: z,
-      };
+        coordinateZ: z
+      });
 
-      const result = await storage.createMbtiResult(resultWithCoordinates);
+      // First create the user
+      await storage.createUser(userData);
+
+      // Then create the MBTI result
+      const result = await storage.createMbtiResult(mbtiResultData);
       res.json(result);
     } catch (error) {
       console.error("Error creating MBTI result:", error);
@@ -109,8 +114,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/mbti-results/login", async (req, res) => {
     try {
       const data = loginSchema.parse(req.body);
-      const result = await storage.getMbtiResultByCredentials(data.userId, data.password);
+      const user = await storage.getUserByCredentials(data.userId, data.password);
 
+      if (!user) {
+        res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
+        return;
+      }
+
+      const result = await storage.getMbtiResult(user.id);
       if (!result) {
         res.status(404).json({ error: "결과를 찾을 수 없습니다" });
         return;
@@ -244,7 +255,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add this new endpoint after the existing /api/mbti-results/:id endpoint
   app.get("/api/admin/mbti-results/:id/credentials", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -255,10 +265,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      // Only return the necessary credentials
+      const user = await storage.getUserByCredentials(result.userId, "");
+      if (!user) {
+        res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
+        return;
+      }
+
       res.json({
-        userId: result.userId,
-        password: result.password
+        userId: user.userId,
+        password: user.password
       });
     } catch (error) {
       console.error("Error getting MBTI result credentials:", error);
