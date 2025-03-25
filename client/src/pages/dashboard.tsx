@@ -86,7 +86,6 @@ export default function Dashboard() {
       }
     },
     onSuccess: () => {
-      // Update the cache immediately
       queryClient.setQueryData([`/api/user/${userId}/mbti-results`], (oldData: MbtiResult[] | undefined) => {
         if (!oldData) return [];
         return oldData.filter(result => result.id !== selectedResultId);
@@ -190,6 +189,9 @@ export default function Dashboard() {
                         <TableRow>
                           <TableHead>날짜</TableHead>
                           <TableHead>MBTI 유형</TableHead>
+                          <TableHead className="hidden lg:table-cell">X</TableHead>
+                          <TableHead className="hidden lg:table-cell">Y</TableHead>
+                          <TableHead className="hidden lg:table-cell">Z</TableHead>
                           <TableHead className="text-right">작업</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -201,6 +203,15 @@ export default function Dashboard() {
                             </TableCell>
                             <TableCell className="font-semibold">
                               {result.result}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              {Number(result.coordinateX).toFixed(2)}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              {Number(result.coordinateY).toFixed(2)}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              {Number(result.coordinateZ).toFixed(2)}
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
