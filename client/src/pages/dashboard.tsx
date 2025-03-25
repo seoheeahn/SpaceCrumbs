@@ -86,7 +86,12 @@ export default function Dashboard() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/user/${userId}/mbti-results`] });
+      // Update the cache immediately
+      queryClient.setQueryData([`/api/user/${userId}/mbti-results`], (oldData: MbtiResult[] | undefined) => {
+        if (!oldData) return [];
+        return oldData.filter(result => result.id !== selectedResultId);
+      });
+
       toast({
         title: "삭제 완료",
         description: "테스트 결과가 성공적으로 삭제되었습니다.",
