@@ -112,11 +112,8 @@ export default function Result() {
 
     // Case 2: User accessing own result
     if (userLoginState === 'true' && loggedInUserId) {
-      const userMatch = sessionStorage.getItem('user-id') === id;
-      if (userMatch) {
-        setShowLoginDialog(false);
-        return;
-      }
+      setShowLoginDialog(false);
+      return;
     }
 
     // Case 3: Non-logged in user or accessing other's result
@@ -126,10 +123,7 @@ export default function Result() {
   // API query
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
-    enabled: !!id && (
-      (!showLoginDialog && loggedInUserId === id) || // Logged in user viewing own result
-      (isAdmin && isAdminLoggedIn) // Admin viewing any result
-    )
+    enabled: !!id && !showLoginDialog
   });
 
   // Add console logs for debugging
