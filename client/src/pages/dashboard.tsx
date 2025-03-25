@@ -213,11 +213,12 @@ export default function Dashboard() {
                             <TableCell>
                               {Number(result.coordinateZ).toFixed(2)}
                             </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
+                            <TableCell className="space-y-2 sm:space-y-0 sm:text-right">
+                              <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="w-full sm:w-auto"
                                   onClick={() => setLocation(`/result/${result.id}`)}
                                 >
                                   결과 보기
@@ -225,13 +226,14 @@ export default function Dashboard() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  className="w-full sm:w-auto text-red-500 hover:text-red-700 hover:bg-red-50"
                                   onClick={() => {
                                     setSelectedResultId(result.id);
                                     setDeleteConfirmDialogOpen(true);
                                   }}
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  삭제
                                 </Button>
                               </div>
                             </TableCell>
