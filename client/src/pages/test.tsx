@@ -319,38 +319,42 @@ export default function Test() {
               </h2>
 
               <div className="space-y-6">
-                <div className="flex flex-col items-center text-center">
-                  <div className="mb-2 text-sm font-medium text-primary">
-                    {question?.options.A}
+                {/* PC: 가로형, Mobile: 세로형 레이아웃 */}
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto,1fr] gap-4 items-center">
+                  {/* Option A */}
+                  <div className="text-center sm:text-right order-1">
+                    <div className="text-sm font-medium text-primary">
+                      {question?.options.A}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500">매우 그렇다</div>
-                </div>
 
-                <div className="grid grid-cols-5 gap-2 sm:gap-4">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <Button
-                      key={value}
-                      variant={value === 3 ? "secondary" : "outline"}
-                      onClick={() => handleAnswer(value)}
-                      className={`
-                        w-full h-12 sm:h-14 p-0 text-sm sm:text-base relative
-                        ${value === 3 ? 'bg-primary/10' : ''}
-                        hover:bg-primary/20 transition-colors
-                      `}
-                    >
-                      {value === 1 && <span className="absolute -top-6 text-xs text-gray-500">A 매우</span>}
-                      {value === 3 && <span className="absolute -top-6 text-xs text-gray-500">중립</span>}
-                      {value === 5 && <span className="absolute -top-6 text-xs text-gray-500">B 매우</span>}
-                      {value}
-                    </Button>
-                  ))}
-                </div>
-
-                <div className="flex flex-col items-center text-center">
-                  <div className="mb-2 text-sm font-medium text-primary">
-                    {question?.options.B}
+                  {/* Answer Buttons */}
+                  <div className="flex sm:grid sm:grid-cols-5 flex-col gap-2 order-3 sm:order-2">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <Button
+                        key={value}
+                        variant={value === 3 ? "secondary" : "outline"}
+                        onClick={() => handleAnswer(value)}
+                        className={`
+                          w-full h-12 sm:h-14 p-0 text-sm sm:text-base relative
+                          ${value === 3 ? 'bg-primary/10' : ''}
+                          hover:bg-primary/20 transition-colors
+                        `}
+                      >
+                        {value === 1 && <span className="absolute sm:-top-6 -left-6 sm:left-auto text-xs text-gray-500">← A</span>}
+                        {value === 3 && <span className="absolute sm:-top-6 text-xs text-gray-500">중립</span>}
+                        {value === 5 && <span className="absolute sm:-top-6 -right-6 sm:right-auto text-xs text-gray-500">B →</span>}
+                        {value}
+                      </Button>
+                    ))}
                   </div>
-                  <div className="text-xs text-gray-500">매우 그렇다</div>
+
+                  {/* Option B */}
+                  <div className="text-center sm:text-left order-2 sm:order-3">
+                    <div className="text-sm font-medium text-primary">
+                      {question?.options.B}
+                    </div>
+                  </div>
                 </div>
               </div>
 
