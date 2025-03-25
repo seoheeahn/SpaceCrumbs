@@ -121,6 +121,14 @@ export default function Result() {
     enabled: !!id && (!showLoginDialog || (isAdmin && isAdminLoggedIn))
   });
 
+  // Add console logs for debugging
+  console.log("Login state:", {
+    isAdmin,
+    isAdminLoggedIn,
+    showLoginDialog,
+    hasResult: !!result
+  });
+
   // Loading state
   if (!id || isLoading) {
     return (

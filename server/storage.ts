@@ -71,7 +71,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMbtiResult(id: number): Promise<MbtiResult | undefined> {
-    const [result] = await db.select().from(mbtiResults).where(eq(mbtiResults.id, id));
+    // Join users and mbti_results tables to get complete result
+    const [result] = await db
+      .select({
+        id: mbtiResults.id,
+        userId: mbtiResults.userId,
+        answers: mbtiResults.answers,
+        result: mbtiResults.result,
+        language: mbtiResults.language,
+        openaiRequestId: mbtiResults.openaiRequestId,
+        analysis: mbtiResults.analysis,
+        coordinateX: mbtiResults.coordinateX,
+        coordinateY: mbtiResults.coordinateY,
+        coordinateZ: mbtiResults.coordinateZ,
+        createdAt: mbtiResults.createdAt
+      })
+      .from(mbtiResults)
+      .innerJoin(users, eq(users.userId, mbtiResults.userId))
+      .where(eq(mbtiResults.id, id));
+
     return result;
   }
 

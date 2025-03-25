@@ -148,21 +148,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      if (result.analysis && result.openaiRequestId) {
+      // If the result exists and doesn't have analysis yet, generate it
+      if (!result.analysis || !result.openaiRequestId) {
+        try {
+          const { analysis, requestId } = await analyzeMbtiResult(result);
+          await storage.updateMbtiResult(id, { analysis, openaiRequestId: requestId });
+          res.json({ ...result, analysis });
+        } catch (error) {
+          console.error("Error or timeout in OpenAI analysis:", error);
+          res.json({
+            ...result,
+            analysis: "AI 분석을 일시적으로 사용할 수 없습니다. 나중에 다시 시도해주세요."
+          });
+        }
+      } else {
         res.json(result);
-        return;
-      }
-
-      try {
-        const { analysis, requestId } = await analyzeMbtiResult(result);
-        await storage.updateMbtiResult(id, { analysis, openaiRequestId: requestId });
-        res.json({ ...result, analysis });
-      } catch (error) {
-        console.error("Error or timeout in OpenAI analysis:", error);
-        res.json({
-          ...result,
-          analysis: "AI 분석을 일시적으로 사용할 수 없습니다. 나중에 다시 시도해주세요."
-        });
       }
     } catch (error) {
       console.error("Error getting MBTI result:", error);
