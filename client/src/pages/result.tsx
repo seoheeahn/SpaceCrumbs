@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -12,7 +12,6 @@ import { questions } from "@/lib/questions";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, DialogHeader } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import html2canvas from 'html2canvas';
-import { useRef,  } from 'react';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -22,80 +21,19 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 
-interface Answer {
-  questionId: number;
-  value: number;
-}
-
-type DimensionKey = "외향성/내향성" | "감각/직관" | "사고/감정" | "판단/인식";
-type MbtiLetter = "E" | "I" | "S" | "N" | "T" | "F" | "J" | "P";
-
-const dimensionColors: Record<DimensionKey, string> = {
-  "외향성/내향성": "hsl(220, 70%, 65%)",
-  "감각/직관": "hsl(12, 75%, 65%)",
-  "사고/감정": "hsl(160, 75%, 65%)",
-  "판단/인식": "hsl(45, 75%, 60%)"
-} as const;
-
-const facetColors: Record<DimensionKey, [string, string]> = {
-  "외향성/내향성": ["hsl(220, 70%, 60%)", "hsl(220, 60%, 85%)"],
-  "감각/직관": ["hsl(12, 75%, 60%)", "hsl(12, 65%, 85%)"],
-  "사고/감정": ["hsl(160, 75%, 60%)", "hsl(160, 65%, 85%)"],
-  "판단/인식": ["hsl(45, 75%, 55%)", "hsl(45, 65%, 80%)"]
-} as const;
-
-const loginSchema = z.object({
-  userId: z.string().min(1, { message: "아이디를 입력해주세요." }),
-  password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
-});
-
-type LoginInput = z.infer<typeof loginSchema>;
-
-function getFacetWeights(value: number): { A: number; B: number } {
-  if (value === 1) return { A: 100, B: 0 };
-  if (value === 2) return { A: 75, B: 25 };
-  if (value === 3) return { A: 50, B: 50 };
-  if (value === 4) return { A: 25, B: 75 };
-  if (value === 5) return { A: 0, B: 100 };
-  return { A: 50, B: 50 };
-}
-
-const mbtiIcons: Record<MbtiLetter, JSX.Element> = {
-  E: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
-  I: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
-  S: <MdSettings className="w-12 h-12 drop-shadow-lg" />,
-  N: <MdFlashOn className="w-12 h-12 drop-shadow-lg" />,
-  T: <MdFavoriteBorder className="w-12 h-12 drop-shadow-lg" />,
-  F: <MdFavorite className="w-12 h-12 drop-shadow-lg" />,
-  J: <MdChecklist className="w-12 h-12 drop-shadow-lg" />,
-  P: <MdStarBorder className="w-12 h-12 drop-shadow-lg" />
-};
-
-interface FacetGroup {
-  category: DimensionKey;
-  title: DimensionKey;
-  facets: {
-    id: number;
-    facet: string;
-    selected: "A" | "B" | "neutral";
-    weights: { A: number; B: number };
-  }[];
-}
-
-const dimensionToLetters: Record<DimensionKey, [MbtiLetter, MbtiLetter]> = {
-  "외향성/내향성": ["E", "I"],
-  "감각/직관": ["S", "N"],
-  "사고/감정": ["T", "F"],
-  "판단/인식": ["J", "P"]
-};
-
+// ... (type definitions remain the same)
 
 export default function Result() {
+  // Initialize all hooks at the top level
   const { id } = useParams();
   const [location] = useLocation();
   const [, setLocation] = useLocation();
   const [showLoginDialog, setShowLoginDialog] = useState(true);
   const { toast } = useToast();
+  const resultRef = useRef<HTMLDivElement>(null);
+  const snsRef = useRef<HTMLDivElement>(null);
+  const [previewImage, setPreviewImage] = useState<string>('');
+  const [snsImage, setSnsImage] = useState<string>('');
 
   // Check access type and login states
   const isAdmin = location.includes('isAdmin=true');
@@ -126,13 +64,22 @@ export default function Result() {
     enabled: !!id && !showLoginDialog
   });
 
-  // Add console logs for debugging
-  console.log("Login state:", {
-    isAdmin,
-    isAdminLoggedIn,
-    showLoginDialog,
-    hasResult: !!result
-  });
+  const handleShare = async (type: 'sns' | 'full') => {
+    const targetRef = type === 'sns' ? snsRef : resultRef;
+    if (targetRef.current) {
+      const canvas = await html2canvas(targetRef.current, {
+        scale: 2,
+        width: type === 'sns' ? 1080 : 800,
+        height: type === 'sns' ? 1080 : targetRef.current.scrollHeight,
+      });
+      const image = canvas.toDataURL('image/png', 1.0);
+      if (type === 'sns') {
+        setSnsImage(image);
+      } else {
+        setPreviewImage(image);
+      }
+    }
+  };
 
   // Loading state
   if (!id || isLoading) {
@@ -192,28 +139,6 @@ export default function Result() {
       })
     };
   });
-
-  const resultRef = useRef<HTMLDivElement>(null);
-  const snsRef = useRef<HTMLDivElement>(null);
-  const [previewImage, setPreviewImage] = useState<string>('');
-  const [snsImage, setSnsImage] = useState<string>('');
-
-  const handleShare = async (type: 'sns' | 'full') => {
-    const targetRef = type === 'sns' ? snsRef : resultRef;
-    if (targetRef.current) {
-      const canvas = await html2canvas(targetRef.current, {
-        scale: 2,
-        width: type === 'sns' ? 1080 : 800,
-        height: type === 'sns' ? 1080 : targetRef.current.scrollHeight,
-      });
-      const image = canvas.toDataURL('image/png', 1.0);
-      if (type === 'sns') {
-        setSnsImage(image);
-      } else {
-        setPreviewImage(image);
-      }
-    }
-  };
 
   function ResultContent({ showControls = true }) {
     return (
@@ -541,3 +466,70 @@ export default function Result() {
     </div>
   );
 }
+
+function getFacetWeights(value: number): { A: number; B: number } {
+  if (value === 1) return { A: 100, B: 0 };
+  if (value === 2) return { A: 75, B: 25 };
+  if (value === 3) return { A: 50, B: 50 };
+  if (value === 4) return { A: 25, B: 75 };
+  if (value === 5) return { A: 0, B: 100 };
+  return { A: 50, B: 50 };
+}
+
+const mbtiIcons: Record<MbtiLetter, JSX.Element> = {
+  E: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
+  I: <MdPerson className="w-12 h-12 drop-shadow-lg" />,
+  S: <MdSettings className="w-12 h-12 drop-shadow-lg" />,
+  N: <MdFlashOn className="w-12 h-12 drop-shadow-lg" />,
+  T: <MdFavoriteBorder className="w-12 h-12 drop-shadow-lg" />,
+  F: <MdFavorite className="w-12 h-12 drop-shadow-lg" />,
+  J: <MdChecklist className="w-12 h-12 drop-shadow-lg" />,
+  P: <MdStarBorder className="w-12 h-12 drop-shadow-lg" />
+};
+
+interface FacetGroup {
+  category: DimensionKey;
+  title: DimensionKey;
+  facets: {
+    id: number;
+    facet: string;
+    selected: "A" | "B" | "neutral";
+    weights: { A: number; B: number };
+  }[];
+}
+
+const dimensionToLetters: Record<DimensionKey, [MbtiLetter, MbtiLetter]> = {
+  "외향성/내향성": ["E", "I"],
+  "감각/직관": ["S", "N"],
+  "사고/감정": ["T", "F"],
+  "판단/인식": ["J", "P"]
+};
+
+const dimensionColors: Record<DimensionKey, string> = {
+  "외향성/내향성": "hsl(220, 70%, 65%)",
+  "감각/직관": "hsl(12, 75%, 65%)",
+  "사고/감정": "hsl(160, 75%, 65%)",
+  "판단/인식": "hsl(45, 75%, 60%)"
+} as const;
+
+const facetColors: Record<DimensionKey, [string, string]> = {
+  "외향성/내향성": ["hsl(220, 70%, 60%)", "hsl(220, 60%, 85%)"],
+  "감각/직관": ["hsl(12, 75%, 60%)", "hsl(12, 65%, 85%)"],
+  "사고/감정": ["hsl(160, 75%, 60%)", "hsl(160, 65%, 85%)"],
+  "판단/인식": ["hsl(45, 75%, 55%)", "hsl(45, 65%, 80%)"]
+} as const;
+
+const loginSchema = z.object({
+  userId: z.string().min(1, { message: "아이디를 입력해주세요." }),
+  password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
+});
+
+type LoginInput = z.infer<typeof loginSchema>;
+
+interface Answer {
+  questionId: number;
+  value: number;
+}
+
+type DimensionKey = "외향성/내향성" | "감각/직관" | "사고/감정" | "판단/인식";
+type MbtiLetter = "E" | "I" | "S" | "N" | "T" | "F" | "J" | "P";
