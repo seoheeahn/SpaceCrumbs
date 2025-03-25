@@ -164,21 +164,23 @@ export default function Result() {
 
   const { data: result, isLoading } = useQuery<MbtiResult>({
     queryKey: [`/api/mbti-results/${id}`],
-    enabled: !!id && (!showLoginDialog || (isAdmin && isAdminLoggedIn))
+    enabled: !!id && (isAdmin ? isAdminLoggedIn : !showLoginDialog)
   });
 
-  if (isLoading) {
+  if (!id || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>결과를 불러오는 중...</p>
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
+        <p className="text-gray-800">
+          {!id ? "잘못된 접근입니다." : "결과를 불러오는 중..."}
+        </p>
       </div>
     );
   }
 
   if (!result) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>결과를 찾을 수 없습니다.</p>
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-primary/5 flex items-center justify-center p-4">
+        <p className="text-gray-800">결과를 찾을 수 없습니다.</p>
       </div>
     );
   }
