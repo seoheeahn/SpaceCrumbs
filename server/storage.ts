@@ -6,6 +6,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getUser(id: number): Promise<User | undefined>;
   getUserByCredentials(userId: string, password: string): Promise<User | undefined>;
+  getUserByUserId(userId: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   updateUserPassword(userId: string, newPassword: string): Promise<void>;
   checkDuplicateUserId(userId: string): Promise<boolean>;
@@ -43,6 +44,14 @@ export class DatabaseStorage implements IStorage {
         eq(users.userId, userId),
         eq(users.password, password)
       ));
+    return user;
+  }
+
+  async getUserByUserId(userId: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.userId, userId));
     return user;
   }
 
