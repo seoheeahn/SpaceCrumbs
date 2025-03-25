@@ -323,37 +323,48 @@ export default function Test() {
                 <div className="flex flex-col sm:grid sm:grid-cols-[1fr,auto,1fr] gap-4 items-center">
                   {/* Option A */}
                   <div className="text-center sm:text-right mb-4 sm:mb-0">
-                    <div className="text-sm font-medium text-primary">
+                    <div className="text-base sm:text-lg font-semibold text-primary">
                       {question?.options.A}
                     </div>
                   </div>
 
                   {/* Answer Buttons */}
                   <div className="flex flex-col sm:grid sm:grid-cols-5 gap-2 w-full sm:w-auto">
-                    {[1, 2, 3, 4, 5].map((value) => (
-                      <Button
-                        key={value}
-                        variant={value === 3 ? "secondary" : "outline"}
-                        onClick={() => handleAnswer(value)}
-                        className={`
-                          w-full h-12 sm:h-14 p-0 text-sm sm:text-base relative
-                          ${value === 3 ? 'bg-primary/10' : ''}
-                          hover:bg-primary/20 transition-colors
-                        `}
-                      >
-                        <div className="absolute -left-16 sm:left-auto sm:-top-6 text-xs text-gray-500">
-                          {value === 1 && '← A'}
-                          {value === 3 && '중립'}
-                          {value === 5 && 'B →'}
-                        </div>
-                        {value}
-                      </Button>
-                    ))}
+                    {[1, 2, 3, 4, 5].map((value) => {
+                      const getButtonLabel = (value: number) => {
+                        switch(value) {
+                          case 1: return 'A에 매우 가까움';
+                          case 2: return 'A에 가까움';
+                          case 3: return '중립';
+                          case 4: return 'B에 가까움';
+                          case 5: return 'B에 매우 가까움';
+                          default: return '';
+                        }
+                      };
+
+                      return (
+                        <Button
+                          key={value}
+                          variant={value === 3 ? "secondary" : "outline"}
+                          onClick={() => handleAnswer(value)}
+                          className={`
+                            w-full h-14 sm:h-16 p-2 text-sm relative
+                            ${value === 3 ? 'bg-primary/10' : ''}
+                            hover:bg-primary/20 transition-colors
+                          `}
+                        >
+                          <div className="absolute -left-16 sm:left-auto sm:-top-6 text-xs text-gray-500 whitespace-nowrap">
+                            {getButtonLabel(value)}
+                          </div>
+                          {value}
+                        </Button>
+                      );
+                    })}
                   </div>
 
                   {/* Option B */}
                   <div className="text-center sm:text-left mt-4 sm:mt-0">
-                    <div className="text-sm font-medium text-primary">
+                    <div className="text-base sm:text-lg font-semibold text-primary">
                       {question?.options.B}
                     </div>
                   </div>
